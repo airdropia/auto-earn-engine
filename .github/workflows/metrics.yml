@@ -1,0 +1,31 @@
+name: metrics
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: metrics
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect catalog and traffic metrics
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 pipeline/collect_metrics.py
+
+      - name: Commit metrics
+        run: |
+          git config user.name "auto-earn-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add metrics
+          git diff --cached --quiet || (git commit -m "weekly metrics [skip ci]" && git push)
