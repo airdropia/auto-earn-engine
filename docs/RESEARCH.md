@@ -1,10 +1,21 @@
 # RESEARCH - Authentic Analysis
 
 Date: 2026-02-14. Constraint set: $0 budget, zero recurring user input,
-no paid services, minimal local PC usage. Note: live web verification was
-unavailable in this session; fee figures below come from prior knowledge
-and MUST be re-verified on the official pricing pages before being relied
-on for business decisions (links included).
+no paid services, minimal local PC usage.
+
+## Fee verification status: LIVE-VERIFIED 2026-08-23
+
+Verified via Jina Search API against official pricing pages:
+
+| Platform | Verified figure | Source |
+| --- | --- | --- |
+| Gumroad | 10% + 50c per direct sale; 30% via Discover marketplace; $0 monthly | https://gumroad.com/pricing |
+| Payhip | Free Forever plan: $0/month, unlimited products/revenue (5% transaction fee on free tier per help center) | https://payhip.com/pricing , https://help.payhip.com/article/102-billing-and-upgrading |
+| Ko-fi | Free to join, no monthly cost; 0% fee on one-time tips (shop fees apply on free tier) | https://ko-fi.com/pricing , https://help.ko-fi.com/hc/en-us/articles/360002506494 |
+| Patreon | Multi-currency payouts for creators outside the US; payout methods documented in official guide (Payoneer route to confirm inside dashboard for Pakistan) | https://support.patreon.com/hc/en-us/articles/39694936541965 |
+
+Earlier note about unverified figures is resolved for the platforms above.
+Etsy figures remain from prior knowledge - verify before use if pursued.
 
 ## Why digital products + GitHub infra
 
