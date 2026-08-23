@@ -50,6 +50,10 @@ main { max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; }
 .support h3 { margin-bottom:8px; }
 .support p { color:#9aa7b4; font-size:.92rem; line-height:1.5; }
 .support a { color:#58a6ff; }
+.support code { background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:5px 9px; word-break:break-all; color:#7ee787; font-size:.82rem; }
+.copy-btn { background:#21262d; border:1px solid #30363d; color:#c9d1d9; border-radius:6px; padding:5px 12px; font-size:.75rem; cursor:pointer; margin-left:8px; vertical-align:middle; }
+.copy-btn:hover { border-color:#58a6ff; color:#fff; }
+.warn { display:block; font-size:.72rem; color:#d29922; margin-top:4px; }
 footer { text-align:center; color:#6e7681; font-size:.78rem; padding:28px 16px 40px; line-height:1.6; }
 @media (max-width:520px){ header{padding:34px 16px 24px;} .grid{grid-template-columns:1fr;} }
 """
@@ -76,6 +80,16 @@ def money_links(cfg: dict) -> str:
         parts.append(
             f'<p>Sponsor the pipeline on <a href="{svgkit.escape(cfg["github_sponsors_url"])}" '
             'target="_blank" rel="noopener">GitHub Sponsors</a>.</p>'
+        )
+    if cfg.get("crypto_address"):
+        network = cfg.get("crypto_network") or "crypto"
+        parts.append(
+            '<p>Crypto tip - '
+            f'{svgkit.escape(network)} only:</p>'
+            f'<p><code id="tip-address">{svgkit.escape(cfg["crypto_address"])}</code>'
+            '<button class="copy-btn" type="button" '
+            'onclick="navigator.clipboard.writeText(document.getElementById(\'tip-address\').textContent)">Copy</button>'
+            f'<span class="warn">Send only {svgkit.escape(network)} to this address - other assets will be lost.</span></p>'
         )
     if cfg.get("affiliate_html"):
         parts.append(str(cfg["affiliate_html"]))
