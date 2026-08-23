@@ -24,6 +24,21 @@ No secrets are needed for generation or publishing. The pipeline uses only:
 1. Join at https://github.com/sponsors (requires payout setup with Stripe)
 2. Put your profile URL in `config.json` -> `"github_sponsors_url"`
 
+### Option D - Patreon + Payoneer (recommended for Pakistan)
+PayPal and Stripe are not available in Pakistan, so Ko-fi/Gumroad direct
+payouts fail there. The working free combo is:
+
+1. **Payoneer** (free account, acts like the payout wallet):
+   sign up at https://www.payoneer.com - requires CNIC and a phone number.
+2. **Patreon** (free creator page): sign up at https://www.patreon.com,
+   create a creator page for your design studio.
+3. In Patreon: Settings -> Payouts -> connect Payoneer.
+4. Copy your Patreon page URL into `config.json` -> `"patreon_url"`.
+   The storefront support box activates automatically on next build.
+
+Verify current Patreon payout country support on
+https://support.patreon.com before relying on it.
+
 ### Option C - Paid product listings (Gumroad / Payhip)
 1. Create a free Gumroad or Payhip account
 2. Optional automation token: repo Settings -> Secrets and variables ->
