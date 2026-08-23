@@ -62,6 +62,11 @@ def rel(path: str) -> str:
 
 def money_links(cfg: dict) -> str:
     parts: list[str] = []
+    if cfg.get("patreon_url"):
+        parts.append(
+            f'<p>Support monthly on <a href="{svgkit.escape(cfg["patreon_url"])}" '
+            'target="_blank" rel="noopener">Patreon</a> - every design here stays free.</p>'
+        )
     if cfg.get("kofi_url"):
         parts.append(
             f'<p>Tip the machine\'s operator on <a href="{svgkit.escape(cfg["kofi_url"])}" '
