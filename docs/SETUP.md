@@ -39,6 +39,13 @@ payouts fail there. The working free combo is:
 Verify current Patreon payout country support on
 https://support.patreon.com before relying on it.
 
+### Option E - Direct crypto tip address
+1. Create a wallet in Trust Wallet (or any self-custody wallet)
+2. Tap Receive and copy the PUBLIC address only - never the seed phrase
+3. Put the address in `config.json` -> `"crypto_address"` and the network
+   label (e.g. `USDT (TRC20)`) in `"crypto_network"`
+4. The storefront renders a copyable tip box with a wrong-network warning.
+
 ### Option C - Paid product listings (Gumroad / Payhip)
 1. Create a free Gumroad or Payhip account
 2. Optional automation token: repo Settings -> Secrets and variables ->
