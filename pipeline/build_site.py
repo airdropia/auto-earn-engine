@@ -101,6 +101,38 @@ def money_links(cfg: dict) -> str:
     return "".join(parts)
 
 
+def canonical_url(cfg: dict) -> str:
+    """Public base URL of the storefront, no trailing slash."""
+    return (cfg.get("site_base_url") or "https://airdropia.github.io/auto-earn-engine").rstrip("/")
+
+def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
+    """robots.txt + sitemap.xml for search engine indexing."""
+    base = canonical_url(cfg)
+    site_dir.joinpath("robots.txt").write_text(
+        "User-agent: *\nAllow: /\n\n"
+        f"Sitemap: {base}/sitemap.xml\n",
+        encoding="utf-8",
+    )
+
+    urls: list[str] = [f"{base}/"]
+    for item in sorted(catalog, key=lambda x: x["created"], reverse=True):
+        urls.append(f"{base}/downloads/{item['id']}.zip")
+
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    entries: list[str] = []
+    for u in urls:
+        entries.append(
+            "<url><loc>" + svgkit.escape(u) + "</loc>"
+            f"<lastmod>{today}</lastmod></url>"
+        )
+    site_dir.joinpath("sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(entries)
+        + "\n</urlset>\n",
+        encoding="utf-8",
+    )
+
 def render_index(cfg: dict, catalog: list[dict]) -> str:
     newest = max(item["created"] for item in catalog)
     cards: list[str] = []
@@ -136,6 +168,7 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
         f"<title>{svgkit.escape(cfg['store_name'])} - Free SVG Bundles Daily</title>"
         '<meta name="description" content="New generative SVG design bundles published daily by automation. Free download."/>'
+        '<link rel="canonical" href="' + canonical_url(cfg) + '/"/>'
         '<meta property="og:title" content="' + svgkit.escape(cfg["store_name"]) + '"/>'
         '<meta property="og:description" content="Fresh SVG design bundles generated every day by automation."/>'
         '<meta property="og:image" content="og.png"/>'
@@ -176,6 +209,20 @@ def make_og_image(site_dir: Path, cfg: dict) -> None:
     pngio.write_png(site_dir / "og.png", 1200, 630, pixel)
 
 
+def make_sitemap(site_dir: Path) -> None:
+    """Static sitemap: storefront is a single index page."""
+    base = "https://airdropia.github.io/auto-earn-engine/"
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    (site_dir / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"  <url><loc>{base}</loc><lastmod>{today}</lastmod>"
+        "<changefreq>daily</changefreq><priority>1.0</priority></url>\n"
+        "</urlset>\n",
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     catalog: list[dict] = []
@@ -205,7 +252,14 @@ def main() -> None:
             zipped += 1
 
     make_og_image(SITE_DIR, cfg)
+    make_sitemap(SITE_DIR)
+    (SITE_DIR / "robots.txt").write_text(
+        "User-agent: *\nAllow: /\n"
+        "Sitemap: https://airdropia.github.io/auto-earn-engine/sitemap.xml\n",
+        encoding="utf-8",
+    )
     (SITE_DIR / "index.html").write_text(render_index(cfg, catalog), encoding="utf-8")
+    write_seo_files(SITE_DIR, cfg, catalog)
     print(f"site built: products={len(catalog)} zips={zipped}")
 
 
