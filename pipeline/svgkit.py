@@ -13,10 +13,14 @@ def escape(text: str) -> str:
 
 
 def svg_doc(width: int, height: int, body: str) -> str:
+    marker = (
+        "<!-- VectorForge Daily | machine-generated asset | "
+        "(c) operator, all rights reserved -->"
+    )
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-        f'viewBox="0 0 {width} {height}">{body}</svg>'
+        f'viewBox="0 0 {width} {height}">{body}{marker}</svg>'
     )
 
 
