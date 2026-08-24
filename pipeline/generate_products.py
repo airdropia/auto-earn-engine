@@ -23,6 +23,7 @@ import svgkit
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCTS_DIR = ROOT / "products"
 CATALOG_DIR = ROOT / "catalog"
+CATALOG_PATH = CATALOG_DIR / "catalog.json"
 
 MAX_ATTEMPTS_PER_SLOT = 3
 
@@ -629,7 +630,7 @@ def main() -> None:
     batch_dir = PRODUCTS_DIR / today
     batch_dir.mkdir(parents=True, exist_ok=True)
 
-    catalog_path = CATALOG_DIR / "catalog.json"
+    catalog_path = CATALOG_PATH
     catalog: list[dict] = []
     if catalog_path.exists():
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
