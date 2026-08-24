@@ -418,7 +418,8 @@ def validate_quote_card(svg_text: str) -> str | None:
     for token in ("DAILY FUEL", "VECTORFORGE"):
         if token not in svg_text:
             return f"missing {token}"
-    if count_elements(svg_text) < 8:
+    # a card carries 3 rects + 2 paths + 1 line of geometry; texts excluded
+    if count_elements(svg_text) < 6:
         return "too few elements"
     return None
 
