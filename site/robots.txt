@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://airdropia.github.io/auto-earn-engine/sitemap.xml
