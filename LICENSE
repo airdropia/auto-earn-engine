@@ -1,0 +1,27 @@
+# NOTICE AND LICENSE
+
+Copyright (c) 2026 VectorForge Daily / repo owner. All rights reserved.
+
+## Code
+
+All source code in this repository is PROPRIETARY.
+No license is granted to copy, fork, redistribute, or create derivative
+works from any part of this codebase without prior written permission.
+
+Permitted: reading for security review, invoking the deployed service.
+
+## Generated assets
+
+All generated design assets (SVG bundles, archives under products/ and
+site/) are the property of the operator. Assets downloaded through the
+official storefront carry their own grant (see LICENSE.txt inside each
+bundle): personal and commercial *use* of the designs is allowed;
+reselling or redistributing the raw digital files as-is is not.
+
+## Provenance
+
+Every asset carries an embedded generation marker and the full git history
+of this repository documents the exact automated run that produced it.
+Unauthorized redistribution will be identified and acted upon.
+
+Contact: via the storefront support links.
