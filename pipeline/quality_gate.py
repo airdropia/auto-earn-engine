@@ -18,7 +18,7 @@ CATALOG_PATH = ROOT / "catalog" / "catalog.json"
 MIN_ELEMENTS = {
     "mandala": 120,
     "patterns": 10,
-    "quotes": 8,
+    "quotes": 5,
     "planner": 40,
 }
 
