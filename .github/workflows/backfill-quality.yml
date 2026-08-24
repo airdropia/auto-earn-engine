@@ -1,0 +1,31 @@
+name: backfill-quality
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-build
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild historical batches at v2 quality
+        run: |
+          cd pipeline && python3 backfill.py && cd ..
+
+      - name: Quality gate over full catalog
+        run: python3 pipeline/quality_gate.py
+
+      - name: Commit upgraded archive
+        run: |
+          git config user.name "auto-earn-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "backfill: entire catalog regenerated at v2 quality [skip ci]" && git push)
