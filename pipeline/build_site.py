@@ -166,6 +166,7 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         "<!DOCTYPE html><html lang=\"en\"><head>"
         '<meta charset="utf-8"/>'
         '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
+        '<meta name="google-site-verification" content="rj9PdWPw8UQNxgVDfJbn3ISodK8t-0nU51F4L6GtbpI"/>'
         f"<title>{svgkit.escape(cfg['store_name'])} - Free SVG Bundles Daily</title>"
         '<meta name="description" content="New generative SVG design bundles published daily by automation. Free download."/>'
         '<link rel="canonical" href="' + canonical_url(cfg) + '/"/>'
