@@ -1,0 +1,18 @@
+Mandala SVG Bundle (cut-ready closed paths)
+
+What is inside:
+- mandala-26962501-design-1.svg
+- mandala-26962501-design-2.svg
+- mandala-26962501-design-3.svg
+- mandala-26962501-design-4.svg
+- mandala-26962501-design-5.svg
+
+Quick use notes:
+- SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
+  Illustrator, Figma and most laser software.
+- All shapes are vector - scale to any size without quality loss.
+- Printables: print at 100% scale on A4 or US Letter ("fit to page" also works).
+- Colors are flat fills; recolor freely in any vector editor.
+
+Generated on 2026-08-25. Questions? Reach the operator via the storefront
+support links.
