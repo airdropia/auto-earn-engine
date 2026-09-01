@@ -1,0 +1,17 @@
+Quote Card Set (1080x1350 social-ready cards)
+
+What is inside:
+- quotes-d6d5e1ff-card-1.svg
+- quotes-d6d5e1ff-card-2.svg
+- quotes-d6d5e1ff-card-3.svg
+- quotes-d6d5e1ff-card-4.svg
+
+Quick use notes:
+- SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
+  Illustrator, Figma and most laser software.
+- All shapes are vector - scale to any size without quality loss.
+- Printables: print at 100% scale on A4 or US Letter ("fit to page" also works).
+- Colors are flat fills; recolor freely in any vector editor.
+
+Generated on 2026-09-01. Questions? Reach the operator via the storefront
+support links.
