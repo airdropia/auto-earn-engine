@@ -1,0 +1,14 @@
+Habit Tracker Printable (A4 landscape print sheets)
+
+What is inside:
+- planner-b9ff005d-sheet-1.svg
+
+Quick use notes:
+- SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
+  Illustrator, Figma and most laser software.
+- All shapes are vector - scale to any size without quality loss.
+- Printables: print at 100% scale on A4 or US Letter ("fit to page" also works).
+- Colors are flat fills; recolor freely in any vector editor.
+
+Generated on 2026-09-03. Questions? Reach the operator via the storefront
+support links.

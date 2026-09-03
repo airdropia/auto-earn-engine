@@ -1385,5 +1385,133 @@
     "quality": {
       "sheets": 1
     }
+  },
+  {
+    "id": "mandala-d2db01f9",
+    "type": "mandala",
+    "title": "Mandala SVG Bundle #346 | 5 Designs (SVG)",
+    "description": "Hand-tuned generative mandala set delivered as clean vector SVG files.\n\n- Clean closed paths: cuts cleanly on Cricut, Silhouette and laser machines\n- Scalable to any size with zero quality loss (true vector)\n- Ideal for wall art, decals, coloring pages, wood engraving\n- Instant digital download - no physical item ships\n- Generated and quality-checked by an automated daily pipeline\n\nSet 346 contains 5 file(s).",
+    "tags": [
+      "mandala svg",
+      "cricut cut file",
+      "laser cut file",
+      "svg bundle",
+      "vector art",
+      "coloring page",
+      "vinyl decal svg",
+      "glowforge",
+      "zentangle svg",
+      "wall decor svg",
+      "digital download",
+      "commercial use svg",
+      "meditation art"
+    ],
+    "files": [
+      "products/2026-09-03/mandala-d2db01f9/mandala-d2db01f9-design-1.svg",
+      "products/2026-09-03/mandala-d2db01f9/mandala-d2db01f9-design-2.svg",
+      "products/2026-09-03/mandala-d2db01f9/mandala-d2db01f9-design-3.svg",
+      "products/2026-09-03/mandala-d2db01f9/mandala-d2db01f9-design-4.svg",
+      "products/2026-09-03/mandala-d2db01f9/mandala-d2db01f9-design-5.svg"
+    ],
+    "folder": "products/2026-09-03/mandala-d2db01f9",
+    "preview": "products/2026-09-03/mandala-d2db01f9/mandala-d2db01f9-design-1.svg",
+    "created": "2026-09-03",
+    "quality": {
+      "elements": 1208
+    }
+  },
+  {
+    "id": "patterns-a2ee1b61",
+    "type": "patterns",
+    "title": "Seamless Pattern Pack #346 | 2 Designs (SVG)",
+    "description": "A curated sheet of tileable seamless vector patterns on one SVG board.\n\n- True repeating tiles built with SVG <pattern> primitives\n- Recolor easily: every shape uses flat fills, no effects\n- Great for fabric previews, wrapping paper, backgrounds, scrapbooking\n- Instant digital download - no physical item ships\n\nSet 346 contains 2 file(s).",
+    "tags": [
+      "seamless pattern",
+      "surface pattern design",
+      "repeat tile svg",
+      "fabric print pattern",
+      "wrapping paper design",
+      "background svg",
+      "scrapbook paper",
+      "textile pattern",
+      "digital paper pack",
+      "geometric pattern",
+      "printable paper",
+      "craft vinyl",
+      "digital download"
+    ],
+    "files": [
+      "products/2026-09-03/patterns-a2ee1b61/patterns-a2ee1b61-board-1.svg",
+      "products/2026-09-03/patterns-a2ee1b61/patterns-a2ee1b61-board-2.svg"
+    ],
+    "folder": "products/2026-09-03/patterns-a2ee1b61",
+    "preview": "products/2026-09-03/patterns-a2ee1b61/patterns-a2ee1b61-board-1.svg",
+    "created": "2026-09-03",
+    "quality": {
+      "boards": 2
+    }
+  },
+  {
+    "id": "quotes-de8242e6",
+    "type": "quotes",
+    "title": "Quote Card Set #346 | 4 Designs (SVG)",
+    "description": "A fresh set of original motivational quote cards sized for social feeds.\n\n- Portrait 4:5 layout that fits Instagram and Pinterest feeds\n- Original public-friendly aphorisms written for this project\n- Editable vector text: change fonts, colors and wording freely\n- Consistent palette per set for a cohesive feed aesthetic\n\nSet 346 contains 4 file(s).",
+    "tags": [
+      "quote card template",
+      "instagram post template",
+      "motivational quotes",
+      "social media templates",
+      "canva alternative svg",
+      "story templates",
+      "affirmation cards",
+      "printable quotes",
+      "content creator kit",
+      "quote graphics pack",
+      "digital download",
+      "wellness quotes",
+      "pinterest pins"
+    ],
+    "files": [
+      "products/2026-09-03/quotes-de8242e6/quotes-de8242e6-card-1.svg",
+      "products/2026-09-03/quotes-de8242e6/quotes-de8242e6-card-2.svg",
+      "products/2026-09-03/quotes-de8242e6/quotes-de8242e6-card-3.svg",
+      "products/2026-09-03/quotes-de8242e6/quotes-de8242e6-card-4.svg"
+    ],
+    "folder": "products/2026-09-03/quotes-de8242e6",
+    "preview": "products/2026-09-03/quotes-de8242e6/quotes-de8242e6-card-1.svg",
+    "created": "2026-09-03",
+    "quality": {
+      "cards": 4
+    }
+  },
+  {
+    "id": "planner-b9ff005d",
+    "type": "planner",
+    "title": "Habit Tracker Printable #346 | 1 Design (SVG)",
+    "description": "Minimal A4-landscape habit tracker sheet, print-and-go.\n\n- 31 day columns x 8 habit rows, fits any month\n- Crisp thin rules tuned for home printers\n- Works as bullet journal insert or clipboard sheet\n- Print at 100% scale on A4 or US Letter with fit-to-page\n\nSet 346 contains 1 file(s).",
+    "tags": [
+      "habit tracker printable",
+      "a4 planner insert",
+      "daily habit log",
+      "goal tracker sheet",
+      "productivity printable",
+      "bullet journal page",
+      "monthly tracker",
+      "planner pdf alternative",
+      "routine tracker",
+      "self care planner",
+      "digital download",
+      "study planner",
+      "fitness tracker sheet"
+    ],
+    "files": [
+      "products/2026-09-03/planner-b9ff005d/planner-b9ff005d-sheet-1.svg"
+    ],
+    "folder": "products/2026-09-03/planner-b9ff005d",
+    "preview": "products/2026-09-03/planner-b9ff005d/planner-b9ff005d-sheet-1.svg",
+    "created": "2026-09-03",
+    "quality": {
+      "sheets": 1
+    }
   }
 ]
