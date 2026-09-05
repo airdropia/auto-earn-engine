@@ -261,6 +261,9 @@ def main() -> None:
     )
     (SITE_DIR / "index.html").write_text(render_index(cfg, catalog), encoding="utf-8")
     write_seo_files(SITE_DIR, cfg, catalog)
+    extra = ROOT / "site_extra"
+    if extra.is_dir():
+        shutil.copytree(extra, SITE_DIR, dirs_exist_ok=True)
     print(f"site built: products={len(catalog)} zips={zipped}")
 
 
