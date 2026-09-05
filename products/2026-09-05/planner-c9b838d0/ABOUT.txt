@@ -2,6 +2,7 @@ Habit Tracker Printable (A4 landscape print sheets)
 
 What is inside:
 - planner-c9b838d0-sheet-1.svg
+- planner-c9b838d0-sheet-2.svg
 
 Quick use notes:
 - SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
