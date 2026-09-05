@@ -13,6 +13,7 @@ import hashlib
 import json
 import math
 import random
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -229,6 +230,154 @@ def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str) -> dict:
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += count_elements(svg)
     write_package_docs(folder, "Mandala SVG Bundle", files, "cut-ready closed paths")
+    return {
+        "files": files,
+        "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
+        "designs": 5,
+        "preview": files[0],
+        "quality": {"elements": total_elements},
+    }
+
+
+# --------------------------------------------------------------------------
+# Layered mandala v1: cut-ready 3D cardstock layers (bold connected shapes)
+# --------------------------------------------------------------------------
+# Design rules (see private-docs/AUDIT.md, P1):
+# - bold filled shapes only, min stroke 6px @1000 viewBox (gate: >=4px)
+# - no floating dots, no thin slivers -> cuts cleanly on Cricut
+# - 3 concentric layer bands; each layer ships as its own SVG so makers can
+#   cut each tier from different cardstock and stack with foam dots.
+
+LAYERED_LAYERS = 3
+CUT_STROKE = 6.0
+LAYER_BANDS = [  # (inner_frac, outer_frac) of max radius; index 0 = outermost
+    (0.60, 0.95),
+    (0.34, 0.66),
+    (0.00, 0.42),
+]
+
+
+def _cut_petal(rng: random.Random, cx: float, cy: float,
+               inner_r: float, outer_r: float, half_w: float, fill: str) -> str:
+    """One fat closed petal spanning inner_r..outer_r centred on -90deg."""
+    base = inner_r * rng.uniform(1.02, 1.10)
+    tip = outer_r * rng.uniform(0.96, 1.00)
+    x1, y1 = _p(cx, cy, base, -math.pi / 2 - half_w)
+    xt, yt = _p(cx, cy, tip, -math.pi / 2)
+    x2, y2 = _p(cx, cy, base, -math.pi / 2 + half_w)
+    mid = (base + tip) / 2
+    c1x, c1y = _p(cx, cy, mid, -math.pi / 2 - half_w * 1.5)
+    c2x, c2y = _p(cx, cy, mid, -math.pi / 2 + half_w * 1.5)
+    return (
+        f'<path d="M {_fmt(x1, y1)} Q {_fmt(c1x, c1y)} {_fmt(xt, yt)} '
+        f'Q {_fmt(c2x, c2y)} {_fmt(x2, y2)} Z" fill="{fill}"/>'
+    )
+
+
+def _cut_arc(rng: random.Random, cx: float, cy: float,
+             radius: float, start_angle: float, sweep: float, ink: str) -> str:
+    """Thick stroked arc linking two petals (interlock)."""
+    x0, y0 = _p(cx, cy, radius, start_angle)
+    x1, y1 = _p(cx, cy, radius, start_angle + sweep)
+    large = 1 if sweep > math.pi else 0
+    return (
+        f'<path d="M {_fmt(x0, y0)} A {radius:.1f} {radius:.1f} 0 {large} 1 '
+        f'{_fmt(x1, y1)}" fill="none" stroke="{ink}" stroke-width="{CUT_STROKE:.1f}"/>'
+    )
+
+
+def render_layered_design(rng: random.Random) -> tuple[str, list[str]]:
+    """Return (combined_svg, [layer_1_svg, layer_2_svg, layer_3_svg])."""
+    size = 1000
+    cx = cy = size / 2
+    max_radius = size / 2 - 24
+    palette = PALETTES[rng.randrange(len(PALETTES))]
+    ink = min(palette, key=_lum)
+    accents = sorted(palette, key=_lum)[1:3]
+    symmetry = rng.choice([8, 10, 12])
+    step = 2 * math.pi / symmetry
+
+    all_parts: list[str] = []
+    layer_svgs: list[str] = []
+    for layer in range(LAYERED_LAYERS):
+        inner_frac, outer_frac = LAYER_BANDS[layer]
+        inner_r = max_radius * inner_frac
+        outer_r = max_radius * outer_frac
+        half_w = step * rng.uniform(0.28, 0.38)
+        # One wedge of bold shapes, rotated `symmetry` times for full coverage.
+        wedge: list[str] = []
+        wedge.append(_cut_petal(rng, cx, cy, inner_r, outer_r, half_w, ink))
+        echo_outer = inner_r + (outer_r - inner_r) * rng.uniform(0.30, 0.45)
+        wedge.append(_cut_petal(rng, cx, cy, inner_r, echo_outer,
+                                half_w * rng.uniform(0.5, 0.65), accents[0]))
+        mid_r = (inner_r + outer_r) / 2
+        arc_gap = step * rng.uniform(0.04, 0.08)
+        wedge.append(_cut_arc(rng, cx, cy, mid_r, arc_gap,
+                              step - 2 * arc_gap, accents[1]))
+        wedge_svg = "".join(wedge)
+        parts: list[str] = []
+        for i in range(symmetry):
+            parts.append(
+                f'<g transform="rotate({360 * i / symmetry:.2f} {cx:.0f} {cy:.0f})">'
+                f"{wedge_svg}</g>"
+            )
+        if layer == LAYERED_LAYERS - 1:
+            parts.append(
+                f'<circle cx="{cx:.0f}" cy="{cy:.0f}" r="{max_radius * 0.13:.1f}" fill="{ink}"/>'
+            )
+            parts.append(
+                f'<circle cx="{cx:.0f}" cy="{cy:.0f}" r="{max_radius * 0.05:.1f}" fill="#ffffff"/>'
+            )
+        bg = f'<rect width="{size}" height="{size}" fill="#ffffff"/>'
+        layer_svgs.append(svgkit.svg_doc(size, size, bg + "".join(parts)))
+        all_parts.extend(parts)
+    combined = svgkit.svg_doc(
+        size, size,
+        f'<rect width="{size}" height="{size}" fill="#ffffff"/>' + "".join(all_parts),
+    )
+    return combined, layer_svgs
+
+
+def validate_layered_svg(svg_text: str) -> str | None:
+    """Return a defect description or None when the candidate passes."""
+    if count_elements(svg_text) < 18:
+        return f"too few elements ({count_elements(svg_text)})"
+    for match in re.finditer(r'stroke-width="([\d.]+)"', svg_text):
+        if float(match.group(1)) < 4.0:
+            return "stroke thinner than 4px (cut hazard)"
+    for match in re.finditer(r'<circle[^>]*\br="([\d.]+)"', svg_text):
+        if float(match.group(1)) < 12.0:
+            return "floating dot detected"
+    return None
+
+
+def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str) -> dict:
+    folder = out_dir / slug
+    folder.mkdir(parents=True, exist_ok=True)
+    files: list[str] = []
+    total_elements = 0
+    for i in range(5):
+        for attempt in range(MAX_ATTEMPTS_PER_SLOT):
+            combined, layers = render_layered_design(rng)
+            defect = None
+            for svg in [combined, *layers]:
+                d = validate_layered_svg(svg)
+                if d is not None:
+                    defect = d
+                    break
+            if defect is None:
+                break
+        else:
+            raise RuntimeError("layered mandala slot failed quality gate after retries")
+        names = [f"{slug}-design-{i + 1}.svg"] + [
+            f"{slug}-design-{i + 1}-layer-{j}.svg" for j in range(1, LAYERED_LAYERS + 1)
+        ]
+        for name, svg in zip(names, [combined, *layers]):
+            (folder / name).write_text(svg, encoding="utf-8")
+            files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
+        total_elements += sum(count_elements(s) for s in layers)
+    write_package_docs(folder, "3D Layered Mandala SVG Pack", files,
+                       "cut-ready bold shapes, 3 layers per design for cardstock stacking")
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
@@ -589,6 +738,7 @@ def write_package_docs(folder: Path, title: str, files: list[str], note: str) ->
 
 BUILDERS = {
     "mandala": build_mandala_bundle,
+    "layered-mandala": build_layered_mandala_bundle,
     "patterns": build_pattern_pack,
     "quotes": build_quote_set,
     "planner": build_planner,
@@ -637,7 +787,7 @@ def main() -> None:
     existing_ids = {item.get("id") for item in catalog}
 
     new_items = []
-    for product_type in ("mandala", "patterns", "quotes", "planner"):
+    for product_type in ("mandala", "layered-mandala", "patterns", "quotes", "planner"):
         item = build_product(product_type, rng, batch_dir, today)
         if item["id"] not in existing_ids:
             new_items.append(item)

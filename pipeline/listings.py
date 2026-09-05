@@ -3,6 +3,7 @@ from __future__ import annotations
 
 NAMES = {
     "mandala": ("Mandala SVG Bundle", "laser-cut ready mandala vectors"),
+    "layered-mandala": ("3D Layered Mandala SVG Pack", "cut-ready layered mandala vectors for cardstock"),
     "patterns": ("Seamless Pattern Pack", "tileable vector pattern sheet"),
     "quotes": ("Quote Card Set", "social-media ready motivational cards"),
     "planner": ("Habit Tracker Printable", "minimal printable planner sheet"),
@@ -14,6 +15,13 @@ TAGS = {
         "vector art", "coloring page", "vinyl decal svg", "glowforge",
         "zentangle svg", "wall decor svg", "digital download",
         "commercial use svg", "meditation art",
+    ],
+    "layered-mandala": [
+        "3d mandala svg", "layered mandala svg", "cricut mandala",
+        "cardstock cut file", "paper craft svg", "mandala layers",
+        "3d paper art", "mandala svg bundle", "cut ready svg",
+        "vinyl mandala", "digital download", "commercial use svg",
+        "wall decor svg",
     ],
     "patterns": [
         "seamless pattern", "surface pattern design", "repeat tile svg",
@@ -46,6 +54,16 @@ DESCRIPTIONS = {
         "- Ideal for wall art, decals, coloring pages, wood engraving\n"
         "- Instant digital download - no physical item ships\n"
         "- Generated and quality-checked by an automated daily pipeline"
+    ),
+    "layered-mandala": (
+        "Cut-ready 3D layered mandala set for Cricut, Silhouette and cardstock crafters.\n\n"
+        "- 3 concentric layer files per design: cut each tier from different cardstock "
+        "and stack with foam dots for a dimensional mandala\n"
+        "- Bold connected shapes, no thin lines or floating pieces: cuts cleanly "
+        "without shredding\n"
+        "- Layer 1 (outer) through Layer 3 (core) plus a combined full view per design\n"
+        "- True vector SVG: scale to any size with zero quality loss\n"
+        "- Instant digital download - no physical item ships"
     ),
     "patterns": (
         "A curated sheet of tileable seamless vector patterns on one SVG board.\n\n"

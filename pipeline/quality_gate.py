@@ -7,6 +7,7 @@ Exits non-zero on any violation so the batch never deploys.
 from __future__ import annotations
 
 import json
+import re
 import sys
 import xml.dom.minidom
 from pathlib import Path
@@ -17,6 +18,7 @@ CATALOG_PATH = ROOT / "catalog" / "catalog.json"
 
 MIN_ELEMENTS = {
     "mandala": 120,
+    "layered-mandala": 18,
     "patterns": 10,
     "quotes": 5,
     "planner": 40,
@@ -66,6 +68,18 @@ def check_svg(path: Path) -> list[str]:
                 defects.append(f"open path in {path.name}")
                 break
             start = end
+
+    if ptype == "layered-mandala":
+        # Cut-readiness invariants (AUDIT.md P1): thick strokes only,
+        # no floating dots - otherwise the design shreds on a Cricut.
+        for match in re.finditer(r'stroke-width="([\d.]+)"', text):
+            if float(match.group(1)) < 4.0:
+                defects.append(f"stroke {match.group(1)}px < 4px in {path.name}")
+                break
+        for match in re.finditer(r'<circle[^>]*\br="([\d.]+)"', text):
+            if float(match.group(1)) < 12.0:
+                defects.append(f"floating dot r={match.group(1)}px in {path.name}")
+                break
 
     return defects
 
