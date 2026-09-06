@@ -169,16 +169,25 @@ def check_pngs_for_mandala_products() -> list[str]:
             continue
         # P5: also require a mockup PNG for mandala + layered-mandala
         # (the 2 pinnable types). Mockup is the same P3 grandfather scope.
+        # Weekly-compilation folders (products/YYYY-Wnn/...) are exempt
+        # because they're snapshots of older source items that predate
+        # the P5 mandate - those bundles are historical archives.
+        try:
+            parent_folder = svg_path.parts[svg_path.parts.index("products") + 1]
+        except (ValueError, IndexError):
+            parent_folder = ""
+        is_weekly_snapshot = parent_folder.startswith(tuple(f"{y}-W" for y in range(2020, 2100)))
         mockup_path = svg_path.with_name(svg_path.stem + "-mockup.png")
-        if not mockup_path.exists():
-            defects.append(f"{mockup_path.relative_to(ROOT)}: mockup PNG missing for {svg_path.name}")
-            continue
-        head = mockup_path.read_bytes()[:8]
-        if head != png_signature:
-            defects.append(f"{mockup_path.relative_to(ROOT)}: mockup not a valid PNG")
-            continue
-        if mockup_path.stat().st_size < 1024:
-            defects.append(f"{mockup_path.relative_to(ROOT)}: mockup PNG too small ({mockup_path.stat().st_size}B)")
+        if not is_weekly_snapshot:
+            if not mockup_path.exists():
+                defects.append(f"{mockup_path.relative_to(ROOT)}: mockup PNG missing for {svg_path.name}")
+                continue
+            head = mockup_path.read_bytes()[:8]
+            if head != png_signature:
+                defects.append(f"{mockup_path.relative_to(ROOT)}: mockup not a valid PNG")
+                continue
+            if mockup_path.stat().st_size < 1024:
+                defects.append(f"{mockup_path.relative_to(ROOT)}: mockup PNG too small ({mockup_path.stat().st_size}B)")
     return defects
 
 
