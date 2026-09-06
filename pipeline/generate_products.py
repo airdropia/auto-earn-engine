@@ -1020,6 +1020,7 @@ def build_product(product_type: str, rng: random.Random, batch_dir: Path,
         "folder": built["folder"],
         "preview": built["preview"],
         "created": today,
+        "designs": built["designs"],
     }
     if "quality" in built:
         item["quality"] = built["quality"]

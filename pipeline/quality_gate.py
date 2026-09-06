@@ -42,6 +42,25 @@ def svg_type_of(path: Path) -> str:
     return "other"
 
 
+def source_date_of(path: Path) -> str:
+    """Extract the SOURCE generation date from a file's path or filename.
+
+    - For daily products: the parent dir IS the date (products/2026-09-06/...)
+    - For weekly-compilation copies: filename starts with YYYY-MM-DD_
+    - Returns 'YYYY-MM-DD' or '' if cannot be determined.
+    """
+    name = path.name
+    if len(name) > 11 and name[4] == "-" and name[7] == "-" and name[10] == "_":
+        return name[:10]
+    try:
+        idx = path.parts.index("products")
+        if idx + 1 < len(path.parts):
+            return path.parts[idx + 1]
+    except ValueError:
+        pass
+    return ""
+
+
 def count_elements(text: str) -> int:
     return sum(text.count(f"<{tag}") for tag in ("path", "circle", "rect", "line"))
 
@@ -133,11 +152,9 @@ def check_pngs_for_mandala_products() -> list[str]:
         if "-layer-" in svg_path.stem:
             continue
         # Grandfather: items generated before P3 deploy are exempt.
-        try:
-            date_part = svg_path.parts[svg_path.parts.index("products") + 1]
-        except (ValueError, IndexError):
-            continue
-        if date_part < p3_deploy_date:
+        # For weekly-compilation copies, the SOURCE date is in the filename
+        # prefix; for daily products it's the parent dir.
+        if source_date_of(svg_path) < p3_deploy_date:
             continue
         png_path = svg_path.with_suffix(".png")
         if not png_path.exists():
