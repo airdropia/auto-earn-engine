@@ -140,19 +140,32 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         tag_html = "".join(f"<em>{svgkit.escape(t)}</em>" for t in item["tags"][:5])
         zip_href = f"downloads/{item['id']}.zip"
         preview_href = rel(item["preview"])
-        # Per-format counters for clarity: shows "SVG 1" and "PNG 1" when
-        # first two files are one SVG and one PNG (instead of "SVG 1, PNG 2"
-        # which would mislead users into thinking the PNG is design 2).
-        displayed = item["files"][:2]
-        labels: list[str] = []
-        per_format: dict[str, int] = {}
-        for f in displayed:
+        # Per-format counters for clarity. P5: show one of each format if
+        # available (SVG + PNG + MOCKUP if all three exist), up to 3
+        # buttons. Otherwise fall back to first 2 files of any type.
+        # This way the mockup (when present) is always discoverable.
+        by_ext: dict[str, list[str]] = {}
+        for f in item["files"]:
             ext = Path(f).suffix.upper().lstrip(".") or "FILE"
-            per_format[ext] = per_format.get(ext, 0) + 1
-            labels.append(f"{ext} {per_format[ext]}")
+            by_ext.setdefault(ext, []).append(f)
+        # Priority order: SVG, PNG, MOCKUP
+        preferred_order = ["SVG", "PNG", "MOCKUP"]
+        displayed: list[tuple[str, str]] = []
+        per_format: dict[str, int] = {}
+        for ext in preferred_order:
+            if ext in by_ext and by_ext[ext]:
+                f = by_ext[ext][0]
+                per_format[ext] = per_format.get(ext, 0) + 1
+                displayed.append((f, f"{ext} {per_format[ext]}"))
+        if not displayed:
+            # Fallback: first 2 files (no preferred formats found)
+            for f in item["files"][:2]:
+                ext = Path(f).suffix.upper().lstrip(".") or "FILE"
+                per_format[ext] = per_format.get(ext, 0) + 1
+                displayed.append((f, f"{ext} {per_format[ext]}"))
         files_list = "".join(
             f'<a class="btn btn-ghost" href="{rel(f)}" download>{label}</a>'
-            for f, label in zip(displayed, labels)
+            for f, label in displayed
         )
         extra = (
             f'<span style="font-size:.72rem;color:#6e7681">+{len(item["files"]) - 2} more in zip</span>'
