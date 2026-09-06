@@ -183,6 +183,113 @@ def render_mandala(rng: random.Random, palette: list[str] | None = None) -> str:
     return svgkit.svg_doc(size, size, "".join(body))
 
 
+def _mandala_pixels(rng: random.Random, palette: list[str] | None = None,
+                    size: int = 1000) -> tuple[list[str], dict]:
+    """Render a stylized PNG preview of a mandala: concentric palette rings
+    plus radial accent wedges derived from the same RNG seed as the SVG
+    counterpart. Returns (rgb_palette_list, render_params) for use by
+    pngio.write_png via a pixel_fn closure. The preview is theme-faithful
+    (same colors, same symmetry) but is a flat-color stylization, not a
+    pixel-perfect copy of the SVG path geometry.
+    """
+    if palette is None:
+        palette = PALETTES[rng.randrange(len(PALETTES))]
+    ink = min(palette, key=_lum)
+    accents = sorted(palette, key=_lum)[1:3]
+    symmetry = rng.choice([8, 10, 12, 16])
+    ring_count = rng.randint(3, 5)
+    max_radius = size / 2 - 20
+    # Per-ring colors: ink for outermost, accents rotating inward, white core
+    ring_colors: list[str] = [ink]
+    for i in range(1, ring_count):
+        ring_colors.append(accents[i % len(accents)])
+    # Wedge accent (alternates per symmetry sector for visual rhythm)
+    wedge_accent = accents[0]
+    params = {
+        "cx": size / 2, "cy": size / 2,
+        "ring_count": ring_count, "max_radius": max_radius,
+        "ring_colors": ring_colors, "symmetry": symmetry, "wedge_accent": wedge_accent,
+    }
+    return [pngio.hex_rgb(c) for c in ring_colors], params
+
+
+def _layered_pixels(rng: random.Random, palette: list[str] | None = None,
+                   size: int = 1000) -> tuple[list[str], dict]:
+    """Stylized PNG preview of a layered mandala: 3 concentric band rings
+    (outer/mid/core) using theme palette, with a small core dot."""
+    if palette is None:
+        palette = PALETTES[rng.randrange(len(PALETTES))]
+    ink = min(palette, key=_lum)
+    accents = sorted(palette, key=_lum)[1:3]
+    symmetry = rng.choice([8, 10, 12])
+    max_radius = size / 2 - 24
+    # 3 layers: outer (accent0), middle (ink), inner (accent1) + white core
+    layer_colors = [accents[0], ink, accents[1], "#ffffff"]
+    params = {
+        "cx": size / 2, "cy": size / 2,
+        "max_radius": max_radius, "symmetry": symmetry,
+        "layer_colors": layer_colors, "ink": ink, "core_r": max_radius * 0.13,
+    }
+    return [pngio.hex_rgb(c) for c in layer_colors], params
+
+
+def _make_mandala_pixel_fn(rgb_palette, params, size):
+    """Closure: (x, y) -> (r, g, b) for a mandala preview."""
+    cx, cy = params["cx"], params["cy"]
+    max_radius = params["max_radius"]
+    ring_count = params["ring_count"]
+    ring_colors = params["ring_colors"]
+    symmetry = params["symmetry"]
+    wedge_accent = params["wedge_accent"]
+    wedge_rgb = pngio.hex_rgb(wedge_accent)
+    white = (255, 255, 255)
+    def pixel(x: int, y: int) -> tuple[int, int, int]:
+        dx, dy = x - cx, y - cy
+        r = math.hypot(dx, dy)
+        if r > max_radius + 1:
+            return white
+        # Pick ring (0 = outermost)
+        ring_idx = int((1 - r / max_radius) * ring_count)
+        if ring_idx >= ring_count:
+            return white
+        # Add subtle wedge accent at even sectors for visual rhythm
+        angle = math.atan2(dy, dx) + math.pi / 2  # shift so 0 is top
+        if angle < 0:
+            angle += 2 * math.pi
+        sector = int(angle / (2 * math.pi) * symmetry)
+        if sector % 2 == 0:
+            return rgb_palette[ring_idx]
+        return wedge_rgb
+    return pixel
+
+
+def _make_layered_pixel_fn(rgb_palette, params, size):
+    """Closure: (x, y) -> (r, g, b) for a layered mandala preview."""
+    cx, cy = params["cx"], params["cy"]
+    max_radius = params["max_radius"]
+    layer_colors = params["layer_colors"]
+    core_r = params["core_r"]
+    inner_r = max_radius * 0.42
+    mid_r = max_radius * 0.66
+    outer_r = max_radius * 0.95
+    white = (255, 255, 255)
+    def pixel(x: int, y: int) -> tuple[int, int, int]:
+        dx, dy = x - cx, y - cy
+        r = math.hypot(dx, dy)
+        if r > outer_r + 1:
+            return white
+        if r < core_r * 0.4:
+            return white  # small white dot at very center
+        if r < core_r:
+            return pngio.hex_rgb(params["ink"])
+        if r < mid_r:
+            return rgb_palette[1]  # middle layer (ink)
+        if r < inner_r:
+            return rgb_palette[2]  # inner layer (accent1)
+        return rgb_palette[0]  # outer layer (accent0)
+    return pixel
+
+
 def count_elements(svg_text: str) -> int:
     return sum(svg_text.count(f"<{tag}") for tag in ("path", "circle", "rect", "line"))
 
@@ -224,15 +331,26 @@ def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
     total_elements = 0
     for i in range(5):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
+            state = rng.getstate()
             svg = render_mandala(rng, palette)
             defect = validate_mandala_svg(svg)
             if defect is None:
                 break
+            # Failed validation: do not reset state - the original semantics
+            # were "try a new random design until one passes". We only
+            # reuse `state` AFTER success to drive a matching PNG render.
         else:
             raise RuntimeError("mandala slot failed quality gate after retries")
         name = f"{slug}-design-{i + 1}.svg"
         (folder / name).write_text(svg, encoding="utf-8")
+        # Generate matching PNG preview (theme-faithful stylization, same RNG seed)
+        rng.setstate(state)
+        rgb_palette, params = _mandala_pixels(rng, palette)
+        png_name = f"{slug}-design-{i + 1}.png"
+        pixel_fn = _make_mandala_pixel_fn(rgb_palette, params, 1000)
+        pngio.write_png(folder / png_name, 1000, 1000, pixel_fn)
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
+        files.append(str((folder / png_name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += count_elements(svg)
     write_package_docs(folder, title, files, "cut-ready closed paths")
     return {
@@ -369,6 +487,7 @@ def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
     total_elements = 0
     for i in range(5):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
+            state = rng.getstate()
             combined, layers = render_layered_design(rng, palette)
             defect = None
             for svg in [combined, *layers]:
@@ -378,6 +497,9 @@ def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
                     break
             if defect is None:
                 break
+            # Failed validation: do not reset state - original semantics are
+            # "try a new random design until one passes". `state` is reused
+            # AFTER success to drive a matching PNG render below.
         else:
             raise RuntimeError("layered mandala slot failed quality gate after retries")
         names = [f"{slug}-design-{i + 1}.svg"] + [
@@ -386,6 +508,13 @@ def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
         for name, svg in zip(names, [combined, *layers]):
             (folder / name).write_text(svg, encoding="utf-8")
             files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
+        # Generate matching PNG preview (combined design, theme-faithful stylization)
+        rng.setstate(state)
+        rgb_palette, params = _layered_pixels(rng, palette)
+        png_name = f"{slug}-design-{i + 1}.png"
+        pixel_fn = _make_layered_pixel_fn(rgb_palette, params, 1000)
+        pngio.write_png(folder / png_name, 1000, 1000, pixel_fn)
+        files.append(str((folder / png_name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += sum(count_elements(s) for s in layers)
     write_package_docs(folder, title, files,
                        "cut-ready bold shapes, 3 layers per design for cardstock stacking")
@@ -817,19 +946,31 @@ def main() -> None:
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     existing_ids = {item.get("id") for item in catalog}
 
-    new_items = []
+    modified = False
     theme = themes.get_today_theme(today)
     for product_type in ("mandala", "layered-mandala", "patterns", "quotes", "planner"):
         item = build_product(product_type, rng, batch_dir, today, theme)
-        if item["id"] not in existing_ids:
-            new_items.append(item)
+        # Idempotency: if id already in catalog, replace in place when the
+        # regenerated item differs (e.g. P3 added PNG files, P2 added
+        # theme prefix). Same date, same id, content updated.
+        existing_idx = next(
+            (i for i, e in enumerate(catalog) if e.get("id") == item["id"]), -1
+        )
+        if existing_idx >= 0:
+            if (catalog[existing_idx].get("files") != item["files"]
+                    or catalog[existing_idx].get("title") != item["title"]):
+                catalog[existing_idx] = item
+                modified = True
+        else:
+            catalog.append(item)
+            modified = True
 
-    if new_items:
-        catalog.extend(new_items)
+    if modified:
         CATALOG_DIR.mkdir(parents=True, exist_ok=True)
         catalog_path.write_text(json.dumps(catalog, indent=2), encoding="utf-8")
 
-    print(f"date={today} generated={len(new_items)} catalog_total={len(catalog)} "
+    new_count = sum(1 for i in catalog if i.get("created") == today)
+    print(f"date={today} today_count={new_count} catalog_total={len(catalog)} "
           "(all slots passed inline quality gate)")
 
 

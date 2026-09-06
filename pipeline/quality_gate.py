@@ -100,6 +100,48 @@ def check_package_paperwork() -> list[str]:
     return defects
 
 
+def check_pngs_for_mandala_products() -> list[str]:
+    """P3 multi-format: mandala and layered-mandala must ship a PNG preview
+    alongside each SVG (per-design PNG download, see AUDIT.md P3).
+
+    Only items generated on or after the P3 deploy date (2026-09-06) are
+    required to have a matching PNG. Older items are grandfathered (their
+    files list predates P3, regenerating them would change buyer-facing
+    slugs - not worth it for retired storefront positions).
+    """
+    defects: list[str] = []
+    if not PRODUCTS_DIR.exists():
+        return defects
+    p3_deploy_date = "2026-09-06"
+    png_signature = b"\x89PNG\r\n\x1a\n"
+    for svg_path in sorted(PRODUCTS_DIR.rglob("*.svg")):
+        ptype = svg_type_of(svg_path)
+        if ptype not in ("mandala", "layered-mandala"):
+            continue
+        # Only require PNG for the combined design SVGs (not per-layer
+        # _layer-1/2/3/ files) - those are auxiliary cut files.
+        if "-layer-" in svg_path.stem:
+            continue
+        # Grandfather: items generated before P3 deploy are exempt.
+        try:
+            date_part = svg_path.parts[svg_path.parts.index("products") + 1]
+        except (ValueError, IndexError):
+            continue
+        if date_part < p3_deploy_date:
+            continue
+        png_path = svg_path.with_suffix(".png")
+        if not png_path.exists():
+            defects.append(f"{png_path.relative_to(ROOT)}: PNG preview missing for {svg_path.name}")
+            continue
+        head = png_path.read_bytes()[:8]
+        if head != png_signature:
+            defects.append(f"{png_path.relative_to(ROOT)}: not a valid PNG")
+            continue
+        if png_path.stat().st_size < 1024:
+            defects.append(f"{png_path.relative_to(ROOT)}: PNG too small ({png_path.stat().st_size}B)")
+    return defects
+
+
 def main() -> int:
     all_defects: list[str] = []
     checked = 0
@@ -109,6 +151,9 @@ def main() -> int:
             checked += 1
             for defect in check_svg(path):
                 all_defects.append(f"{path.relative_to(ROOT)}: {defect}")
+
+    for defect in check_pngs_for_mandala_products():
+        all_defects.append(defect)
 
     for defect in check_package_paperwork():
         all_defects.append(defect)

@@ -141,7 +141,8 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         zip_href = f"downloads/{item['id']}.zip"
         preview_href = rel(item["preview"])
         files_list = "".join(
-            f'<a class="btn btn-ghost" href="{rel(f)}" download>SVG {i + 1}</a>'
+            f'<a class="btn btn-ghost" href="{rel(f)}" download>'
+            f'{Path(f).suffix.upper().lstrip(".")} {i + 1}</a>'
             for i, f in enumerate(item["files"][:2])
         )
         extra = (
