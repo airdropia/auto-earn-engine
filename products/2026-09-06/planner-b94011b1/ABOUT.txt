@@ -2,6 +2,7 @@ Back to School Habit Tracker Printable (A4 landscape print sheets)
 
 What is inside:
 - planner-b94011b1-sheet-1.svg
+- planner-b94011b1-sheet-2.svg
 
 Quick use notes:
 - SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
