@@ -144,10 +144,17 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         # available (SVG + PNG + MOCKUP if all three exist), up to 3
         # buttons. Otherwise fall back to first 2 files of any type.
         # This way the mockup (when present) is always discoverable.
+        # Mockup detection: filename contains '-mockup' (P5 naming).
+        def _fmt_of(path_str: str) -> str:
+            name = Path(path_str).name
+            if "-mockup" in name:
+                return "MOCKUP"
+            ext = Path(path_str).suffix.upper().lstrip(".")
+            return ext or "FILE"
         by_ext: dict[str, list[str]] = {}
         for f in item["files"]:
-            ext = Path(f).suffix.upper().lstrip(".") or "FILE"
-            by_ext.setdefault(ext, []).append(f)
+            fmt = _fmt_of(f)
+            by_ext.setdefault(fmt, []).append(f)
         # Priority order: SVG, PNG, MOCKUP
         preferred_order = ["SVG", "PNG", "MOCKUP"]
         displayed: list[tuple[str, str]] = []
@@ -160,9 +167,9 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         if not displayed:
             # Fallback: first 2 files (no preferred formats found)
             for f in item["files"][:2]:
-                ext = Path(f).suffix.upper().lstrip(".") or "FILE"
-                per_format[ext] = per_format.get(ext, 0) + 1
-                displayed.append((f, f"{ext} {per_format[ext]}"))
+                fmt = _fmt_of(f)
+                per_format[fmt] = per_format.get(fmt, 0) + 1
+                displayed.append((f, f"{fmt} {per_format[fmt]}"))
         files_list = "".join(
             f'<a class="btn btn-ghost" href="{rel(f)}" download>{label}</a>'
             for f, label in displayed
