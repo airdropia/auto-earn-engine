@@ -1051,7 +1051,8 @@ def main() -> None:
         )
         if existing_idx >= 0:
             if (catalog[existing_idx].get("files") != item["files"]
-                    or catalog[existing_idx].get("title") != item["title"]):
+                    or catalog[existing_idx].get("title") != item["title"]
+                    or catalog[existing_idx].get("designs") != item.get("designs")):
                 catalog[existing_idx] = item
                 modified = True
         else:
