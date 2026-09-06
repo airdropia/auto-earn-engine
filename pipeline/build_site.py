@@ -140,10 +140,19 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         tag_html = "".join(f"<em>{svgkit.escape(t)}</em>" for t in item["tags"][:5])
         zip_href = f"downloads/{item['id']}.zip"
         preview_href = rel(item["preview"])
+        # Per-format counters for clarity: shows "SVG 1" and "PNG 1" when
+        # first two files are one SVG and one PNG (instead of "SVG 1, PNG 2"
+        # which would mislead users into thinking the PNG is design 2).
+        displayed = item["files"][:2]
+        labels: list[str] = []
+        per_format: dict[str, int] = {}
+        for f in displayed:
+            ext = Path(f).suffix.upper().lstrip(".") or "FILE"
+            per_format[ext] = per_format.get(ext, 0) + 1
+            labels.append(f"{ext} {per_format[ext]}")
         files_list = "".join(
-            f'<a class="btn btn-ghost" href="{rel(f)}" download>'
-            f'{Path(f).suffix.upper().lstrip(".")} {i + 1}</a>'
-            for i, f in enumerate(item["files"][:2])
+            f'<a class="btn btn-ghost" href="{rel(f)}" download>{label}</a>'
+            for f, label in zip(displayed, labels)
         )
         extra = (
             f'<span style="font-size:.72rem;color:#6e7681">+{len(item["files"]) - 2} more in zip</span>'
