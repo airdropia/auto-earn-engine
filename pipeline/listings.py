@@ -7,6 +7,7 @@ NAMES = {
     "patterns": ("Seamless Pattern Pack", "tileable vector pattern sheet"),
     "quotes": ("Quote Card Set", "social-media ready motivational cards"),
     "planner": ("Habit Tracker Printable", "minimal printable planner sheet"),
+    "weekly-compilation": ("Weekly Compilation Bundle", "best-of-week mega-bundle"),
 }
 
 TAGS = {
@@ -43,6 +44,12 @@ TAGS = {
         "monthly tracker", "planner pdf alternative", "routine tracker",
         "self care planner", "digital download", "study planner",
         "fitness tracker sheet",
+    ],
+    "weekly-compilation": [
+        "weekly compilation", "best of week", "mega bundle", "svg bundle",
+        "weekly mega pack", "designers bundle", "curated collection",
+        "commercial use svg", "digital download", "crafters bundle",
+        "all-in-one pack",
     ],
 }
 
@@ -85,6 +92,18 @@ DESCRIPTIONS = {
         "- Crisp thin rules tuned for home printers\n"
         "- Works as bullet journal insert or clipboard sheet\n"
         "- Print at 100% scale on A4 or US Letter with fit-to-page"
+    ),
+    "weekly-compilation": (
+        "Best-of-week mega-bundle: every design from the past 7 days, "
+        "curated into one downloadable pack.\n\n"
+        "- All daily products from the week, organized by source date in "
+        "the filename (YYYY-MM-DD_...)\n"
+        "- Includes SVG plus PNG previews where available\n"
+        "- One download = the entire week's creative output\n"
+        "- Perfect for crafters who want variety without checking back daily\n"
+        "- Same commercial-use grant as individual bundles (no reselling "
+        "raw files)\n"
+        "- Generated and quality-checked by an automated daily pipeline"
     ),
 }
 

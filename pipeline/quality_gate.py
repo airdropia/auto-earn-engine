@@ -26,8 +26,18 @@ MIN_ELEMENTS = {
 
 
 def svg_type_of(path: Path) -> str:
+    """Identify the product type from the filename. Handles two naming
+    conventions:
+    - Standard: '<type>-<hash>-design-N.svg' (e.g. 'mandala-foo-design-1.svg')
+    - Weekly-compilation copy: 'YYYY-MM-DD_<type>-<hash>-design-N.svg'
+      (e.g. '2026-09-06_mandala-foo-design-1.svg' after copy)
+    """
+    name = path.name
+    # Strip leading date prefix if present
+    if len(name) > 11 and name[4] == "-" and name[7] == "-" and name[10] == "_":
+        name = name[11:]
     for product_type in MIN_ELEMENTS:
-        if path.name.startswith(product_type):
+        if name.startswith(product_type):
             return product_type
     return "other"
 

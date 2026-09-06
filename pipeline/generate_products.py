@@ -29,6 +29,18 @@ CATALOG_PATH = CATALOG_DIR / "catalog.json"
 
 MAX_ATTEMPTS_PER_SLOT = 3
 
+# Bundle sizes per product type (AUDIT.md P4: raise from 5 to 8-10 to
+# match marketplace bundle perception, where 25+ designs is the "feels
+# like a deal" threshold for buyers). Planner stays small (2 sheets) -
+# a printable is a single 1-page artifact, not a tileable collection.
+BUNDLE_SIZES: dict[str, int] = {
+    "mandala": 8,
+    "layered-mandala": 6,
+    "patterns": 4,
+    "quotes": 6,
+    "planner": 2,
+}
+
 QUOTES = [
     "Small daily steps beat rare heroic efforts.",
     "Focus is deciding what not to do today.",
@@ -329,7 +341,7 @@ def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
     title = f"{themes.theme_label(theme)} Mandala SVG Bundle" if theme else "Mandala SVG Bundle"
     files: list[str] = []
     total_elements = 0
-    for i in range(5):
+    for i in range(BUNDLE_SIZES["mandala"]):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
             state = rng.getstate()
             svg = render_mandala(rng, palette)
@@ -352,11 +364,12 @@ def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
         files.append(str((folder / png_name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += count_elements(svg)
-    write_package_docs(folder, title, files, "cut-ready closed paths")
+    write_package_docs(folder, title, files, "cut-ready closed paths",
+                       theme=theme, product_type="mandala", designs=BUNDLE_SIZES["mandala"])
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
-        "designs": 5,
+        "designs": BUNDLE_SIZES["mandala"],
         "preview": files[0],
         "quality": {"elements": total_elements},
     }
@@ -485,7 +498,7 @@ def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
              if theme else "3D Layered Mandala SVG Pack")
     files: list[str] = []
     total_elements = 0
-    for i in range(5):
+    for i in range(BUNDLE_SIZES["layered-mandala"]):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
             state = rng.getstate()
             combined, layers = render_layered_design(rng, palette)
@@ -517,11 +530,13 @@ def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
         files.append(str((folder / png_name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += sum(count_elements(s) for s in layers)
     write_package_docs(folder, title, files,
-                       "cut-ready bold shapes, 3 layers per design for cardstock stacking")
+                       "cut-ready bold shapes, 3 layers per design for cardstock stacking",
+                       theme=theme, product_type="layered-mandala",
+                       designs=BUNDLE_SIZES["layered-mandala"])
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
-        "designs": 5,
+        "designs": BUNDLE_SIZES["layered-mandala"],
         "preview": files[0],
         "quality": {"elements": total_elements},
     }
@@ -637,7 +652,7 @@ def build_pattern_pack(rng: random.Random, out_dir: Path, slug: str,
     title = (f"{themes.theme_label(theme)} Seamless Pattern Pack"
              if theme else "Seamless Pattern Pack")
     files: list[str] = []
-    for i in range(2):
+    for i in range(BUNDLE_SIZES["patterns"]):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
             svg = render_pattern_sheet(rng, palette)
             defect = validate_pattern_sheet(svg)
@@ -648,13 +663,14 @@ def build_pattern_pack(rng: random.Random, out_dir: Path, slug: str,
         name = f"{slug}-board-{i + 1}.svg"
         (folder / name).write_text(svg, encoding="utf-8")
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
-    write_package_docs(folder, title, files, "tileable vector boards")
+    write_package_docs(folder, title, files, "tileable vector boards",
+                       theme=theme, product_type="patterns", designs=BUNDLE_SIZES["patterns"])
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
-        "designs": 2,
+        "designs": BUNDLE_SIZES["patterns"],
         "preview": files[0],
-        "quality": {"boards": 2},
+        "quality": {"boards": BUNDLE_SIZES["patterns"]},
     }
 
 
@@ -730,7 +746,7 @@ def build_quote_set(rng: random.Random, out_dir: Path, slug: str, serial: int,
     title = (f"{themes.theme_label(theme)} Quote Card Set"
              if theme else "Quote Card Set")
     quote_bank = themes.theme_quotes(theme) if theme else QUOTES
-    picks = rng.sample(quote_bank, min(4, len(quote_bank)))
+    picks = rng.sample(quote_bank, min(BUNDLE_SIZES["quotes"], len(quote_bank)))
     files: list[str] = []
     for i, quote in enumerate(picks):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
@@ -743,11 +759,12 @@ def build_quote_set(rng: random.Random, out_dir: Path, slug: str, serial: int,
         name = f"{slug}-card-{i + 1}.svg"
         (folder / name).write_text(svg, encoding="utf-8")
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
-    write_package_docs(folder, title, files, "1080x1350 social-ready cards")
+    write_package_docs(folder, title, files, "1080x1350 social-ready cards",
+                       theme=theme, product_type="quotes", designs=BUNDLE_SIZES["quotes"])
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
-        "designs": 4,
+        "designs": BUNDLE_SIZES["quotes"],
         "preview": files[0],
         "quality": {"cards": 4},
     }
@@ -824,7 +841,7 @@ def build_planner(rng: random.Random, out_dir: Path, slug: str,
     palette = themes.theme_palette(theme) if theme else None
     title = (f"{themes.theme_label(theme)} Habit Tracker Printable"
              if theme else "Habit Tracker Printable")
-    variants = rng.choice([1, 2])
+    variants = BUNDLE_SIZES["planner"]
     files: list[str] = []
     for i in range(variants):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
@@ -837,7 +854,8 @@ def build_planner(rng: random.Random, out_dir: Path, slug: str,
         name = f"{slug}-sheet-{i + 1}.svg"
         (folder / name).write_text(svg, encoding="utf-8")
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
-    write_package_docs(folder, title, files, "A4 landscape print sheets")
+    write_package_docs(folder, title, files, "A4 landscape print sheets",
+                       theme=theme, product_type="planner", designs=BUNDLE_SIZES["planner"])
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
@@ -866,32 +884,106 @@ NOT permitted:
 Attribution appreciated but not required.
 """
 
+# Per-type use-case examples for the enhanced ABOUT.txt (P4 packaging).
+# Shown as a 4-5 bullet list to help buyers visualize what they can make.
+USE_CASES: dict[str, list[str]] = {
+    "mandala": [
+        "Wall art and printable posters (12x12 inch and up)",
+        "Cricut / Silhouette vinyl decals for cars, laptops, water bottles",
+        "Wood-burned and laser-engraved signs (Glowforge, xTool, OMTech)",
+        "Vinyl stencil for furniture and floor cloths",
+        "Adult coloring book pages and zen-tangle printables",
+    ],
+    "layered-mandala": [
+        "3D paper art: cut each layer from different cardstock and stack with foam dots",
+        "Shadow-box frames (8x8 or 10x10 inch) with foam-mounted layers",
+        "Cricut Maker cardstock cut files (each layer ships as a separate SVG)",
+        "Wall hangings on canvas stretcher bars (one layer per bar)",
+        "Vinyl layered decals (cut each color from a different vinyl sheet)",
+    ],
+    "patterns": [
+        "Fabric and textile printing (pillows, tea towels, aprons)",
+        "Wrapping paper, gift tags, and stationery",
+        "Scrapbooking and digital planner backgrounds",
+        "Phone cases, mugs, and sublimation printables",
+        "Web and social-media tileable backgrounds",
+    ],
+    "quotes": [
+        "Instagram and Pinterest posts (1080x1350 portrait, on-brand)",
+        "Printable wall art for home office and living room",
+        "T-shirt and tote-bag iron-on transfers",
+        "Daily social media content calendar posts",
+        "Greeting cards and gift tags",
+    ],
+    "planner": [
+        "A4 / US Letter printable planner insert (print at 100% or 'fit to page')",
+        "Bullet journal and disc-bound planner pages",
+        "Homeschool and classroom tracking sheets",
+        "Goal-setting worksheets and accountability trackers",
+    ],
+}
+
+
 ABOUT_TEXT = """{title}
+
+Theme: {theme_label}
+{files_total} file(s) across {designs} design(s).
 
 What is inside:
 {file_list}
 
+What you can make with this bundle:
+{use_cases}
+
 Quick use notes:
 - SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
   Illustrator, Figma and most laser software.
+- PNG files (when included) are 1000x1000 transparent rasters - use them
+  in Canva, Procreate, or any tool that does not read SVG.
 - All shapes are vector - scale to any size without quality loss.
 - Printables: print at 100% scale on A4 or US Letter ("fit to page" also works).
 - Colors are flat fills; recolor freely in any vector editor.
+
+Format spec:
+- ViewBox: 1000x1000 (square designs) or product-specific dimensions.
+- Layered mandalas ship as one combined SVG + 3 separate layer SVGs.
+- All designs carry an embedded generation marker for provenance.
 
 Generated on {date}. Questions? Reach the operator via the storefront
 support links.
 """
 
 
-def write_package_docs(folder: Path, title: str, files: list[str], note: str) -> None:
+def write_package_docs(folder: Path, title: str, files: list[str], note: str,
+                       theme: dict | None = None,
+                       product_type: str = "",
+                       designs: int = 0) -> None:
+    """Write LICENSE.txt and ABOUT.txt for a bundle.
+
+    Enhanced in P4:
+    - Theme label surfaced in ABOUT.txt
+    - Per-type use-case list (5 examples) so buyers visualize what they
+      can make with the bundle
+    - File count + design count for at-a-glance "value" perception
+    - Format spec section explaining dimensions and layered-mandala structure
+    """
     (folder / "LICENSE.txt").write_text(
         LICENSE_TEXT.format(title=title), encoding="utf-8"
     )
     listing = "\n".join(f"- {Path(f).name}" for f in files)
+    use_cases = USE_CASES.get(product_type, [])
+    use_case_lines = "\n".join(f"  - {uc}" for uc in use_cases) if use_cases else "  - Versatile designs for crafts, decor, and digital projects"
+    about_args = {
+        "title": f"{title} ({note})",
+        "theme_label": themes.theme_label(theme) if theme else "Classic (evergreen)",
+        "files_total": len(files),
+        "designs": designs,
+        "file_list": listing,
+        "use_cases": use_case_lines,
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+    }
     (folder / "ABOUT.txt").write_text(
-        ABOUT_TEXT.format(title=f"{title} ({note})", file_list=listing,
-                          date=datetime.now(timezone.utc).strftime("%Y-%m-%d")),
-        encoding="utf-8",
+        ABOUT_TEXT.format(**about_args), encoding="utf-8"
     )
 
 
