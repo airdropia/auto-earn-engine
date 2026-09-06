@@ -1,0 +1,53 @@
+SUBJECT: App ID {{PINTEREST_APP_ID}} ({{PINTEREST_APP_NAME}}) - "Consumer type not supported" error, Trial access pending 14+ days
+
+APP DETAILS
+- App name: {{PINTEREST_APP_NAME}}
+- App ID: {{PINTEREST_APP_ID}}
+- Status: Trial access pending
+- Pending duration: {{PINTEREST_TRIAL_PENDING_DAYS}}+ days
+- Environment: {{PINTEREST_ENVIRONMENT}}
+- Token scopes (limited): {{PINTEREST_TOKEN_SCOPES}}
+
+ISSUE
+Generated access token successfully (limited 3-scope: pins:read,
+boards:read, user_accounts:read, ads:read, catalogs:read) - this part
+works. However, every v5 API call returns HTTP 401 with the same
+response:
+
+  {"code":3, "message":"Your application consumer type is not
+   supported, please contact support."}
+
+Tested endpoints (all return same error):
+- GET /v5/user_account
+- GET /v5/boards
+- GET /v5/pins (with valid token)
+
+The UI shows "Current access: Trial access pending" and the "App
+secret key" field shows "Unavailable while trial access pending",
+confirming the trial is in queue. The token itself is valid (decodes
+correctly) but the app's consumer type classification appears to be
+in a non-supported bucket.
+
+REQUEST
+Kindly advise on app consumer type classification, and either:
+(a) approve trial access for our SVG design automation use case, OR
+(b) guide us to update app metadata to a supported consumer type, OR
+(c) recommend whether to create a new app with the correct consumer
+    type (and which type we should select during app creation).
+
+USE CASE
+We generate mandala/pattern/quote SVG designs daily and plan to
+publish as Pinterest pins for organic traffic. We do NOT run ad
+campaigns. Required scopes are read-only verification + future
+organic pin publishing (boards:read/write, pins:read/write on
+user-owned boards).
+
+We have seen multiple community threads from June-August 2026
+describing the same "consumer type not supported" error with the
+same 14+ day trial access delay. This appears to be a classification
+issue rather than a violation.
+
+Looking forward to your guidance.
+
+APPEAL REASON: Denial
+DATE OF STRIKE: 22-08-2026
