@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone CI quality gate (see docs/QUALITY-BAR.md).
+"""Standalone CI quality gate (see private-docs/AUDIT.md for the bar).
 
 Validates every SVG under products/ plus catalog/package consistency.
 Exits non-zero on any violation so the batch never deploys.

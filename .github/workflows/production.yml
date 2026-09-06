@@ -22,7 +22,7 @@ jobs:
       - name: Generate daily product batch
         run: python3 pipeline/generate_products.py
 
-      - name: Quality gate (docs/QUALITY-BAR.md)
+      - name: Quality gate (private-docs/AUDIT.md)
         run: python3 pipeline/quality_gate.py
 
       - name: Build storefront

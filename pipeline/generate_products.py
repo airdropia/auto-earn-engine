@@ -2,7 +2,7 @@
 """Daily digital product generator (v2 quality edition).
 
 Stdlib only. Deterministic per UTC date. Produces multiple candidates per
-slot and keeps only gate-passers (see docs/QUALITY-BAR.md), so published
+slot and keeps only gate-passers (see private-docs/AUDIT.md), so published
 volume holds while weak output is filtered at source.
 
 Idempotent: re-running the same date never duplicates catalog entries.

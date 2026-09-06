@@ -96,7 +96,7 @@ def money_links(cfg: dict) -> str:
     if not parts:
         parts.append(
             "<p>Monetization slots activate here automatically once store links "
-            "are added to <code>config.json</code> (see docs/SETUP.md).</p>"
+            "are added to <code>config.json</code> (see README).</p>"
         )
     return "".join(parts)
 
