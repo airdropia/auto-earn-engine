@@ -166,6 +166,19 @@ def check_pngs_for_mandala_products() -> list[str]:
             continue
         if png_path.stat().st_size < 1024:
             defects.append(f"{png_path.relative_to(ROOT)}: PNG too small ({png_path.stat().st_size}B)")
+            continue
+        # P5: also require a mockup PNG for mandala + layered-mandala
+        # (the 2 pinnable types). Mockup is the same P3 grandfather scope.
+        mockup_path = svg_path.with_name(svg_path.stem + "-mockup.png")
+        if not mockup_path.exists():
+            defects.append(f"{mockup_path.relative_to(ROOT)}: mockup PNG missing for {svg_path.name}")
+            continue
+        head = mockup_path.read_bytes()[:8]
+        if head != png_signature:
+            defects.append(f"{mockup_path.relative_to(ROOT)}: mockup not a valid PNG")
+            continue
+        if mockup_path.stat().st_size < 1024:
+            defects.append(f"{mockup_path.relative_to(ROOT)}: mockup PNG too small ({mockup_path.stat().st_size}B)")
     return defects
 
 

@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import listings
+import mockup
 import pngio  # noqa: F401
 import svgkit
 import themes
@@ -359,10 +360,16 @@ def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
         rng.setstate(state)
         rgb_palette, params = _mandala_pixels(rng, palette)
         png_name = f"{slug}-design-{i + 1}.png"
-        pixel_fn = _make_mandala_pixel_fn(rgb_palette, params, 1000)
-        pngio.write_png(folder / png_name, 1000, 1000, pixel_fn)
+        design_pixel_fn = _make_mandala_pixel_fn(rgb_palette, params, 1000)
+        pngio.write_png(folder / png_name, 1000, 1000, design_pixel_fn)
+        # P5: also write a context mockup (white-framed wall art)
+        mockup_name = f"{slug}-design-{i + 1}-mockup.png"
+        mockup_fn = mockup.make_wallart_mockup(design_pixel_fn, design_size=1000)
+        mockup_w, mockup_h = mockup.canvas_size_for("mandala")
+        pngio.write_png(folder / mockup_name, mockup_w, mockup_h, mockup_fn)
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
         files.append(str((folder / png_name).relative_to(ROOT)).replace("\\", "/"))
+        files.append(str((folder / mockup_name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += count_elements(svg)
     write_package_docs(folder, title, files, "cut-ready closed paths",
                        theme=theme, product_type="mandala", designs=BUNDLE_SIZES["mandala"])
@@ -370,7 +377,7 @@ def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
         "designs": BUNDLE_SIZES["mandala"],
-        "preview": files[0],
+        "preview": next((f for f in files if f.endswith("-mockup.png")), files[0]),
         "quality": {"elements": total_elements},
     }
 
@@ -525,9 +532,15 @@ def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
         rng.setstate(state)
         rgb_palette, params = _layered_pixels(rng, palette)
         png_name = f"{slug}-design-{i + 1}.png"
-        pixel_fn = _make_layered_pixel_fn(rgb_palette, params, 1000)
-        pngio.write_png(folder / png_name, 1000, 1000, pixel_fn)
+        design_pixel_fn = _make_layered_pixel_fn(rgb_palette, params, 1000)
+        pngio.write_png(folder / png_name, 1000, 1000, design_pixel_fn)
+        # P5: also write a context mockup (white-framed wall art for 3D layered)
+        mockup_name = f"{slug}-design-{i + 1}-mockup.png"
+        mockup_fn = mockup.make_wallart_mockup(design_pixel_fn, design_size=1000)
+        mockup_w, mockup_h = mockup.canvas_size_for("layered-mandala")
+        pngio.write_png(folder / mockup_name, mockup_w, mockup_h, mockup_fn)
         files.append(str((folder / png_name).relative_to(ROOT)).replace("\\", "/"))
+        files.append(str((folder / mockup_name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += sum(count_elements(s) for s in layers)
     write_package_docs(folder, title, files,
                        "cut-ready bold shapes, 3 layers per design for cardstock stacking",
@@ -537,7 +550,7 @@ def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
         "designs": BUNDLE_SIZES["layered-mandala"],
-        "preview": files[0],
+        "preview": next((f for f in files if f.endswith("-mockup.png")), files[0]),
         "quality": {"elements": total_elements},
     }
 
