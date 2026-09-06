@@ -89,15 +89,30 @@ DESCRIPTIONS = {
 }
 
 
-def title_for(product_type: str, meta: dict) -> str:
+def title_for(product_type: str, meta: dict, theme: dict | None = None) -> str:
     base, _sub = NAMES[product_type]
-    return f"{base} #{meta['serial']:03d} | {meta['designs']} Design{'s' if meta['designs'] != 1 else ''} (SVG)"
+    label = theme["label"] if theme else ""
+    head = f"{label} {base}" if label else base
+    return f"{head} #{meta['serial']:03d} | {meta['designs']} Design{'s' if meta['designs'] != 1 else ''} (SVG)"
 
 
-def description_for(product_type: str, meta: dict) -> str:
+def description_for(product_type: str, meta: dict,
+                    theme: dict | None = None) -> str:
     head = DESCRIPTIONS[product_type]
-    return f"{head}\n\nSet {meta['serial']:03d} contains {meta['designs']} file(s)."
+    theme_line = (f"Themed edition: {theme['label']}."
+                  if theme else "Themed edition: classic.")
+    return f"{head}\n\n{theme_line}\n\nSet {meta['serial']:03d} contains {meta['designs']} file(s)."
 
 
-def tags_for(product_type: str) -> list[str]:
-    return list(TAGS[product_type])
+def tags_for(product_type: str, theme: dict | None = None) -> list[str]:
+    base = list(TAGS[product_type])
+    if theme:
+        # Theme tags first (higher SEO weight), then product-specific, dedup.
+        seen = set()
+        out: list[str] = []
+        for tag in list(theme["tags"]) + base:
+            if tag not in seen:
+                seen.add(tag)
+                out.append(tag)
+        return out
+    return base

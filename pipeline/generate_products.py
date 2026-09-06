@@ -20,6 +20,7 @@ from pathlib import Path
 import listings
 import pngio  # noqa: F401
 import svgkit
+import themes
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCTS_DIR = ROOT / "products"
@@ -143,10 +144,11 @@ def _mandala_wedge(rng: random.Random, cx: float, cy: float,
     return parts
 
 
-def render_mandala(rng: random.Random) -> str:
+def render_mandala(rng: random.Random, palette: list[str] | None = None) -> str:
     size = 1000
     cx = cy = size / 2
-    palette = PALETTES[rng.randrange(len(PALETTES))]
+    if palette is None:
+        palette = PALETTES[rng.randrange(len(PALETTES))]
     ink = min(palette, key=_lum)
     accents = sorted(palette, key=_lum)[1:3]
     body = [f'<rect width="{size}" height="{size}" fill="#ffffff"/>']
@@ -212,14 +214,17 @@ def validate_mandala_svg(svg_text: str) -> str | None:
     return None
 
 
-def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str) -> dict:
+def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
+                       theme: dict | None = None) -> dict:
     folder = out_dir / slug
     folder.mkdir(parents=True, exist_ok=True)
+    palette = themes.theme_palette(theme) if theme else None
+    title = f"{themes.theme_label(theme)} Mandala SVG Bundle" if theme else "Mandala SVG Bundle"
     files: list[str] = []
     total_elements = 0
     for i in range(5):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
-            svg = render_mandala(rng)
+            svg = render_mandala(rng, palette)
             defect = validate_mandala_svg(svg)
             if defect is None:
                 break
@@ -229,7 +234,7 @@ def build_mandala_bundle(rng: random.Random, out_dir: Path, slug: str) -> dict:
         (folder / name).write_text(svg, encoding="utf-8")
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += count_elements(svg)
-    write_package_docs(folder, "Mandala SVG Bundle", files, "cut-ready closed paths")
+    write_package_docs(folder, title, files, "cut-ready closed paths")
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
@@ -286,12 +291,14 @@ def _cut_arc(rng: random.Random, cx: float, cy: float,
     )
 
 
-def render_layered_design(rng: random.Random) -> tuple[str, list[str]]:
+def render_layered_design(rng: random.Random,
+                       palette: list[str] | None = None) -> tuple[str, list[str]]:
     """Return (combined_svg, [layer_1_svg, layer_2_svg, layer_3_svg])."""
     size = 1000
     cx = cy = size / 2
     max_radius = size / 2 - 24
-    palette = PALETTES[rng.randrange(len(PALETTES))]
+    if palette is None:
+        palette = PALETTES[rng.randrange(len(PALETTES))]
     ink = min(palette, key=_lum)
     accents = sorted(palette, key=_lum)[1:3]
     symmetry = rng.choice([8, 10, 12])
@@ -351,14 +358,18 @@ def validate_layered_svg(svg_text: str) -> str | None:
     return None
 
 
-def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str) -> dict:
+def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str,
+                              theme: dict | None = None) -> dict:
     folder = out_dir / slug
     folder.mkdir(parents=True, exist_ok=True)
+    palette = themes.theme_palette(theme) if theme else None
+    title = (f"{themes.theme_label(theme)} 3D Layered Mandala SVG Pack"
+             if theme else "3D Layered Mandala SVG Pack")
     files: list[str] = []
     total_elements = 0
     for i in range(5):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
-            combined, layers = render_layered_design(rng)
+            combined, layers = render_layered_design(rng, palette)
             defect = None
             for svg in [combined, *layers]:
                 d = validate_layered_svg(svg)
@@ -376,7 +387,7 @@ def build_layered_mandala_bundle(rng: random.Random, out_dir: Path, slug: str) -
             (folder / name).write_text(svg, encoding="utf-8")
             files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
         total_elements += sum(count_elements(s) for s in layers)
-    write_package_docs(folder, "3D Layered Mandala SVG Pack", files,
+    write_package_docs(folder, title, files,
                        "cut-ready bold shapes, 3 layers per design for cardstock stacking")
     return {
         "files": files,
@@ -454,10 +465,12 @@ def _pattern_def(pid: str, kind: str, unit: int, fg: str, base: str) -> str:
 PATTERN_KINDS = ["dots", "triangles", "lines", "zigzag", "diamonds", "plus", "arcs", "scales"]
 
 
-def render_pattern_sheet(rng: random.Random) -> str:
+def render_pattern_sheet(rng: random.Random,
+                      palette: list[str] | None = None) -> str:
     w, h = 1000, 1400
     unit = rng.choice([70, 90, 110])
-    palette = PALETTES[rng.randrange(len(PALETTES))]
+    if palette is None:
+        palette = PALETTES[rng.randrange(len(PALETTES))]
     kinds = rng.sample(PATTERN_KINDS, 4)
     defs: list[str] = []
     rects: list[str] = []
@@ -487,13 +500,17 @@ def validate_pattern_sheet(svg_text: str) -> str | None:
     return None
 
 
-def build_pattern_pack(rng: random.Random, out_dir: Path, slug: str) -> dict:
+def build_pattern_pack(rng: random.Random, out_dir: Path, slug: str,
+                     theme: dict | None = None) -> dict:
     folder = out_dir / slug
     folder.mkdir(parents=True, exist_ok=True)
+    palette = themes.theme_palette(theme) if theme else None
+    title = (f"{themes.theme_label(theme)} Seamless Pattern Pack"
+             if theme else "Seamless Pattern Pack")
     files: list[str] = []
     for i in range(2):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
-            svg = render_pattern_sheet(rng)
+            svg = render_pattern_sheet(rng, palette)
             defect = validate_pattern_sheet(svg)
             if defect is None:
                 break
@@ -502,7 +519,7 @@ def build_pattern_pack(rng: random.Random, out_dir: Path, slug: str) -> dict:
         name = f"{slug}-board-{i + 1}.svg"
         (folder / name).write_text(svg, encoding="utf-8")
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
-    write_package_docs(folder, "Seamless Pattern Pack", files, "tileable vector boards")
+    write_package_docs(folder, title, files, "tileable vector boards")
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
@@ -516,9 +533,11 @@ def build_pattern_pack(rng: random.Random, out_dir: Path, slug: str) -> dict:
 # Quote card v2: kicker + double frame + rules, safe font stacks only
 # --------------------------------------------------------------------------
 
-def render_quote_card(rng: random.Random, quote: str, serial: int) -> str:
+def render_quote_card(rng: random.Random, quote: str, serial: int,
+                    palette: list[str] | None = None) -> str:
     w, h = 1080, 1350
-    palette = PALETTES[rng.randrange(len(PALETTES))]
+    if palette is None:
+        palette = PALETTES[rng.randrange(len(PALETTES))]
     background = palette[rng.randrange(len(palette))]
     foreground = "#ffffff" if _lum(background) < 0.45 else "#10131a"
     accent_candidates = [c for c in palette if abs(_lum(c) - _lum(background)) > 0.3]
@@ -574,14 +593,19 @@ def validate_quote_card(svg_text: str) -> str | None:
     return None
 
 
-def build_quote_set(rng: random.Random, out_dir: Path, slug: str, serial: int) -> dict:
+def build_quote_set(rng: random.Random, out_dir: Path, slug: str, serial: int,
+                  theme: dict | None = None) -> dict:
     folder = out_dir / slug
     folder.mkdir(parents=True, exist_ok=True)
-    picks = rng.sample(QUOTES, 4)
+    palette = themes.theme_palette(theme) if theme else None
+    title = (f"{themes.theme_label(theme)} Quote Card Set"
+             if theme else "Quote Card Set")
+    quote_bank = themes.theme_quotes(theme) if theme else QUOTES
+    picks = rng.sample(quote_bank, min(4, len(quote_bank)))
     files: list[str] = []
     for i, quote in enumerate(picks):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
-            svg = render_quote_card(rng, quote, serial)
+            svg = render_quote_card(rng, quote, serial, palette)
             defect = validate_quote_card(svg)
             if defect is None:
                 break
@@ -590,7 +614,7 @@ def build_quote_set(rng: random.Random, out_dir: Path, slug: str, serial: int) -
         name = f"{slug}-card-{i + 1}.svg"
         (folder / name).write_text(svg, encoding="utf-8")
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
-    write_package_docs(folder, "Quote Card Set", files, "1080x1350 social-ready cards")
+    write_package_docs(folder, title, files, "1080x1350 social-ready cards")
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
@@ -604,9 +628,11 @@ def build_quote_set(rng: random.Random, out_dir: Path, slug: str, serial: int) -
 # Planner (clean grid geometry, contrast-checked header)
 # --------------------------------------------------------------------------
 
-def render_planner(rng: random.Random) -> str:
+def render_planner(rng: random.Random,
+                 palette: list[str] | None = None) -> str:
     w, h = 1123, 794
-    palette = PALETTES[rng.randrange(len(PALETTES))]
+    if palette is None:
+        palette = PALETTES[rng.randrange(len(PALETTES))]
     header_color = sorted(palette, key=_lum)[0]
     margin, top = 40, 150
     rows, cols = 8, 31
@@ -662,14 +688,18 @@ def validate_planner(svg_text: str) -> str | None:
     return None
 
 
-def build_planner(rng: random.Random, out_dir: Path, slug: str) -> dict:
+def build_planner(rng: random.Random, out_dir: Path, slug: str,
+                theme: dict | None = None) -> dict:
     folder = out_dir / slug
     folder.mkdir(parents=True, exist_ok=True)
+    palette = themes.theme_palette(theme) if theme else None
+    title = (f"{themes.theme_label(theme)} Habit Tracker Printable"
+             if theme else "Habit Tracker Printable")
     variants = rng.choice([1, 2])
     files: list[str] = []
     for i in range(variants):
         for attempt in range(MAX_ATTEMPTS_PER_SLOT):
-            svg = render_planner(rng)
+            svg = render_planner(rng, palette)
             defect = validate_planner(svg)
             if defect is None:
                 break
@@ -678,7 +708,7 @@ def build_planner(rng: random.Random, out_dir: Path, slug: str) -> dict:
         name = f"{slug}-sheet-{i + 1}.svg"
         (folder / name).write_text(svg, encoding="utf-8")
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
-    write_package_docs(folder, "Habit Tracker Printable", files, "A4 landscape print sheets")
+    write_package_docs(folder, title, files, "A4 landscape print sheets")
     return {
         "files": files,
         "folder": str(folder.relative_to(ROOT)).replace("\\", "/"),
@@ -749,21 +779,22 @@ BUILDERS = {
 # Catalog assembly
 # --------------------------------------------------------------------------
 
-def build_product(product_type: str, rng: random.Random, batch_dir: Path, today: str) -> dict:
+def build_product(product_type: str, rng: random.Random, batch_dir: Path,
+                today: str, theme: dict) -> dict:
     digest = hashlib.sha1(f"{today}-{product_type}".encode()).hexdigest()[:8]
     slug = f"{product_type}-{digest}"
     serial = 100 + datetime.strptime(today, "%Y-%m-%d").timetuple().tm_yday
     if product_type == "quotes":
-        built = BUILDERS[product_type](rng, batch_dir, slug, serial)
+        built = BUILDERS[product_type](rng, batch_dir, slug, serial, theme)
     else:
-        built = BUILDERS[product_type](rng, batch_dir, slug)
+        built = BUILDERS[product_type](rng, batch_dir, slug, theme)
     meta = {"serial": serial, "designs": built["designs"]}
     item = {
         "id": slug,
         "type": product_type,
-        "title": listings.title_for(product_type, meta),
-        "description": listings.description_for(product_type, meta),
-        "tags": listings.tags_for(product_type),
+        "title": listings.title_for(product_type, meta, theme),
+        "description": listings.description_for(product_type, meta, theme),
+        "tags": listings.tags_for(product_type, theme),
         "files": built["files"],
         "folder": built["folder"],
         "preview": built["preview"],
@@ -787,8 +818,9 @@ def main() -> None:
     existing_ids = {item.get("id") for item in catalog}
 
     new_items = []
+    theme = themes.get_today_theme(today)
     for product_type in ("mandala", "layered-mandala", "patterns", "quotes", "planner"):
-        item = build_product(product_type, rng, batch_dir, today)
+        item = build_product(product_type, rng, batch_dir, today, theme)
         if item["id"] not in existing_ids:
             new_items.append(item)
 
