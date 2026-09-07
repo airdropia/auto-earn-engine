@@ -1,0 +1,31 @@
+Back to School Habit Tracker Printable (A4 landscape print sheets)
+
+Theme: Back to School
+2 file(s) across 2 design(s).
+
+What is inside:
+- planner-f7d1ebce-sheet-1.svg
+- planner-f7d1ebce-sheet-2.svg
+
+What you can make with this bundle:
+  - A4 / US Letter printable planner insert (print at 100% or 'fit to page')
+  - Bullet journal and disc-bound planner pages
+  - Homeschool and classroom tracking sheets
+  - Goal-setting worksheets and accountability trackers
+
+Quick use notes:
+- SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
+  Illustrator, Figma and most laser software.
+- PNG files (when included) are 1000x1000 transparent rasters - use them
+  in Canva, Procreate, or any tool that does not read SVG.
+- All shapes are vector - scale to any size without quality loss.
+- Printables: print at 100% scale on A4 or US Letter ("fit to page" also works).
+- Colors are flat fills; recolor freely in any vector editor.
+
+Format spec:
+- ViewBox: 1000x1000 (square designs) or product-specific dimensions.
+- Layered mandalas ship as one combined SVG + 3 separate layer SVGs.
+- All designs carry an embedded generation marker for provenance.
+
+Generated on 2026-09-07. Questions? Reach the operator via the storefront
+support links.
