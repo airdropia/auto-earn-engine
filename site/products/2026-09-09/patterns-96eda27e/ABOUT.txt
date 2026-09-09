@@ -1,0 +1,34 @@
+Back to School Seamless Pattern Pack (tileable vector boards)
+
+Theme: Back to School
+4 file(s) across 4 design(s).
+
+What is inside:
+- patterns-96eda27e-board-1.svg
+- patterns-96eda27e-board-2.svg
+- patterns-96eda27e-board-3.svg
+- patterns-96eda27e-board-4.svg
+
+What you can make with this bundle:
+  - Fabric and textile printing (pillows, tea towels, aprons)
+  - Wrapping paper, gift tags, and stationery
+  - Scrapbooking and digital planner backgrounds
+  - Phone cases, mugs, and sublimation printables
+  - Web and social-media tileable backgrounds
+
+Quick use notes:
+- SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
+  Illustrator, Figma and most laser software.
+- PNG files (when included) are 1000x1000 transparent rasters - use them
+  in Canva, Procreate, or any tool that does not read SVG.
+- All shapes are vector - scale to any size without quality loss.
+- Printables: print at 100% scale on A4 or US Letter ("fit to page" also works).
+- Colors are flat fills; recolor freely in any vector editor.
+
+Format spec:
+- ViewBox: 1000x1000 (square designs) or product-specific dimensions.
+- Layered mandalas ship as one combined SVG + 3 separate layer SVGs.
+- All designs carry an embedded generation marker for provenance.
+
+Generated on 2026-09-09. Questions? Reach the operator via the storefront
+support links.
