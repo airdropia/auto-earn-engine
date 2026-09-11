@@ -1,0 +1,54 @@
+Back to School Mandala SVG Bundle (cut-ready closed paths)
+
+Theme: Back to School
+24 file(s) across 8 design(s).
+
+What is inside:
+- mandala-97194af4-design-1.svg
+- mandala-97194af4-design-1.png
+- mandala-97194af4-design-1-mockup.png
+- mandala-97194af4-design-2.svg
+- mandala-97194af4-design-2.png
+- mandala-97194af4-design-2-mockup.png
+- mandala-97194af4-design-3.svg
+- mandala-97194af4-design-3.png
+- mandala-97194af4-design-3-mockup.png
+- mandala-97194af4-design-4.svg
+- mandala-97194af4-design-4.png
+- mandala-97194af4-design-4-mockup.png
+- mandala-97194af4-design-5.svg
+- mandala-97194af4-design-5.png
+- mandala-97194af4-design-5-mockup.png
+- mandala-97194af4-design-6.svg
+- mandala-97194af4-design-6.png
+- mandala-97194af4-design-6-mockup.png
+- mandala-97194af4-design-7.svg
+- mandala-97194af4-design-7.png
+- mandala-97194af4-design-7-mockup.png
+- mandala-97194af4-design-8.svg
+- mandala-97194af4-design-8.png
+- mandala-97194af4-design-8-mockup.png
+
+What you can make with this bundle:
+  - Wall art and printable posters (12x12 inch and up)
+  - Cricut / Silhouette vinyl decals for cars, laptops, water bottles
+  - Wood-burned and laser-engraved signs (Glowforge, xTool, OMTech)
+  - Vinyl stencil for furniture and floor cloths
+  - Adult coloring book pages and zen-tangle printables
+
+Quick use notes:
+- SVG files open in Cricut Design Space, Silhouette Studio, Inkscape,
+  Illustrator, Figma and most laser software.
+- PNG files (when included) are 1000x1000 transparent rasters - use them
+  in Canva, Procreate, or any tool that does not read SVG.
+- All shapes are vector - scale to any size without quality loss.
+- Printables: print at 100% scale on A4 or US Letter ("fit to page" also works).
+- Colors are flat fills; recolor freely in any vector editor.
+
+Format spec:
+- ViewBox: 1000x1000 (square designs) or product-specific dimensions.
+- Layered mandalas ship as one combined SVG + 3 separate layer SVGs.
+- All designs carry an embedded generation marker for provenance.
+
+Generated on 2026-09-11. Questions? Reach the operator via the storefront
+support links.
