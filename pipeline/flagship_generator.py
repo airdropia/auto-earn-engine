@@ -203,8 +203,9 @@ def build(rng, out_dir: Path, slug: str, theme: dict) -> dict:
         defects = [d for d in (validate(s) for s in [combined, *layers]) if d]
         if not defects:
             break
+        print(f"attempt {attempt + 1}: {defects[:2]}")
     else:
-        raise RuntimeError("flagship failed quality gate after retries")
+        raise RuntimeError("flagship failed quality gate after retries: " + "; ".join(defects[:3]))
 
     files = []
     names = [f"{slug}-design-1.svg"] + [
