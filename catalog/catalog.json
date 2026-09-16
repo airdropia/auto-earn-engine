@@ -5982,5 +5982,36 @@
     "quality": {
       "sheets": 2
     }
+  },
+  {
+    "id": "flagship-22acf7b3",
+    "type": "flagship",
+    "title": "Autumn 3D Shadow-Box Mandala | 7 Layers",
+    "description": "Premium 7-layer 3D shadow-box mandala. Cut each layer from cardstock and stack for real depth - voids in upper layers reveal lower layers. Theme: Autumn.",
+    "tags": [
+      "autumn mandala",
+      "3d layered mandala",
+      "shadow box svg",
+      "cricut mandala",
+      "layered svg",
+      "flagship"
+    ],
+    "files": [
+      "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1.svg",
+      "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1-layer-1.svg",
+      "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1-layer-2.svg",
+      "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1-layer-3.svg",
+      "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1-layer-4.svg",
+      "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1-layer-5.svg",
+      "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1-layer-6.svg",
+      "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1-layer-7.svg"
+    ],
+    "folder": "products/2026-09-16/flagship-22acf7b3",
+    "preview": "products/2026-09-16/flagship-22acf7b3/flagship-22acf7b3-design-1.svg",
+    "created": "2026-09-16",
+    "designs": 1,
+    "quality": {
+      "layers": 7
+    }
   }
 ]
