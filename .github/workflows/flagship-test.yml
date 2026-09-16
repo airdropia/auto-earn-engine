@@ -9,33 +9,32 @@ concurrency:
   group: pages-deploy
   cancel-in-progress: false
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Generate flagship design
         run: python3 pipeline/flagship_generator.py
       - name: Quality gate
         run: python3 pipeline/quality_gate.py
-      - name: Build storefront (includes product pages)
+      - name: Build storefront (per-product pages + sitemap)
         run: python3 pipeline/build_site.py
-      - name: Commit
+      - name: Commit generator outputs
         run: |
           git config user.name "auto-earn-bot"
           git config user.email "actions@users.noreply.github.com"
           git add -A
           git diff --cached --quiet || (git commit -m "flagship design [skip ci]" && git push)
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
+      - name: Verify site artifact exists
+        run: |
+          ls -la site/ | head -20
+          find site/products/2026-09-16/flagship-* -name '*.svg' | head
       - uses: actions/configure-pages@v5
         with:
           enablement: true
-      - uses: actions/checkout@v4
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
