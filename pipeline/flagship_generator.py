@@ -217,6 +217,15 @@ def build(rng, out_dir: Path, slug: str, theme: dict) -> dict:
         (folder / name).write_text(svg, encoding="utf-8")
         files.append(str((folder / name).relative_to(ROOT)).replace("\\", "/"))
 
+    (folder / "LICENSE.txt").write_text(
+        f"{theme['label']} 3D Shadow-Box Mandala - Flagship\n\n"
+        "LICENSE - Commercial Use Grant: perpetual, worldwide, royalty-free\n"
+        "license for personal AND commercial projects (physical products,\n"
+        "client work, printed goods).\n\nNOT permitted: reselling or\n"
+        "redistributing the raw digital files as-is; claiming authorship\n"
+        "of the source designs.\n",
+        encoding="utf-8",
+    )
     (folder / "ABOUT.txt").write_text(
         f"{theme['label']} 3D Shadow-Box Mandala - Flagship\n\n"
         f"{LAYERS} physical layers for shadow-box assembly.\n"
