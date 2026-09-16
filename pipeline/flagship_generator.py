@@ -185,10 +185,12 @@ def render_flagship(rng) -> tuple[str, list[str]]:
     return combined, layer_svgs
 
 
-def validate(svg_text: str) -> str | None:
+def validate(svg_text: str, is_combined: bool = False) -> str | None:
     n = sum(svg_text.count(f"<{t}") for t in ("path", "circle", "rect", "line"))
-    if n < 60:
-        return f"too simple ({n} elements)"
+    # combined has 7 layers stacked; a single layer is ~1 annulus + 1 ring
+    floor = 60 if is_combined else 10
+    if n < floor:
+        return f"too simple ({n} elements, floor {floor})"
     for m in re.finditer(r'<circle[^>]*\br="([\d.]+)"', svg_text):
         if float(m.group(1)) < MIN_PART:
             return f"floating dot r={m.group(1)}"
@@ -200,7 +202,7 @@ def build(rng, out_dir: Path, slug: str, theme: dict) -> dict:
     folder.mkdir(parents=True, exist_ok=True)
     for attempt in range(MAX_ATTEMPTS):
         combined, layers = render_flagship(rng)
-        defects = [d for d in (validate(s) for s in [combined, *layers]) if d]
+        defects = [d for d in (validate(combined, True), *(validate(s) for s in layers)) if d]
         if not defects:
             break
         print(f"attempt {attempt + 1}: {defects[:2]}")
