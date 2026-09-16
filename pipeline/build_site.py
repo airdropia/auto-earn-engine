@@ -54,6 +54,19 @@ main { max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; }
 .copy-btn { background:#21262d; border:1px solid #30363d; color:#c9d1d9; border-radius:6px; padding:5px 12px; font-size:.75rem; cursor:pointer; margin-left:8px; vertical-align:middle; }
 .copy-btn:hover { border-color:#58a6ff; color:#fff; }
 .warn { display:block; font-size:.72rem; color:#d29922; margin-top:4px; }
+.actions.big { margin:22px 0 8px; }
+.actions.big .btn { flex:0 0 auto; padding:12px 18px; }
+.info { background:#101826; border:1px solid #1f2937; border-radius:14px; padding:22px; margin-top:26px; line-height:1.6; }
+.info p { color:#9aa7b4; font-size:.92rem; margin:10px 0; }
+.info h3 { margin-top:20px; font-size:1.05rem; }
+.info h3:first-of-type { margin-top:0; }
+.hero { background:#ffffff; border-radius:14px; border:1px solid #21262d; padding:18px; display:flex; align-items:center; justify-content:center; }
+.hero img { max-width:min(560px,100%); height:auto; border-radius:10px; }
+.related { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; margin-top:14px; }
+.rel { background:#161b22; border:1px solid #21262d; border-radius:10px; padding:10px; display:flex; align-items:center; gap:10px; transition:border-color .15s; }
+.rel:hover { border-color:#388bfd66; }
+.rel img { width:52px; height:52px; object-fit:contain; background:#fff; border-radius:6px; }
+.rel span { font-size:.8rem; line-height:1.3; color:#c9d1d9; }
 footer { text-align:center; color:#6e7681; font-size:.78rem; padding:28px 16px 40px; line-height:1.6; }
 @media (max-width:520px){ header{padding:34px 16px 24px;} .grid{grid-template-columns:1fr;} }
 """
@@ -105,6 +118,113 @@ def canonical_url(cfg: dict) -> str:
     """Public base URL of the storefront, no trailing slash."""
     return (cfg.get("site_base_url") or "https://airdropia.github.io/auto-earn-engine").rstrip("/")
 
+def product_page_url(cfg: dict, item: dict) -> str:
+    """Canonical URL of a single product's landing page."""
+    return f"{canonical_url(cfg)}/p/{item['id']}/"
+
+def file_buttons(item: dict) -> str:
+    """Download buttons for a product: one per format (SVG, PNG, MOCKUP),
+    falling back to the first two files when no preferred format exists."""
+    def fmt_of(path_str: str) -> str:
+        name = Path(path_str).name
+        if "-mockup" in name:
+            return "MOCKUP"
+        ext = Path(path_str).suffix.upper().lstrip(".")
+        return ext or "FILE"
+
+    by_fmt: dict[str, list[str]] = {}
+    for f in item.get("files", []):
+        by_fmt.setdefault(fmt_of(f), []).append(f)
+    displayed: list[tuple[str, str]] = []
+    per_fmt: dict[str, int] = {}
+    for fmt in ("SVG", "PNG", "MOCKUP"):
+        if by_fmt.get(fmt):
+            per_fmt[fmt] = per_fmt.get(fmt, 0) + 1
+            displayed.append((by_fmt[fmt][0], f"{fmt} {per_fmt[fmt]}"))
+    if not displayed:
+        for f in item.get("files", [])[:2]:
+            fmt = fmt_of(f)
+            per_fmt[fmt] = per_fmt.get(fmt, 0) + 1
+            displayed.append((f, f"{fmt} {per_fmt[fmt]}"))
+    return "".join(
+        f'<a class="btn btn-ghost" href="{rel(f)}" download>{label}</a>'
+        for f, label in displayed
+    )
+
+def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
+    """One indexable landing page per product (long-tail SEO).
+
+    Each page has a unique title/description, the product image, download
+    buttons, the full listing copy, license note, and links to related
+    products (internal links help crawlers discover the whole catalog).
+    """
+    base = canonical_url(cfg)
+    title = item["title"]
+    desc = " ".join((item.get("description") or "").split())[:155]
+    preview = rel(item.get("preview", ""))
+    tag_html = "".join(f"<em>{svgkit.escape(t)}</em>" for t in item.get("tags", [])[:8])
+    zip_href = f"{base}/downloads/{item['id']}.zip"
+    # Description paragraphs (split on blank lines to keep the bullet list)
+    desc_html = "".join(
+        f"<p>{svgkit.escape(block)}</p>"
+        for block in (item.get("description") or "").split("\n\n") if block.strip()
+    )
+    # Related products: same type, newest 6 excluding self
+    related = [
+        i for i in sorted(catalog, key=lambda x: x.get("created", ""), reverse=True)
+        if i.get("type") == item.get("type") and i.get("id") != item.get("id")
+    ][:6]
+    related_html = "".join(
+        f'<a class="rel" href="{product_page_url(cfg, r)}">'
+        f'<img loading="lazy" src="/auto-earn-engine/{rel(r.get("preview", "")) if not rel(r.get("preview", "")).startswith("http") else r.get("preview", "")}" alt=""/>'
+        f'<span>{svgkit.escape(r.get("title", "")[:52])}</span></a>'
+        for r in related
+    )
+    updated = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return (
+        '<!DOCTYPE html><html lang="en"><head>'
+        '<meta charset="utf-8"/>'
+        '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
+        f"<title>{svgkit.escape(title)} | {svgkit.escape(cfg['store_name'])}</title>"
+        f'<meta name="description" content="{svgkit.escape(desc)}"/>'
+        f'<link rel="canonical" href="{product_page_url(cfg, item)}"/>'
+        f'<meta property="og:title" content="{svgkit.escape(title)}"/>'
+        f'<meta property="og:description" content="{svgkit.escape(desc)}"/>'
+        f'<meta property="og:image" content="{base}/{svgkit.escape(preview)}"/>'
+        '<meta name="twitter:card" content="summary_large_image"/>'
+        f"<style>{CSS}</style></head><body>"
+        '<header><p><a href="./../..">&larr; Back to all bundles</a></p>'
+        f'<h1>{svgkit.escape(title)}</h1>'
+        f'<div class="tags">{tag_html}</div>'
+        f'<span class="badge">Free download &middot; commercial use allowed</span>'
+        '</header><main>'
+        f'<div class="hero"><img src="{base}/{svgkit.escape(preview)}" alt="{svgkit.escape(title)}"/></div>'
+        '<div class="actions big">'
+        f'<a class="btn btn-primary" href="{base}/downloads/{item["id"]}.zip" download>Download full bundle (ZIP)</a>'
+        f"{file_buttons(item)}"
+        '</div>'
+        f'<section class="info">{desc_html}'
+        '<h3>License</h3>'
+        '<p>Free for personal and commercial use. You may use these designs in physical '
+        'products, client work and printed goods. Please do not resell or redistribute '
+        'the raw digital files as-is.</p>'
+        '<h3>How to use</h3>'
+        '<p>SVG opens in Cricut Design Space, Silhouette Studio, Inkscape, Illustrator and '
+        'most laser software. PNG files (where included) are 1000&times;1000 transparent '
+        'rasters for Canva, Procreate and any tool that does not read SVG. All shapes are '
+        'vector - scale to any size with no quality loss.</p>'
+        '</section>'
+        + (f'<section class="info"><h3>More {svgkit.escape(item.get("type", ""))} bundles</h3>'
+           f'<div class="related">{related_html}</div></section>' if related_html else "")
+        + '<section class="support"><h3>Support this machine</h3>'
+        + money_links(cfg)
+        + '</section></main>'
+        '<footer>Generated by the VectorForge Daily pipeline on ' + updated + '.<br/>'
+        '<a href="./../..">All free SVG bundles</a> &middot; '
+        '<a href="./../../privacy.html">Privacy Policy</a></footer>'
+        '</body></html>'
+    )
+
 def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
     """robots.txt + sitemap.xml for search engine indexing."""
     base = canonical_url(cfg)
@@ -116,7 +236,10 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
 
     urls: list[str] = [f"{base}/"]
     for item in sorted(catalog, key=lambda x: x["created"], reverse=True):
+        urls.append(product_page_url(cfg, item))
         urls.append(f"{base}/downloads/{item['id']}.zip")
+    # static pages
+    urls.append(f"{base}/privacy.html")
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     entries: list[str] = []
@@ -170,25 +293,22 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
                 fmt = _fmt_of(f)
                 per_format[fmt] = per_format.get(fmt, 0) + 1
                 displayed.append((f, f"{fmt} {per_format[fmt]}"))
-        files_list = "".join(
-            f'<a class="btn btn-ghost" href="{rel(f)}" download>{label}</a>'
-            for f, label in displayed
-        )
         extra = (
             f'<span style="font-size:.72rem;color:#6e7681">+{len(item["files"]) - 2} more in zip</span>'
             if len(item["files"]) > 2
             else ""
         )
+        card_href = product_page_url(cfg, item)
         cards.append(
             '<div class="card">'
-            f'<div class="thumb"><img loading="lazy" src="{preview_href}" alt="{svgkit.escape(item["title"])}"/></div>'
+            f'<a class="thumb" href="{card_href}"><img loading="lazy" src="{preview_href}" alt="{svgkit.escape(item["title"])}"/></a>'
             '<div class="card-body">'
-            f"<h2>{svgkit.escape(item['title'])}</h2>"
+            f'<h2><a href="{card_href}">{svgkit.escape(item["title"])}</a></h2>'
             f'<div class="tags">{tag_html}</div>'
             f'{extra}'
             '<div class="actions">'
             f'<a class="btn btn-primary" href="{zip_href}" download>Download ZIP</a>'
-            f"{files_list}"
+            f"{file_buttons(item)}"
             "</div></div></div>"
         )
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -241,20 +361,6 @@ def make_og_image(site_dir: Path, cfg: dict) -> None:
     pngio.write_png(site_dir / "og.png", 1200, 630, pixel)
 
 
-def make_sitemap(site_dir: Path) -> None:
-    """Static sitemap: storefront is a single index page."""
-    base = "https://airdropia.github.io/auto-earn-engine/"
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    (site_dir / "sitemap.xml").write_text(
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        f"  <url><loc>{base}</loc><lastmod>{today}</lastmod>"
-        "<changefreq>daily</changefreq><priority>1.0</priority></url>\n"
-        "</urlset>\n",
-        encoding="utf-8",
-    )
-
-
 def main() -> None:
     cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     catalog: list[dict] = []
@@ -284,18 +390,26 @@ def main() -> None:
             zipped += 1
 
     make_og_image(SITE_DIR, cfg)
-    make_sitemap(SITE_DIR)
     (SITE_DIR / "robots.txt").write_text(
         "User-agent: *\nAllow: /\n"
         "Sitemap: https://airdropia.github.io/auto-earn-engine/sitemap.xml\n",
         encoding="utf-8",
     )
     (SITE_DIR / "index.html").write_text(render_index(cfg, catalog), encoding="utf-8")
+    # Per-product landing pages (long-tail SEO: one indexable page each)
+    pages = 0
+    for item in catalog:
+        page_dir = SITE_DIR / "p" / item["id"]
+        page_dir.mkdir(parents=True, exist_ok=True)
+        (page_dir / "index.html").write_text(
+            render_product_page(cfg, item, catalog), encoding="utf-8"
+        )
+        pages += 1
     write_seo_files(SITE_DIR, cfg, catalog)
     extra = ROOT / "site_extra"
     if extra.is_dir():
         shutil.copytree(extra, SITE_DIR, dirs_exist_ok=True)
-    print(f"site built: products={len(catalog)} zips={zipped}")
+    print(f"site built: products={len(catalog)} pages={pages} zips={zipped}")
 
 
 if __name__ == "__main__":
