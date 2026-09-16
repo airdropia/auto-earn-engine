@@ -1,0 +1,18 @@
+name: flagship-test
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate flagship design
+        run: python3 pipeline/flagship_generator.py
+      - name: Commit
+        run: |
+          git config user.name "auto-earn-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "flagship design [skip ci]" && git push)
