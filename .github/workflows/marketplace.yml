@@ -1,0 +1,38 @@
+name: marketplace-prep
+
+# Turns every flagship product into marketplace-ready listing assets
+# (Creative Fabrica + Etsy): listing.txt, keywords.txt, README.txt per product.
+# Runs on GitHub Actions (user rule: local machine = operating window only,
+# GitHub = free unlimited compute). Idempotent, [skip ci] to avoid loops.
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["flagship-test"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: marketplace-prep
+  cancel-in-progress: false
+
+jobs:
+  prep:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Generate marketplace listing assets
+        run: bun pipeline/marketplace_prep.js
+
+      - name: Commit listing assets
+        run: |
+          git config user.name "auto-earn-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add products/*/flagship-*/marketplace/ || true
+          git diff --cached --quiet || (git commit -m "marketplace listing assets [skip ci]" && git push)
