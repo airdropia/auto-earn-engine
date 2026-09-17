@@ -42,9 +42,20 @@ jobs:
             echo "rendered: ${id}-6500.png ($(du -h "/tmp/pngs/${id}-6500.png" | cut -f1))"
           done
 
+      - name: Render brand profile pic (1024x1024, newest flagship)
+        run: |
+          latest=$(ls -d products/*/flagship-* | sort | tail -1)
+          svg="$latest/$(basename "$latest")-design-1.svg"
+          test -f "$svg"
+          mkdir -p site_extra/brand
+          rsvg-convert -w 1024 -h 1024 --background-color '#ffffff' "$svg" \
+            -o site_extra/brand/profile-pic.png
+          echo "profile pic source: $svg"
+          ls -la site_extra/brand/
+
       - name: Commit listing assets
         run: |
           git config user.name "auto-earn-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add products/*/flagship-*/marketplace/ products/*/flagship-*/*-6500.png || true
-          git diff --cached --quiet || (git commit -m "marketplace listing assets + 6500px PNG [skip ci]" && git push)
+          git add products/*/flagship-*/marketplace/ products/*/flagship-*/*-6500.png site_extra/brand/ || true
+          git diff --cached --quiet || (git commit -m "brand: profile pic + marketplace assets [skip ci]" && git push)
