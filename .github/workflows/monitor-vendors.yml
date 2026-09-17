@@ -42,3 +42,6 @@ jobs:
           else
             echo "Ticket within expected response window. No action needed."
           fi
+
+      - name: Probe Creative Fabrica designer approval status
+        run: bash ops/check_cf_approval.sh
