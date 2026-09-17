@@ -1,0 +1,33 @@
+name: housekeeping
+
+# Autonomous cleanup: archives stale products (>KEEP_DAYS) out of the
+# storefront, reports unreferenced/junk, commits results. Safe-by-default:
+# no hard deletes unless --purge is passed. Free: GitHub Actions cron, $0.
+
+on:
+  schedule:
+    - cron: "23 5 * * 0"   # 05:23 UTC Sunday
+  workflow_dispatch:        # on-demand
+
+permissions:
+  contents: write
+
+concurrency:
+  group: housekeeping
+  cancel-in-progress: false
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run housekeeping (archive stale + report, no purge)
+        run: python3 pipeline/housekeeping.py
+
+      - name: Commit cleanup
+        run: |
+          git config user.name "auto-earn-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "housekeeping: archive stale, report junk [skip ci]" && git push)

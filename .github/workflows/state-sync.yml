@@ -1,0 +1,36 @@
+name: state-sync
+
+# Autonomous LIVE HEALTH reporter. Writes metrics/live-health.md with
+# ground-truth live facts and commits it, so ANY session/agent can read the
+# freshest state from the repo at any time (no local run needed).
+# Free: GitHub Actions cron, $0. Idempotent.
+
+on:
+  schedule:
+    - cron: "17 4 * * *"   # 04:17 UTC daily
+  workflow_dispatch:        # manual / on-demand refresh
+
+permissions:
+  contents: write
+
+concurrency:
+  group: state-sync
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate LIVE HEALTH report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 pipeline/sync_state.py
+
+      - name: Commit report
+        run: |
+          git config user.name "auto-earn-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add metrics/live-health.md
+          git diff --cached --quiet || (git commit -m "live health report [skip ci]" && git push)

@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# pre-push hook — FORCE every agent to keep CURRENT-STATE.md current.
+#
+# Blocks push if CURRENT-STATE.md snapshot is stale (>48h). This makes it
+# impossible for an agent to ship work without first recording the plan/state
+# in private-docs/CURRENT-STATE.md. Rule lives in the hook so it follows the
+# working copy, not the agent's memory.
+#
+# Also auto-appends a "session turn" line (timestamp + note) whenever a push
+# happens, so the state log accumulates a per-session audit trail.
+#
+# Install (idempotent):  .git/hooks/pre-push  (this repo)
+# Reinstall after clone:  bash .github/hooks/install-hooks.sh
+#
+# SKIP:  SKIP_STATE_GUARD=1 git push   (emergency override, logs a warning)
+
+set -uo pipefail
+
+# Resolve private-docs as SIBLING of the repo root (works from both
+# .github/hooks/ and .git/hooks/ install locations).
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$(dirname "$(dirname "$(dirname "$0")")")")"
+DOCS_DIR="$REPO_ROOT/../private-docs"
+STATE_FILE="$DOCS_DIR/CURRENT-STATE.md"
+STALE_HOURS=48
+
+if [[ "${SKIP_STATE_GUARD:-0}" == "1" ]]; then
+  echo "::warning::pre-push: SKIP_STATE_GUARD=1 — state freshness guard bypassed." >&2
+  exit 0
+fi
+
+if [[ ! -f "$STATE_FILE" ]]; then
+  echo "::error::pre-push: $STATE_FILE missing. Create/update it before pushing." >&2
+  exit 1
+fi
+
+# Extract the "Snapshot:" date line (YYYY-MM-DD) from CURRENT-STATE.md
+snapshot_line="$(grep -m1 '^\*\*Snapshot:\*\*' "$STATE_FILE" || true)"
+snapshot_date="$(echo "$snapshot_line" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1 || true)"
+
+if [[ -z "$snapshot_date" ]]; then
+  echo "::error::pre-push: no '**Snapshot:** YYYY-MM-DD' line found in $STATE_FILE" >&2
+  exit 1
+fi
+
+now_s="$(date +%s)"
+snap_s="$(date -d "$snapshot_date" +%s 2>/dev/null || date -j -f "%Y-%m-%d" "$snapshot_date" +%s 2>/dev/null || echo 0)"
+age_h=$(( (now_s - snap_s) / 3600 ))
+
+if (( age_h > STALE_HOURS )); then
+  echo "::error::pre-push: CURRENT-STATE.md is STALE (snapshot $snapshot_date, ${age_h}h old, >${STALE_HOURS}h)." >&2
+  echo "::error::pre-push: Update **Snapshot:** + plan/status in $STATE_FILE, commit, then push." >&2
+  echo "::error::pre-push: Emergency override: SKIP_STATE_GUARD=1 git push" >&2
+  exit 1
+fi
+
+# Auto-append a session-turn audit line (best effort; never blocks push).
+{
+  printf '\n- %s — session turn recorded on push (branch: %s).\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${1:-?}"
+} >> "$STATE_FILE" 2>/dev/null || true
+
+echo "::ok::pre-push: state fresh (${age_h}h)."
+exit 0
