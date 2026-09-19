@@ -1,0 +1,54 @@
+name: cf-package
+
+# Prepare Creative Fabrica upload bundle from the latest flagship.
+# Runs manually or after flagship-test. Produces marketplace/cf-package.zip
+# (SVGs + 6500px PNG + ABOUT + LICENSE + listing copy) as a CI artifact.
+# Upload itself is manual web-UI (Cloudflare bot-wall blocks automation;
+# ToS risk not worth it) — agent pre-fills everything, upload is one step.
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [flagship-test]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find latest flagship
+        id: latest
+        run: |
+          LATEST=$(ls -d products/20*-*-*/*/ 2>/dev/null | sort -r | head -1)
+          LATEST=${LATEST%/}
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "Latest flagship dir: $LATEST"
+
+      - name: Build CF bundle
+        run: |
+          set -e
+          DIR="${{ steps.latest.outputs.latest }}"
+          SLUG=$(basename "$DIR")
+          OUT="cf-bundle-$SLUG"
+          mkdir -p "$OUT"
+          cp "$DIR"/*.svg "$OUT"/ 2>/dev/null || true
+          cp "$DIR"/*-6500.png "$OUT"/ 2>/dev/null || true
+          cp "$DIR"/ABOUT.txt "$OUT"/ 2>/dev/null || true
+          cp "$DIR"/LICENSE.txt "$OUT"/ 2>/dev/null || true
+          cp "$DIR"/marketplace/listing.txt "$OUT"/CF-LISTING-COPY-PASTE.txt 2>/dev/null || true
+          cp "$DIR"/marketplace/keywords.txt "$OUT"/CF-KEYWORDS.txt 2>/dev/null || true
+          zip -r "$OUT.zip" "$OUT"
+          echo "Bundle built: $OUT.zip ($(du -h "$OUT.zip" | cut -f1))"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cf-bundle
+          path: cf-bundle-*.zip
+          retention-days: 30
