@@ -61,12 +61,12 @@ jobs:
 
       - name: Commit bounty updates
         run: |
-          if git diff --quiet metrics/bounties.md 2>/dev/null; then
-            echo "No changes to commit."
-          else
+          if [ -f metrics/bounties.md ] && ! git diff --quiet HEAD -- metrics/bounties.md || ! git ls-files --error-unmatch metrics/bounties.md >/dev/null 2>&1 && [ -s metrics/bounties.md ]; then
             git config user.name "auto-earn-bot"
             git config user.email "actions@users.noreply.github.com"
             git add metrics/bounties.md
             git commit -m "bounty: new agent-allowed listings detected [skip ci]"
             git push
+          else
+            echo "No changes to commit."
           fi
