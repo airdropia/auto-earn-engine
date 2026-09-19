@@ -1,6 +1,6 @@
 # LIVE HEALTH (auto-generated)
 
-_Auto-updated 2026-09-18T09:03:03Z by `pipeline/sync_state.py` (CI: state-sync workflow). 
+_Auto-updated 2026-09-19T08:50:58Z by `pipeline/sync_state.py` (CI: state-sync workflow). 
 Do not hand-edit; next run overwrites._
 
 | Check | Value |
