@@ -60,5 +60,45 @@
     "quality": {
       "layers": 7
     }
+  },
+  {
+    "id": "weekly-compilation-347e9277",
+    "type": "weekly-compilation",
+    "title": "Weekly Compilation Bundle 2026-W39 | 2 designs",
+    "description": "Best-of-week mega-bundle for 2026-W39 (2026-09-15 to 2026-09-21). Curated compilation of 2 products, 2 total designs across flagship. Theme: Autumn. Every file is a fully usable SVG/PNG from the week's daily batches.",
+    "tags": [
+      "autumn mandala",
+      "3d layered mandala",
+      "shadow box svg",
+      "cricut mandala",
+      "layered svg",
+      "weekly compilation",
+      "best of week",
+      "mega bundle",
+      "autumn bundle"
+    ],
+    "files": [
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1-layer-1.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1-layer-2.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1-layer-3.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1-layer-4.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1-layer-5.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1-layer-6.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1-layer-7.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-17_flagship-d36a3587-design-1.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-17_flagship-d36a3587-design-1-layer-1.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-17_flagship-d36a3587-design-1-layer-2.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-17_flagship-d36a3587-design-1-layer-3.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-17_flagship-d36a3587-design-1-layer-4.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-17_flagship-d36a3587-design-1-layer-5.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-17_flagship-d36a3587-design-1-layer-6.svg",
+      "products/2026-W39/weekly-compilation-347e9277/2026-09-17_flagship-d36a3587-design-1-layer-7.svg"
+    ],
+    "folder": "products/2026-W39/weekly-compilation-347e9277",
+    "preview": "products/2026-W39/weekly-compilation-347e9277/2026-09-16_flagship-22acf7b3-design-1.svg",
+    "created": "2026-09-21",
+    "designs": 2,
+    "week_id": "2026-W39"
   }
 ]
