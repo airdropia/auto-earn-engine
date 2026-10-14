@@ -70,6 +70,7 @@ table.price-table th, table.price-table td { text-align:left; padding:9px 10px; 
 table.price-table th { color:#8b949e; font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; }
 table.price-table td.amt { color:#7ee787; font-family:ui-monospace,monospace; white-space:nowrap; }
 .muted { color:#6e7681; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
+a.ref-link { font-family:ui-monospace,monospace; font-size:.72rem; color:#58a6ff; }
 .card-price { color:#7ee787; font-size:.82rem; font-family:ui-monospace,monospace; margin:2px 0 8px; }
 .info h3 { margin-top:20px; font-size:1.05rem; }
 .info h3:first-of-type { margin-top:0; }
@@ -283,6 +284,19 @@ def checkout_price(cfg: dict, item: dict) -> str:
     return str(override)
 
 
+def _stable_reference(slug: str) -> str:
+    """Deterministic order reference for a product, used before a session exists.
+
+    checkout.py issues references from its own session ids, which only exist once
+    an invoice is created. The checkout page still has to give a buyer something
+    to bookmark before that, so it derives a reference from the product slug.
+    Both sides use the same 10-hex-character shape, and a real invoice always
+    wins when one is present.
+    """
+    import hashlib as _h
+    return _h.sha1(f"vf-ref:{slug}".encode()).hexdigest()[:10].upper()
+
+
 def load_invoices() -> dict:
     """Issued checkout sessions, keyed by product slug. Empty if not generated yet.
 
@@ -428,17 +442,25 @@ def render_checkout(cfg: dict, catalog: list[dict]) -> str:
     rows = []
     for item in sorted(catalog, key=lambda x: x.get("created", ""), reverse=True):
         amt = checkout_price(cfg, item)
-        status = (invoices.get(item.get("id", "")) or {}).get("status", "")
+        inv = invoices.get(item.get("id", "")) or {}
+        status = inv.get("status", "")
         badge = {
             "awaiting_payment": "available",
             "paid": "processing",
             "confirmed": "in stock",
         }.get(status, "available")
+        # Pre-assign a reference at render time so the buyer has something to
+        # bookmark even before the session file is refreshed. The reference is
+        # derived the same way checkout.py derives it, from the product slug,
+        # so it stays stable across builds.
+        slug = item.get("id", "")
+        ref = inv.get("reference") or _stable_reference(slug)
         rows.append(
             f'<tr><td>{svgkit.escape(item.get("title", "")[:60])}'
             f'<br/><span class="muted">{svgkit.escape(badge)}</span></td>'
             f'<td class="amt">{svgkit.escape(amt)} {svgkit.escape(network)}</td>'
-            f'<td><a class="btn btn-ghost" href="{rel(item.get("preview", ""))}">preview</a></td></tr>'
+            f'<td><a class="btn btn-ghost" href="{rel(item.get("preview", ""))}">preview</a>'
+            f'<br/><a class="ref-link" href="{base}/delivery/{ref}/">order {svgkit.escape(ref)}</a></td></tr>'
         )
     return (
         '<!DOCTYPE html><html lang="en"><head>'
@@ -458,8 +480,8 @@ def render_checkout(cfg: dict, catalog: list[dict]) -> str:
         '- each one is unique so your payment can be matched to your order.</li>'
         f'<li>Send exactly that amount of {svgkit.escape(network)} to the address shown.</li>'
         '<li>Wait a few minutes. The payment is detected automatically on-chain, then '
-        'your download link appears on this page. Nothing to sign up for, no account, '
-        'no login.</li></ol>'
+        'your download link appears on your order page. Nothing to sign up for, no '
+        'account, no login.</li></ol>'
         f'<p class="payaddr">Send only <strong>{svgkit.escape(network)}</strong> on the '
         'BEP20 network (BSC). Other assets sent here are unrecoverable.</p>'
         f'<p><code id="pay-address">{svgkit.escape(address)}</code>'
@@ -468,6 +490,8 @@ def render_checkout(cfg: dict, catalog: list[dict]) -> str:
         '<p class="warn">Send the exact amount. If you send less, the order cannot be '
         'matched automatically and you will need to contact support with your '
         'transaction hash.</p>'
+        '<p class="muted">Already sent? Open your order page from the table below to '
+        'track the confirmation and get your download link.</p>'
         '</section>'
         '<section class="info"><h3>Available bundles</h3>'
         '<table class="price-table"><thead><tr><th>Bundle</th><th>Exact amount to send</th><th></th></tr></thead>'

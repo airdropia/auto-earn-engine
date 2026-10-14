@@ -62,6 +62,16 @@ def order_ref(session_id: str) -> str:
     return session_id[:10].upper()
 
 
+def stable_ref(slug: str) -> str:
+    """Reference for a product that has no issued session yet.
+
+    Mirrors build_site._stable_reference so the checkout page and the delivery
+    pages agree even before an invoice exists.
+    """
+    import hashlib
+    return hashlib.sha1(f"vf-ref:{slug}".encode()).hexdigest()[:10].upper()
+
+
 def render_order(rec: dict) -> str:
     ref = order_ref(rec["id"])
     status = rec.get("status", "awaiting_payment")
@@ -152,11 +162,39 @@ def main() -> int:
         print("no checkout sessions; nothing to render")
         return 0
 
+    # Every catalog product gets a page, not just the ones with an invoice yet:
+    # the checkout page links to a reference for all of them, and a link that
+    # 404s is worse than a page that says "awaiting payment".
+    catalog_path = ROOT / "catalog" / "catalog.json"
+    catalog = []
+    if catalog_path.exists():
+        try:
+            catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+            if not isinstance(catalog, list):
+                catalog = []
+        except json.JSONDecodeError:
+            catalog = []
+
+    by_slug = {r.get("slug"): r for r in sessions.values() if isinstance(r, dict)}
+    entries = dict(by_slug)
+    for item in catalog:
+        slug = item.get("id")
+        if not slug or slug in entries:
+            continue
+        entries[slug] = {
+            "id": stable_ref(slug),
+            "slug": slug,
+            "unique_amount_usdt": "",
+            "status": "awaiting_payment",
+            "download": f"/downloads/{slug}.zip",
+            "synthetic": True,
+        }
+
     if not args.dry_run:
         OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     counts: dict[str, int] = {}
-    for rec in sessions.values():
+    for rec in entries.values():
         if not isinstance(rec, dict) or not rec.get("id"):
             continue
         status = rec.get("status", "awaiting_payment")
@@ -166,7 +204,7 @@ def main() -> int:
             d.mkdir(parents=True, exist_ok=True)
             (d / "index.html").write_text(render_order(rec), encoding="utf-8")
 
-    print(f"orders rendered: {len(sessions)}")
+    print(f"orders rendered: {len(entries)} (from {len(sessions)} issued sessions)")
     for k, v in sorted(counts.items()):
         print(f"  {k}: {v}")
     if not args.dry_run:
