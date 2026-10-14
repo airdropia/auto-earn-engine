@@ -1,0 +1,56 @@
+name: checkout
+
+# Zero-signup crypto checkout watcher.
+#
+# No payment gateway account, no KYC, no API key, no user step. The buyer sends
+# USDT (BEP20) to the published address; this job confirms the payment on a
+# free public RPC and records earnings. Runs entirely in GitHub Actions.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # every 10 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Offline selftest (money math must be correct before real funds)
+        run: python3 pipeline/checkout.py --selftest
+
+      - name: Ensure invoices exist for every product
+        env:
+          VF_PAYOUT_ADDRESS: ${{ vars.VF_PAYOUT_ADDRESS }}
+        run: python3 pipeline/checkout.py --init
+
+      - name: Scan chain and confirm payments
+        env:
+          VF_PAYOUT_ADDRESS: ${{ vars.VF_PAYOUT_ADDRESS }}
+        run: python3 pipeline/checkout.py --watch
+
+      - name: Status
+        env:
+          VF_PAYOUT_ADDRESS: ${{ vars.VF_PAYOUT_ADDRESS }}
+        run: python3 pipeline/checkout.py --status
+
+      - name: Commit checkout state + earnings
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add checkout/ metrics/earnings.json || true
+          if git diff --staged --quiet; then
+            echo "no checkout state change"
+          else
+            git commit -m "checkout: payment watcher state + earnings"
+            git push
+          fi
