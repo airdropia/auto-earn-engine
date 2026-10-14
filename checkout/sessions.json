@@ -25,12 +25,12 @@
       "created": "2026-10-14T10:30:56Z",
       "download": "/downloads/flagship-22acf7b3.zip",
       "id": "6bbe9058ff6d3b87d4cd",
+      "reference": "186AFF2ED5",
       "slug": "flagship-22acf7b3",
       "status": "awaiting_payment",
+      "status_url": "/delivery/186AFF2ED5/",
       "tx_hash": null,
-      "unique_amount_usdt": "7.004688",
-      "reference": "186AFF2ED5",
-      "status_url": "/delivery/186AFF2ED5/"
+      "unique_amount_usdt": "7.004688"
     },
     "7e68e951de56ea0d41bd": {
       "address": "0x1c7B4F7e1101bA38c92d99B35299E83736a3b112",
@@ -55,12 +55,12 @@
       "created": "2026-10-14T10:30:56Z",
       "download": "/downloads/flagship-d36a3587.zip",
       "id": "cc77d373eff376891e79",
+      "reference": "609075C401",
       "slug": "flagship-d36a3587",
       "status": "awaiting_payment",
+      "status_url": "/delivery/609075C401/",
       "tx_hash": null,
-      "unique_amount_usdt": "7.005651",
-      "reference": "609075C401",
-      "status_url": "/delivery/609075C401/"
+      "unique_amount_usdt": "7.005651"
     },
     "e31418b745fb7d09dc76": {
       "address": "0x1c7B4F7e1101bA38c92d99B35299E83736a3b112",
@@ -70,12 +70,12 @@
       "created": "2026-10-14T10:30:56Z",
       "download": "/downloads/weekly-compilation-347e9277.zip",
       "id": "e31418b745fb7d09dc76",
+      "reference": "8FF88CB624",
       "slug": "weekly-compilation-347e9277",
       "status": "awaiting_payment",
+      "status_url": "/delivery/8FF88CB624/",
       "tx_hash": null,
-      "unique_amount_usdt": "7.000368",
-      "reference": "8FF88CB624",
-      "status_url": "/delivery/8FF88CB624/"
+      "unique_amount_usdt": "7.000368"
     }
   },
   "version": 1
