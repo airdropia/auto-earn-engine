@@ -72,6 +72,10 @@ table.price-table td.amt { color:#7ee787; font-family:ui-monospace,monospace; wh
 .card-price { color:#7ee787; font-size:.82rem; font-family:ui-monospace,monospace; margin:2px 0 8px; }
 .info h3 { margin-top:20px; font-size:1.05rem; }
 .info h3:first-of-type { margin-top:0; }
+details.faq { border-bottom:1px solid #21262d; padding:10px 0; }
+details.faq summary { cursor:pointer; color:#e6edf3; font-size:.92rem; font-weight:600; }
+details.faq[open] summary { margin-bottom:6px; }
+details.faq p { color:#9aa7b4; font-size:.9rem; margin:0; }
 .hero { background:#ffffff; border-radius:14px; border:1px solid #21262d; padding:18px; display:flex; align-items:center; justify-content:center; }
 .hero img { max-width:min(560px,100%); height:auto; border-radius:10px; }
 .related { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; margin-top:14px; }
@@ -169,6 +173,71 @@ def file_buttons(item: dict) -> str:
         f'<a class="btn btn-ghost" href="{rel(f)}" download>{label}</a>'
         for f, label in displayed
     )
+
+def product_faq(cfg: dict, item: dict) -> list[tuple[str, str]]:
+    """Question/answer pairs for FAQPage rich results.
+
+    These are the questions buyers actually ask before purchasing digital cut
+    files. Answering them on the page earns expandable rich results in search,
+    which lifts click-through without any ad spend.
+    """
+    t = item.get("title", "")
+    layers = "7"
+    size = "300mm"
+    return [
+        (f"What do I get when I buy the {t}?",
+         f"You get the complete {layers}-layer bundle: the combined SVG, one "
+         f"separate SVG per physical layer in cut order, and print-ready PNG "
+         f"renders. Every file is a vector, so it scales to any size without "
+         f"losing quality."),
+        ("Do I need a Cricut to use these files?",
+         "No. The SVGs open in Cricut Design Space, Silhouette Studio, Inkscape, "
+         "Illustrator, Affinity Designer and most laser software. If a tool only "
+         "accepts raster images, the included PNG renders work there too."),
+        ("How do I assemble the shadow box?",
+         "Cut each layer from cardstock, roughly 250-350 gsm, then stack them in "
+         "numbered order using foam tape or a small dab of glue between layers. "
+         "The voids in the upper layers are what reveal the layers beneath and "
+         "produce the three-dimensional effect."),
+        ("Can I use this design commercially?",
+         "Yes. You may use it for physical products you make and sell, for client "
+         "work, and for printed goods. The only restriction is that you may not "
+         "resell or redistribute the raw digital files as-is."),
+        ("What material and size should I use?",
+         f"Cardstock between 250 and 350 gsm works best. The artwork is drawn at "
+         f"{size} so it scales to whatever size your machine can cut, from a "
+         f"small card front up to a large wall piece."),
+        (f"How is this different from a flat SVG?",
+         f"It is genuinely layered. A flat SVG is a single plane; this is built "
+         f"from {layers} separate physical sheets, so the depth is real and casts "
+         f"actual shadows rather than simulating them with colour."),
+    ]
+
+
+def faq_jsonld(cfg: dict, item: dict) -> str:
+    """schema.org FAQPage markup for the product's question/answer pairs."""
+    import json as _json
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": q,
+             "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in product_faq(cfg, item)
+        ],
+    }
+    return _json.dumps(payload)
+
+
+def faq_block(cfg: dict, item: dict) -> str:
+    """Visible FAQ section. The markup earns nothing without on-page content."""
+    rows = "".join(
+        f'<details class="faq"><summary>{svgkit.escape(q)}</summary>'
+        f'<p>{svgkit.escape(a)}</p></details>'
+        for q, a in product_faq(cfg, item)
+    )
+    return f'<section class="info"><h3>Questions before you buy</h3>{rows}</section>'
+
 
 def product_jsonld(cfg: dict, item: dict) -> str:
     """schema.org Product markup. Rich results need price/availability, and
@@ -276,6 +345,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         '<meta name="twitter:card" content="summary_large_image"/>'
         '<meta name="robots" content="index,follow,max-image-preview:large"/>'
         f'<script type="application/ld+json">{product_jsonld(cfg, item)}</script>'
+        f'<script type="application/ld+json">{faq_jsonld(cfg, item)}</script>'
         f"<style>{CSS}</style></head><body>"
         '<header><p><a href="./../..">&larr; Back to all bundles</a></p>'
         f'<h1>{svgkit.escape(title)}</h1>'
@@ -299,7 +369,9 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         'most laser software. PNG files (where included) are 1000&times;1000 transparent '
         'rasters for Canva, Procreate and any tool that does not read SVG. All shapes are '
         'vector - scale to any size with no quality loss.</p>'
-        '</section>'        + (f'<section class="info"><h3>More {svgkit.escape(item.get("type", ""))} bundles</h3>'
+        '</section>'
+        + faq_block(cfg, item)
+        + (f'<section class="info"><h3>More {svgkit.escape(item.get("type", ""))} bundles</h3>'
            f'<div class="related">{related_html}</div></section>' if related_html else "")
         + '<section class="support"><h3>Support this machine</h3>'
         + money_links(cfg)
