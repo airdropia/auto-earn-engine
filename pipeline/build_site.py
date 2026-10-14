@@ -360,6 +360,152 @@ def render_checkout(cfg: dict, catalog: list[dict]) -> str:
     )
 
 
+# SEO keyword clusters. Each entry becomes an indexable /c/<slug>/ page
+# targeting one search intent. Craft-cutting buyers search by machine + format
+# + style, not by our product names, so these clusters are how the catalog
+# becomes findable. Kept explicit (not auto-generated from tags) because each
+# one needs hand-written copy that matches real search intent.
+COLLECTIONS = [
+    {
+        "slug": "shadow-box-svg",
+        "title": "Shadow Box SVG Files",
+        "h1": "Shadow Box SVG Cut Files",
+        "intro": (
+            "Layered shadow box designs built for real physical depth. Each bundle "
+            "ships every layer as a separate SVG plus the combined file, so you cut "
+            "each sheet from cardstock and stack them in order. Voids in the upper "
+            "layers reveal the layers beneath, which is what produces the 3D look."
+        ),
+        "match": ["shadow box", "shadow-box", "layered", "3d layered"],
+    },
+    {
+        "slug": "cricut-mandala-svg",
+        "title": "Cricut Mandala SVG Templates",
+        "h1": "Cricut Mandala SVG Templates",
+        "intro": (
+            "Mandala templates that open directly in Cricut Design Space. Every shape "
+            "is a clean vector path, so there is nothing to trace and nothing to clean "
+            "up after import. Sized for cardstock and mat board."
+        ),
+        "match": ["mandala", "cricut"],
+    },
+    {
+        "slug": "layered-svg-bundle",
+        "title": "Layered SVG Bundles",
+        "h1": "Layered SVG Bundles",
+        "intro": (
+            "Multi-layer SVG bundles with one file per layer plus a combined design. "
+            "Works in Cricut Design Space, Silhouette Studio, Inkscape, Illustrator "
+            "and most laser software. Scales to any size with no quality loss."
+        ),
+        "match": ["layered svg", "bundle", "layered"],
+    },
+    {
+        "slug": "silhouette-cut-files",
+        "title": "Silhouette Cut Files",
+        "h1": "Silhouette Cut Files",
+        "intro": (
+            "Cut files prepared for Silhouette Studio. Grouped and named per layer so "
+            "the cut order stays obvious, with registration-friendly outlines and "
+            "no rasterised elements."
+        ),
+        "match": ["silhouette", "layered", "shadow box"],
+    },
+    {
+        "slug": "mandala-svg",
+        "title": "Mandala SVG Designs",
+        "h1": "Mandala SVG Designs",
+        "intro": (
+            "Original mandala artwork as vector SVG. Radial symmetry built from "
+            "generated geometry rather than traced stock art, so every curve stays "
+            "sharp at any scale."
+        ),
+        "match": ["mandala"],
+    },
+    {
+        "slug": "3d-layered-art",
+        "title": "3D Layered Art Templates",
+        "h1": "3D Layered Art Templates",
+        "intro": (
+            "Templates assembled from separate physical layers. Built for paper "
+            "crafters and laser cutters who want depth rather than a flat print."
+        ),
+        "match": ["3d layered", "layered", "shadow box"],
+    },
+]
+
+
+def collection_items(cfg: dict, catalog: list[dict], spec: dict) -> list[dict]:
+    """Products matching a collection, scored by how many terms they hit."""
+    terms = [t.lower() for t in spec["match"]]
+    scored = []
+    for item in catalog:
+        hay = " ".join([
+            item.get("title", ""), item.get("description", ""),
+            " ".join(item.get("tags", [])), item.get("type", ""),
+        ]).lower()
+        hits = sum(1 for t in terms if t in hay)
+        if hits:
+            scored.append((hits, item))
+    scored.sort(key=lambda x: (-x[0], x[1].get("created", "")), reverse=False)
+    scored.sort(key=lambda x: x[1].get("created", ""), reverse=True)
+    return [i for _, i in scored]
+
+
+def render_collection(cfg: dict, catalog: list[dict], spec: dict) -> str:
+    """An indexable landing page for one keyword cluster."""
+    base = canonical_url(cfg)
+    items = collection_items(cfg, catalog, spec)
+    if not items:
+        return ""
+    cards = []
+    for item in items:
+        preview_href = rel(item.get("preview", ""))
+        cards.append(
+            '<div class="card">'
+            f'<a class="thumb" href="{product_page_url(cfg, item)}">'
+            f'<img loading="lazy" src="{preview_href}" alt="{svgkit.escape(item["title"])}"/></a>'
+            '<div class="card-body">'
+            f'<h2><a href="{product_page_url(cfg, item)}">{svgkit.escape(item["title"])}</a></h2>'
+            f'<div class="tags">{"".join(f"<em>{svgkit.escape(t)}</em>" for t in item.get("tags", [])[:4])}</div>'
+            f'<div class="card-price">{svgkit.escape(checkout_price(cfg, item))} '
+            f'{svgkit.escape(cfg.get("crypto_network", "USDT (BEP20)"))}</div>'
+            '<div class="actions">'
+            f'<a class="btn btn-primary" href="{product_page_url(cfg, item)}">View bundle</a>'
+            "</div></div></div>"
+        )
+    others = [c for c in COLLECTIONS if c["slug"] != spec["slug"]]
+    links = "".join(
+        f'<a class="rel" href="{base}/c/{c["slug"]}/"><span>{svgkit.escape(c["title"])}</span></a>'
+        for c in others
+    )
+    updated = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return (
+        '<!DOCTYPE html><html lang="en"><head>'
+        '<meta charset="utf-8"/>'
+        '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
+        f"<title>{svgkit.escape(spec['title'])} | {svgkit.escape(cfg['store_name'])}</title>"
+        f'<meta name="description" content="{svgkit.escape(" ".join(spec["intro"].split())[:155])}"/>'
+        f'<link rel="canonical" href="{base}/c/{spec["slug"]}/"/>'
+        '<meta name="robots" content="index,follow,max-image-preview:large"/>'
+        f'<meta property="og:title" content="{svgkit.escape(spec["h1"])}"/>'
+        f'<meta property="og:description" content="{svgkit.escape(" ".join(spec["intro"].split())[:155])}"/>'
+        f'<meta property="og:image" content="{base}/{svgkit.escape(rel(items[0].get("preview", "")))}"/>'
+        f"<style>{CSS}</style></head><body>"
+        '<header><p><a href="./../..">&larr; All bundles</a></p>'
+        f"<h1>{svgkit.escape(spec['h1'])}</h1>"
+        f'<span class="badge">{len(items)} design{"" if len(items)==1 else "s"} &middot; instant download &middot; USDT checkout</span>'
+        '</header><main>'
+        f'<section class="info"><p>{svgkit.escape(spec["intro"])}</p></section>'
+        f'<div class="grid">{"".join(cards)}</div>'
+        f'<section class="info"><h3>Browse other collections</h3><div class="related">{links}</div></section>'
+        f'<section class="support"><h3>Support this machine</h3>{money_links(cfg)}</section>'
+        '</main><footer>Updated ' + updated + ' &middot; '
+        '<a href="./../..">All bundles</a> &middot; <a href="./../checkout/">Checkout</a>'
+        + contact_link(cfg) + '</footer></body></html>'
+    )
+
+
 def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
     """robots.txt + sitemap.xml for search engine indexing."""
     base = canonical_url(cfg)
@@ -370,6 +516,9 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
     )
 
     urls: list[str] = [f"{base}/", f"{base}/checkout/"]
+    for spec in COLLECTIONS:
+        if collection_items(cfg, catalog, spec):
+            urls.append(f"{base}/c/{spec['slug']}/")
     for item in sorted(catalog, key=lambda x: x["created"], reverse=True):
         urls.append(product_page_url(cfg, item))
         urls.append(f"{base}/downloads/{item['id']}.zip")
@@ -480,6 +629,12 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         "<span>SVG vector format</span>"
         f'<span><a href="{canonical_url(cfg)}/checkout/">Checkout</a></span>'
         "</div></header><main>"
+        f'<section class="info"><h3>Browse by type</h3><div class="related">'
+        + "".join(
+            f'<a class="rel" href="{canonical_url(cfg)}/c/{c["slug"]}/"><span>{svgkit.escape(c["title"])}</span></a>'
+            for c in COLLECTIONS if collection_items(cfg, catalog, c)
+        )
+        + "</div></section>"
         f'<div class="grid">{"".join(cards)}</div>'
         '<section class="support"><h3>Support this machine</h3>'
         f"{money_links(cfg)}"
@@ -549,6 +704,15 @@ def main() -> None:
     (checkout_dir / "index.html").write_text(
         render_checkout(cfg, catalog), encoding="utf-8"
     )
+    # SEO collection pages: one indexable page per keyword cluster
+    coll_pages = 0
+    for spec in COLLECTIONS:
+        if not collection_items(cfg, catalog, spec):
+            continue
+        cdir = SITE_DIR / "c" / spec["slug"]
+        cdir.mkdir(parents=True, exist_ok=True)
+        (cdir / "index.html").write_text(render_collection(cfg, catalog, spec), encoding="utf-8")
+        coll_pages += 1
     # Per-product landing pages (long-tail SEO: one indexable page each)
     pages = 0
     for item in catalog:
@@ -562,7 +726,7 @@ def main() -> None:
     extra = ROOT / "site_extra"
     if extra.is_dir():
         shutil.copytree(extra, SITE_DIR, dirs_exist_ok=True)
-    print(f"site built: products={len(catalog)} pages={pages} zips={zipped}")
+    print(f"site built: products={len(catalog)} pages={pages} zips={zipped} collections={coll_pages}")
 
 
 if __name__ == "__main__":
