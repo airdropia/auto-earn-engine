@@ -69,7 +69,7 @@ jobs:
         run: python3 pipeline/checkout.py --watch
 
       - name: Commit checkout state + earnings
-        run: 'bash .github/scripts/commit-push.sh "checkout: payment watcher state + earnings" checkout/ metrics/earnings.json'
+        run: 'bash .github/scripts/commit-push.sh "checkout: payment watcher state + earnings" checkout/ metrics/earnings.json site_extra/delivery'
 
   # ---------------------------------------------------------------------------
   # Catalog hygiene (relocated from catalog-hygiene.yml)

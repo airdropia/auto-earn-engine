@@ -473,8 +473,14 @@ def main() -> int:
 
     if a.init:
         products = discover_products()
+        # Idempotency guard: --init runs on a cron, so re-issuing a session for
+        # a slug that already has one would pile up duplicate invoices and
+        # ambiguous amounts for the same product on every single run.
+        existing = {rec.get("slug") for rec in state["sessions"].values()}
         print(f"products: {len(products)}")
         for p in products:
+            if p["slug"] in existing:
+                continue
             rec = create_session(state, p)
             print(f"  {rec['slug']:24} {rec['unique_amount_usdt']} USDT  ->  {rec['address']}")
         save_sessions(state)
