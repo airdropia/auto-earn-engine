@@ -284,7 +284,11 @@ def checkout_price(cfg: dict, item: dict) -> str:
 
 
 def load_invoices() -> dict:
-    """Issued checkout sessions, keyed by product slug. Empty if not generated yet."""
+    """Issued checkout sessions, keyed by product slug. Empty if not generated yet.
+
+    checkout.py stores sessions keyed by a session id, so they are re-indexed
+    by slug here: that is what the catalog knows each product by.
+    """
     path = ROOT / "checkout" / "sessions.json"
     if not path.exists():
         return {}
@@ -295,7 +299,11 @@ def load_invoices() -> dict:
     sessions = data.get("sessions") if isinstance(data, dict) else None
     if not isinstance(sessions, dict):
         return {}
-    return sessions
+    return {
+        rec.get("slug", ""): rec
+        for rec in sessions.values()
+        if isinstance(rec, dict) and rec.get("slug")
+    }
 
 
 def checkout_block(cfg: dict, item: dict) -> str:
