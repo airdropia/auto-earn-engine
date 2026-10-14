@@ -63,6 +63,14 @@ jobs:
       - name: Generate flagship design
         run: python3 pipeline/flagship_generator.py
 
+      - name: Issue checkout invoices for every product
+        env:
+          VF_PAYOUT_ADDRESS: ${{ vars.VF_PAYOUT_ADDRESS }}
+        run: python3 pipeline/checkout.py --init
+
+      - name: Commit invoices so buyers see exact amounts
+        run: bash .github/scripts/commit-push.sh "checkout: issue invoices [skip ci]" checkout/
+
       - name: Quality gate
         run: python3 pipeline/quality_gate.py
 

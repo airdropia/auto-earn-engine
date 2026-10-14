@@ -69,6 +69,7 @@ table.price-table { width:100%; border-collapse:collapse; margin-top:10px; font-
 table.price-table th, table.price-table td { text-align:left; padding:9px 10px; border-bottom:1px solid #21262d; }
 table.price-table th { color:#8b949e; font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; }
 table.price-table td.amt { color:#7ee787; font-family:ui-monospace,monospace; white-space:nowrap; }
+.muted { color:#6e7681; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
 .card-price { color:#7ee787; font-size:.82rem; font-family:ui-monospace,monospace; margin:2px 0 8px; }
 .info h3 { margin-top:20px; font-size:1.05rem; }
 .info h3:first-of-type { margin-top:0; }
@@ -266,10 +267,35 @@ def product_jsonld(cfg: dict, item: dict) -> str:
 
 
 def checkout_price(cfg: dict, item: dict) -> str:
-    """Price in USDT for the paid bundle. Quality-first pricing: a single
-    considered flagship is worth more than a cheap bundle nobody trusts."""
+    """Exact amount the buyer must send, in USDT.
+
+    Each product carries a small unique offset in its invoice (see
+    pipeline/checkout.py) so that an incoming on-chain transfer can be matched
+    to the right order without a memo field. Showing the base price here would
+    make every buyer send an identical amount, and payments would become
+    unattributable, so this reads the issued invoice when one exists.
+    """
+    invoices = load_invoices()
+    rec = invoices.get(item.get("id", ""))
+    if rec and rec.get("unique_amount_usdt"):
+        return str(rec["unique_amount_usdt"])
     override = (item.get("meta") or {}).get("price_usdt") or cfg.get("price_usdt", "7.00")
     return str(override)
+
+
+def load_invoices() -> dict:
+    """Issued checkout sessions, keyed by product slug. Empty if not generated yet."""
+    path = ROOT / "checkout" / "sessions.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    sessions = data.get("sessions") if isinstance(data, dict) else None
+    if not isinstance(sessions, dict):
+        return {}
+    return sessions
 
 
 def checkout_block(cfg: dict, item: dict) -> str:
@@ -390,11 +416,20 @@ def render_checkout(cfg: dict, catalog: list[dict]) -> str:
     address = cfg.get("crypto_address", "")
     network = cfg.get("crypto_network") or "USDT (BEP20)"
     price = checkout_price(cfg, {"meta": {}})
+    invoices = load_invoices()
     rows = []
     for item in sorted(catalog, key=lambda x: x.get("created", ""), reverse=True):
+        amt = checkout_price(cfg, item)
+        status = (invoices.get(item.get("id", "")) or {}).get("status", "")
+        badge = {
+            "awaiting_payment": "available",
+            "paid": "processing",
+            "confirmed": "in stock",
+        }.get(status, "available")
         rows.append(
-            f'<tr><td>{svgkit.escape(item.get("title", "")[:60])}</td>'
-            f'<td class="amt">{svgkit.escape(checkout_price(cfg, item))} {svgkit.escape(network)}</td>'
+            f'<tr><td>{svgkit.escape(item.get("title", "")[:60])}'
+            f'<br/><span class="muted">{svgkit.escape(badge)}</span></td>'
+            f'<td class="amt">{svgkit.escape(amt)} {svgkit.escape(network)}</td>'
             f'<td><a class="btn btn-ghost" href="{rel(item.get("preview", ""))}">preview</a></td></tr>'
         )
     return (
@@ -411,18 +446,23 @@ def render_checkout(cfg: dict, catalog: list[dict]) -> str:
         f'<span class="badge">{svgkit.escape(network)} &middot; no account needed &middot; on-chain verified</span>'
         '</header><main>'
         '<section class="info"><h3>How it works</h3>'
-        '<ol><li>Pick a bundle below and note its exact amount.</li>'
-        '<li>Send that amount of ' + svgkit.escape(network) + ' to the address shown.</li>'
-        '<li>Payment is detected automatically on-chain and your download link '
-        'is issued. No account, no login, no KYC - nothing to sign up for.</li></ol>'
+        '<ol><li>Find your bundle below and <strong>note the exact amount shown</strong> '
+        '- each one is unique so your payment can be matched to your order.</li>'
+        f'<li>Send exactly that amount of {svgkit.escape(network)} to the address shown.</li>'
+        '<li>Wait a few minutes. The payment is detected automatically on-chain, then '
+        'your download link appears on this page. Nothing to sign up for, no account, '
+        'no login.</li></ol>'
         f'<p class="payaddr">Send only <strong>{svgkit.escape(network)}</strong> on the '
         'BEP20 network (BSC). Other assets sent here are unrecoverable.</p>'
         f'<p><code id="pay-address">{svgkit.escape(address)}</code>'
         '<button class="copy-btn" type="button" '
         'onclick="navigator.clipboard.writeText(document.getElementById(\'pay-address\').textContent)">Copy</button></p>'
+        '<p class="warn">Send the exact amount. If you send less, the order cannot be '
+        'matched automatically and you will need to contact support with your '
+        'transaction hash.</p>'
         '</section>'
         '<section class="info"><h3>Available bundles</h3>'
-        '<table class="price-table"><thead><tr><th>Bundle</th><th>Price</th><th></th></tr></thead>'
+        '<table class="price-table"><thead><tr><th>Bundle</th><th>Exact amount to send</th><th></th></tr></thead>'
         '<tbody>' + "".join(rows) + '</tbody></table>'
         '</section>'
         + (f'<section class="support">{money_links(cfg)}</section>' if money_links(cfg) else "")
