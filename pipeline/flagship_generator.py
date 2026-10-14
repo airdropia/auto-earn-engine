@@ -257,17 +257,23 @@ def main() -> None:
         print(f"flagship already exists for {today}: {slug}")
         return
     item = build(rng, PRODUCTS_DIR / today, slug, theme)
+    # Titles must differ per listing; the theme label alone was not enough when
+    # an entire month resolved to the same theme.
+    discriminator = int(slug_seed, 16) % 997
     entry = {
         "id": slug,
         "type": "flagship",
-        "title": f"{theme['label']} 3D Shadow-Box Mandala | {LAYERS} Layers",
+        "title": themes.unique_title(theme, LAYERS, discriminator),
         "description": (
             f"Premium {LAYERS}-layer 3D shadow-box mandala. Cut each layer from "
             f"cardstock and stack for real depth - voids in upper layers reveal "
             f"lower layers. Theme: {theme['label']}."
         ),
-        "tags": [f"{theme['label'].lower()} mandala", "3d layered mandala",
-                 "shadow box svg", "cricut mandala", "layered svg", "flagship"],
+        "tags": sorted(set(
+            list(themes.theme_tags(theme))
+            + ["3d layered mandala", "shadow box svg", "cricut mandala",
+               "layered svg", "flagship", f"{theme['label'].lower()} mandala"]
+        )),
         "files": item["files"],
         "folder": item["folder"],
         "preview": item["preview"],

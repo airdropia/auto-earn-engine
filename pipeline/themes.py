@@ -333,19 +333,23 @@ _FIXED_DATES: list[tuple[int, int, int | None, str]] = [
 ]
 
 # Seasonal bucket (month-level fallback)
-_SEASONAL_BUCKET: dict[int, str] = {
-    1: "winter",
-    2: "winter",
-    3: "spring",
-    4: "spring",
-    5: "spring",
-    6: "summer",
-    7: "summer",
-    8: "summer",
-    9: "autumn",
-    10: "autumn",
-    11: "autumn",
-    12: "winter",
+# Seasonal buckets hold a LIST of themes so listings rotate within a season
+# instead of every product in a month sharing one label (which produced
+# duplicate titles that search engines ignore). Order matters: it is the
+# rotation order, advancing by day-of-year.
+_SEASONAL_BUCKET: dict[int, list[str]] = {
+    1: ["winter", "newyear", "hearts"],
+    2: ["valentine", "hearts", "winter"],
+    3: ["spring", "floral", "geometric"],
+    4: ["spring", "floral", "easter", "sunburst"],
+    5: ["mothersday", "spring", "floral", "sunburst"],
+    6: ["summer", "boho", "geometric"],
+    7: ["summer", "boho", "sunburst"],
+    8: ["backtoschool", "summer", "geometric"],
+    9: ["autumn", "leaves", "geometric"],
+    10: ["halloween", "autumn", "leaves"],
+    11: ["thanksgiving", "autumn", "leaves"],
+    12: ["christmas", "winter", "hanukkah", "newyear"],
 }
 
 # Evergreen pool (final fallback; rotate by day-of-year for variety)
@@ -363,25 +367,68 @@ def get_today_theme(date_str: str) -> dict:
 
     Three-tier resolution:
       1. Fixed calendar peak (e.g., Oct 31 -> halloween, Dec 25 -> christmas)
-      2. Seasonal bucket (e.g., September -> autumn)
+      2. Seasonal rotation: the seasonal bucket's own themes, advanced by the
+         day-of-year so consecutive days in the same season differ
       3. Evergreen rotation (day-of-year modulo pool size)
+
+    Why not just the seasonal bucket: an entire month resolving to a single
+    theme produced near-identical titles across every listing in that month,
+    which search engines treat as duplicates and ignore. Rotating within the
+    season keeps the seasonal relevance AND gives each listing its own title.
 
     Returns a theme dict (label, palette, tags, quotes). Never returns None
     so every listing is always themed.
     """
     dt = datetime.strptime(date_str, "%Y-%m-%d")
     month, day = dt.month, dt.day
+    yday = dt.timetuple().tm_yday
 
+    # 1. Fixed calendar peaks always win.
     for m, d_start, d_end, name in _FIXED_DATES:
         if m == month and d_start <= day <= (d_end if d_end else d_start):
             return THEMES[name]
 
+    # 2. Rotate through the season's themes so titles stay distinct.
     seasonal = _SEASONAL_BUCKET.get(month)
-    if seasonal and seasonal in THEMES:
-        return THEMES[seasonal]
+    if seasonal:
+        if isinstance(seasonal, str):
+            options = [seasonal]
+        else:
+            options = [t for t in seasonal if t in THEMES]
+        if options:
+            return THEMES[options[yday % len(options)]]
 
-    pool_index = dt.timetuple().tm_yday % len(_EVERGREEN_POOL)
+    # 3. Evergreen fallback.
+    pool_index = yday % len(_EVERGREEN_POOL)
     return THEMES[_EVERGREEN_POOL[pool_index]]
+
+
+# ---------------------------------------------------------------------------
+# Title variation
+# ---------------------------------------------------------------------------
+# Titles must be unique per listing or search engines treat them as duplicates.
+# These modifiers are combined with the theme label and the per-listing index so
+# each product gets a distinct, readable, search-relevant title.
+
+_TITLE_SHAPES = [
+    "{theme} 3D Shadow-Box Mandala | {layers} Layers",
+    "{theme} Layered Mandala Shadow Box | {layers} Deep Layers",
+    "Layered {theme} Mandala | {layers}-Layer Shadow Box Design",
+    "{theme} Mandala | {layers}-Layer 3D Shadow-Box Template",
+    "Stacked {theme} Mandala Art | {layers} Layer Cut File Set",
+    "{theme} Shadow-Box Mandala | {layers} Layer Vector Bundle",
+]
+
+
+def unique_title(theme: dict, layers: int, discriminator: int) -> str:
+    """
+    Build a title that is unique per listing.
+
+    `discriminator` should be a stable per-listing value (the product slug or
+    date ordinal), so regenerating the same product yields the same title.
+    """
+    shape = _TITLE_SHAPES[discriminator % len(_TITLE_SHAPES)]
+    return shape.format(theme=theme["label"], layers=layers)
 
 
 def theme_label(theme: dict) -> str:

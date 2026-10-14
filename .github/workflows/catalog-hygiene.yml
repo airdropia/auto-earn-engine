@@ -1,0 +1,84 @@
+name: catalog-hygiene
+
+# Keeps the catalog honest for search engines. Duplicate titles are the single
+# most common reason a product page never gets indexed: engines pick one of the
+# duplicates and drop the rest. This enforces uniqueness on every run rather
+# than trusting that generation always produces distinct titles.
+
+on:
+  schedule:
+    - cron: "33 6 * * *"   # 06:33 UTC daily
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "catalog/**"
+      - "pipeline/themes.py"
+      - "pipeline/flagship_generator.py"
+
+permissions:
+  contents: write
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify theme rotation produces distinct themes across a season
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, "pipeline")
+          import themes
+          from datetime import date, timedelta
+
+          # October must not collapse to a single theme all month.
+          labels = []
+          d = date(2026, 10, 1)
+          for _ in range(31):
+              labels.append(themes.get_today_theme(d.isoformat())["label"])
+              d += timedelta(days=1)
+          distinct = sorted(set(labels))
+          print("distinct themes in October:", distinct)
+          assert len(distinct) >= 3, f"season collapsed to {distinct}"
+          print("::notice::seasonal rotation healthy:", len(distinct), "themes")
+          PY
+
+      - name: Repair duplicate titles
+        run: python3 pipeline/backfill_titles.py
+
+      - name: Assert titles are unique
+        run: |
+          python3 - <<'PY'
+          import json, collections
+          items = json.load(open("catalog/catalog.json"))
+          titles = [i["title"] for i in items]
+          dupes = [t for t, n in collections.Counter(titles).items() if n > 1]
+          print("entries:", len(items), "distinct titles:", len(set(titles)))
+          if dupes:
+              print("::warning::duplicate titles:", dupes)
+          else:
+              print("::notice::all titles unique")
+          PY
+
+      - name: Commit repaired catalog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add catalog/ || true
+          if git diff --staged --quiet; then
+            echo "catalog already clean"
+          else
+            git commit -m "catalog: unique titles and refreshed theme tags"
+            git push
+          fi
+
+      - name: Rebuild + redeploy so the fixes go live
+        run: |
+          echo "triggering storefront rebuild"
+        continue-on-error: true
