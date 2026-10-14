@@ -13,6 +13,11 @@ on:
 
 permissions:
   contents: write
+  # deploy-pages authenticates to GitHub Pages via OIDC, which requires this.
+  # Without it the deploy step fails with "Unable to get
+  # ACTIONS_ID_TOKEN_REQUEST_URL".
+  id-token: write
+  pages: write
 
 concurrency:
   group: production-build
