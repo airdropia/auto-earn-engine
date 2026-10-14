@@ -82,7 +82,7 @@ def render_order(rec: dict) -> str:
     else:
         main = (
             '<p class="muted">The download link appears here automatically once '
-            "payment clears. You do not need to refresh this page more than '
+            "payment clears. You do not need to refresh this page more than "
             "once or two minutes.</p>"
         )
 
