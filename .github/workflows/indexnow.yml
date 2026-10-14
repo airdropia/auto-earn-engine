@@ -1,0 +1,50 @@
+name: indexnow
+
+# Free search-engine URL submission. No account, no dashboard, no human step:
+# authentication is a key file published at the site root, which build_site.py
+# copies from site_extra/. Bing/Yandex/Tandex and others poll it.
+#
+# Runs after every deploy, because a freshly built page is exactly when
+# notifying a search engine matters most.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 6 * * *"   # 06:23 UTC daily, re-submit the catalog
+  workflow_run:
+    workflows: ["flagship-test"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify the key file is actually published
+        run: |
+          KEY=$(ls site_extra/*.txt | head -1 | xargs -n1 basename | sed 's/.txt//')
+          echo "key: $KEY"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 25 "https://airdropia.github.io/auto-earn-engine/$KEY.txt" || true)
+          echo "live key file: $CODE"
+          if [ "$CODE" != "200" ]; then
+            echo "::warning::key file not yet live at site root (HTTP $CODE); submission may be rejected"
+          fi
+
+      - name: Submit URLs to IndexNow
+        env:
+          INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
+        run: python3 pipeline/indexnow_submit.py
+
+      - name: Dry run (visibility into exactly what was sent)
+        env:
+          INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
+        run: python3 pipeline/indexnow_submit.py --dry-run
