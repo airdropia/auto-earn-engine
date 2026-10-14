@@ -67,9 +67,7 @@ jobs:
           PY
 
       - name: Commit repaired catalog
-        run: |
-          bash .github/scripts/commit-push.sh "chore(catalog-hygiene): automated update"
-          fi
+        run: bash .github/scripts/commit-push.sh "catalog: unique titles and refreshed theme tags" catalog/
 
       - name: Rebuild + redeploy so the fixes go live
         run: |
