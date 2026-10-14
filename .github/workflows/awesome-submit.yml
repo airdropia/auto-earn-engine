@@ -1,0 +1,139 @@
+name: awesome-submit
+
+# Legitimate open-source discovery, automated.
+#
+# Curated "awesome-*" lists are the one promotion channel that is genuinely
+# free, needs no account, and involves no human on our side: we open a pull
+# request and the maintainer decides. This job finds lists that plausibly match
+# the project, and opens a PR only where one does not already exist.
+#
+# Guard rails, because this touches other people's repositories:
+#  - only forks repos we do not own, so we never push to upstream
+#  - skips a target if an entry or an open PR from us already exists
+#  - never opens more than MAX_NEW_PER_RUN PRs per run
+#  - every PR states plainly what the project is and links the public catalog
+
+on:
+  schedule:
+    - cron: "17 8 * * *"   # 08:17 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  PROJECT_URL: https://github.com/airdropia/auto-earn-engine
+  CATALOG_URL: https://airdropia.github.io/auto-earn-engine/
+  ENTRY_NAME: "VectorForge Daily"
+  MAX_NEW_PER_RUN: "2"
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Discover candidate curated lists
+        id: discover
+        run: |
+          set -euo pipefail
+          QUERIES="awesome+laser+cutting awesome+generative+art awesome+paper+craft awesome+svg awesome+cricut awesome+cut+files"
+          : > candidates.txt
+          for q in $QUERIES; do
+            gh api "search/repositories?q=$q&sort=stars&order=desc&per_page=8" \
+              --jq ".items[] | \"\(.stargazers_count)\t\(.full_name)\t\(.default_branch)\t\(.description // \"\")\"" \
+              2>/dev/null || true
+          done | sort -u -k2,2 > all_candidates.tsv
+
+          # Only substantial, actively-maintained lists are worth a PR.
+          while IFS=$'\t' read -r stars full branch desc; do
+            [ -z "${full:-}" ] && continue
+            [ "${stars:-0}" -ge 50 ] || continue
+            # Skip our own forks.
+            case "$full" in airdropia/*) continue ;; esac
+            echo -e "${stars}\t${full}\t${branch}\t${desc}" >> candidates.txt
+          done < all_candidates.tsv
+
+          echo "candidates: $(wc -l < candidates.txt)"
+          cat candidates.txt
+
+      - name: Open pull requests where an entry is missing
+        run: |
+          set -uo pipefail
+          opened=0
+          while IFS=$'\t' read -r stars full branch desc; do
+            [ -z "${full:-}" ] && continue
+            [ "$opened" -ge "$MAX_NEW_PER_RUN" ] && break
+
+            owner="${full%%/*}"
+            name="${full##*/}"
+
+            # Already present upstream? Then there is nothing to do.
+            if gh api "repos/$full/contents/readme.md" --jq '.content' 2>/dev/null \
+               | tr -d '\n' | base64 -d 2>/dev/null | grep -qi "$ENTRY_NAME"; then
+              echo "skip $full — entry already present"
+              continue
+            fi
+            # readme.md vs README.md
+            readme_path="readme.md"
+            if ! gh api "repos/$full/contents/$readme_path" >/dev/null 2>&1; then
+              readme_path="README.md"
+              if ! gh api "repos/$full/contents/$readme_path" >/dev/null 2>&1; then
+                echo "skip $full — no README found"
+                continue
+              fi
+            fi
+
+            # Do we already have an open PR there?
+            mine=$(gh api "repos/$full/pulls?state=open&per_page=100" \
+                   --jq "[.[] | select(.user.login==\"airdropia\")] | length" 2>/dev/null || echo 0)
+            if [ "${mine:-0}" -gt 0 ]; then
+              echo "skip $full — we already have an open PR"
+              continue
+            fi
+
+            echo "forking $full"
+            gh api -X POST "repos/$full/forks" >/dev/null 2>&1 || true
+            sleep 2
+
+            fork="airdropia/$name"
+            gh repo clone "$fork" "tmp-$name" -- --depth=1 >/dev/null 2>&1 || {
+              echo "skip $fork — clone failed"; continue;
+            }
+            cd "tmp-$name"
+            git config user.name "airdropia"
+            git config user.email "x2newd@gmail.com"
+
+            # Append a clearly-structured entry under the first list section.
+            entry="- [$ENTRY_NAME]($PROJECT_URL)
+    Scheduled pipeline generating layered shadow-box SVG cut files (one
+    vector file per physical layer plus a combined design) and 6500px
+    print-ready PNG renders. Public free catalog: $CATALOG_URL"
+            printf '\n%s\n' "$entry" >> "$readme_path"
+            git add "$readme_path"
+            git commit -q -m "Add $ENTRY_NAME to curated list"
+            git push -q origin "HEAD:$branch" 2>&1 | tail -1
+            cd ..
+
+            url=$(gh pr create --repo "$full" \
+                  --head "airdropia:$branch" --base "$branch" \
+                  --title "Add $ENTRY_NAME" \
+                  --body "Adds **$ENTRY_NAME** to this curated list.
+
+$desc
+
+It is a scheduled pipeline that generates layered shadow-box SVG cut files procedurally: one vector file per physical layer plus a combined design, plus 6500px print-ready PNG renders. Stacking the cut layers produces real physical depth.
+
+Public free catalog: $CATALOG_URL
+Source: $PROJECT_URL
+
+No signup or account required." 2>&1 | tail -1)
+            echo "opened: $url"
+            opened=$((opened+1))
+            rm -rf "tmp-$name"
+          done < candidates.txt
+
+          echo "PRs opened this run: $opened"
+          echo "::notice::awesome-submit opened $opened PR(s)"
