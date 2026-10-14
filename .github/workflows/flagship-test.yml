@@ -24,10 +24,7 @@ jobs:
         run: python3 pipeline/build_site.py
       - name: Commit generator outputs
         run: |
-          git config user.name "auto-earn-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet || (git commit -m "flagship design [skip ci]" && git push)
+          bash .github/scripts/commit-push.sh "flagship design [skip ci]"
       - name: Verify site artifact exists
         run: |
           ls -la site/ | head -20

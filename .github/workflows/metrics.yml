@@ -24,8 +24,4 @@ jobs:
         run: python3 pipeline/collect_metrics.py
 
       - name: Commit metrics
-        run: |
-          git config user.name "auto-earn-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add metrics
-          git diff --cached --quiet || (git commit -m "weekly metrics [skip ci]" && git push)
+        run: bash .github/scripts/commit-push.sh "weekly metrics [skip ci]" metrics/

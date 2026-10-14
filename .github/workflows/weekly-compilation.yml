@@ -35,7 +35,4 @@ jobs:
 
       - name: Commit weekly bundle
         run: |
-          git config user.name "auto-earn-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet || (git commit -m "weekly compilation $(date -u +%G-W%V) [skip ci]" && git push)
+          bash .github/scripts/commit-push.sh "weekly compilation [skip ci]"

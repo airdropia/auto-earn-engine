@@ -54,8 +54,4 @@ jobs:
           ls -la site_extra/brand/
 
       - name: Commit listing assets
-        run: |
-          git config user.name "auto-earn-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add products/*/flagship-*/marketplace/ products/*/flagship-*/*-6500.png site_extra/brand/ || true
-          git diff --cached --quiet || (git commit -m "brand: profile pic + marketplace assets [skip ci]" && git push)
+        run: bash .github/scripts/commit-push.sh "brand: profile pic + marketplace assets [skip ci]" products/ site_extra/
