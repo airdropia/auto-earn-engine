@@ -8,13 +8,7 @@ name: catalog-hygiene
 on:
   workflow_dispatch:
   schedule:
-    - cron: "33 6 * * *"   # 06:33 UTC daily
-  push:
-    branches: [main]
-    paths:
-      - "catalog/**"
-      - "pipeline/themes.py"
-      - "pipeline/flagship_generator.py"
+    - cron: "33 6 * * *"
 
 permissions:
   contents: write
@@ -37,7 +31,6 @@ jobs:
           import themes
           from datetime import date, timedelta
 
-          # October must not collapse to a single theme all month.
           labels = []
           d = date(2026, 10, 1)
           for _ in range(31):
@@ -45,7 +38,8 @@ jobs:
               d += timedelta(days=1)
           distinct = sorted(set(labels))
           print("distinct themes in October:", distinct)
-          assert len(distinct) >= 3, f"season collapsed to {distinct}"
+          if len(distinct) < 3:
+              raise SystemExit(f"season collapsed to {distinct}")
           print("::notice::seasonal rotation healthy:", len(distinct), "themes")
           PY
 
@@ -68,7 +62,3 @@ jobs:
 
       - name: Commit repaired catalog
         run: bash .github/scripts/commit-push.sh "catalog: unique titles and refreshed theme tags" catalog/
-
-      - name: Rebuild + redeploy so the fixes go live
-        run: |
-          echo "catalog hygiene complete; storefront rebuild runs on flagship-test"
