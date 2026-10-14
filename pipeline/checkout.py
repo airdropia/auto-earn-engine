@@ -159,6 +159,9 @@ def create_session(state: dict, product: dict) -> dict:
         "tx_hash": None,
         "block": None,
         "download": f"/downloads/{product['slug']}.zip",
+        # Short reference the buyer can quote and the delivery page is keyed by.
+        "reference": sid[:10].upper(),
+        "status_url": f"/delivery/{sid[:10].upper()}/",
     }
     state["sessions"][sid] = rec
     return rec
@@ -285,6 +288,95 @@ def confirm_payments(state: dict, lookback: int | None = None) -> dict:
     return {"matched": matched, "confirmed": confirmed, "seen": len(transfers),
             "balance_usdt": str(bal), "head_block": head}
 
+def regenerate_delivery_pages(state: dict) -> None:
+    """Re-render delivery pages from current session state.
+
+    Called after every chain scan so a buyer watching their order page sees the
+    transition from awaiting to confirmed without waiting for a site rebuild.
+    """
+    out = ROOT / "site_extra" / "delivery"
+    out.mkdir(parents=True, exist_ok=True)
+    for rec in state["sessions"].values():
+        if not isinstance(rec, dict) or not rec.get("id"):
+            continue
+        ref = rec["id"][:10].upper()
+        d = out / ref
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "index.html").write_text(_delivery_page(rec), encoding="utf-8")
+
+
+def _delivery_page(rec: dict) -> str:
+    """Minimal inline renderer used by the watcher (mirrors pipeline/delivery.py)."""
+    ref = rec["id"][:10].upper()
+    status = rec.get("status", "awaiting_payment")
+    titles = {
+        "awaiting_payment": "Awaiting payment",
+        "paid": "Payment detected - confirming",
+        "confirmed": "Payment confirmed",
+    }
+    blurbs = {
+        "awaiting_payment": (
+            "Send the exact amount shown on the checkout page to the published "
+            "address. This page updates automatically once the transfer is seen "
+            "on-chain."
+        ),
+        "paid": (
+            "Your transfer is on-chain and waiting for confirmation depth. This "
+            "page updates automatically; no action is needed from you."
+        ),
+        "confirmed": "Your download is ready. The link below is live.",
+    }
+    accent = {"confirmed": "#7ee787", "paid": "#d29922"}.get(status, "#8b949e")
+    title = titles.get(status, titles["awaiting_payment"])
+
+    if status == "confirmed":
+        main = (
+            f'<p><a class="btn" style="background:#238636;color:#fff;display:inline-block;'
+            f'padding:10px 18px;border-radius:8px;font-weight:600" '
+            f'href="/{rec["download"].lstrip("/")}" download>Download {rec["slug"]}</a></p>'
+        )
+    else:
+        main = ('<p class="muted">The download link appears here automatically once '
+                'payment clears. No action needed from you.</p>')
+
+    tx = (f"<tr><th>Transaction</th><td>{rec['tx_hash']}</td></tr>"
+          if rec.get("tx_hash") else "")
+    confirmed = (f"<tr><th>Confirmed</th><td>{rec['confirmed_at']}</td></tr>"
+                 if rec.get("confirmed_at") else "")
+
+    return f"""<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Order {ref} | VectorForge Daily</title><meta name="robots" content="noindex,nofollow"/>
+<style>{_DELIVERY_CSS}</style></head><body>
+<header><p><a href="/">&larr; Store</a></p><h1>Order {ref}</h1>
+<span class="badge" style="color:{accent};border-color:{accent}55">{title}</span></header>
+<main><section class="info"><p>{blurbs.get(status, blurbs["awaiting_payment"])}</p>{main}</section>
+<section class="info"><h3>Details</h3><table>
+<tr><th>Order reference</th><td>{ref}</td></tr>
+<tr><th>Bundle</th><td>{rec.get("slug","")}</td></tr>
+<tr><th>Amount sent</th><td>{rec.get("unique_amount_usdt","")} USDT (BEP20)</td></tr>
+{tx}{confirmed}</table></section></main>
+<footer>VectorForge Daily &middot; payments verified on-chain</footer></body></html>"""
+
+
+_DELIVERY_CSS = (
+    ":root{color-scheme:dark}*{box-sizing:border-box;margin:0;padding:0}"
+    "body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#e6edf3;line-height:1.6}"
+    "a{color:#58a6ff;text-decoration:none}"
+    "header{padding:40px 24px 28px;text-align:center;background:linear-gradient(180deg,#101826,#0d1117)}"
+    "header h1{font-size:1.7rem;letter-spacing:-.02em}header p{margin-bottom:8px}"
+    ".badge{display:inline-block;margin-top:12px;font-size:.8rem;border:1px solid;border-radius:999px;padding:4px 12px}"
+    "main{max-width:760px;margin:0 auto;padding:24px 16px 48px}"
+    ".info{background:#11161d;border:1px solid #2b3644;border-radius:12px;padding:18px;margin-bottom:18px}"
+    ".info h3{margin:0 0 8px;font-size:1rem}.info p{color:#9aa7b4;margin:8px 0;font-size:.92rem}"
+    ".muted{color:#6e7681;font-size:.85rem}table{width:100%;border-collapse:collapse;font-size:.9rem}"
+    "table th,table td{text-align:left;padding:8px 10px;border-bottom:1px solid #21262d}"
+    "table th{color:#8b949e;font-weight:600;white-space:nowrap;width:38%}"
+    "table td{font-family:ui-monospace,monospace;word-break:break-all}"
+    "footer{text-align:center;color:#6e7681;font-size:.78rem;padding:24px 16px 40px}"
+)
+
+
 def record_earnings(state: dict) -> dict:
     """Aggregate confirmed sessions into metrics/earnings.json."""
     earnings = {
@@ -381,6 +473,9 @@ def main() -> int:
         res = confirm_payments(state)
         save_sessions(state)
         e = record_earnings(state)
+        # Delivery pages must reflect the new statuses, or a paid buyer keeps
+        # seeing "awaiting payment" until the next full site build.
+        regenerate_delivery_pages(state)
         print(json.dumps({**res, "gross_usdt": e["gross_usdt"],
                           "confirmed_orders": e["confirmed_orders"]}, indent=2))
         if res["matched"]:
