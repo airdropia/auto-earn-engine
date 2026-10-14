@@ -1,0 +1,52 @@
+name: repo-surface
+
+# Keeps the repository's discovery surface healthy. GitHub topics and the repo
+# description are how people (and GitHub's own search) find this project
+# without any ad spend, so they are treated as deployable config rather than
+# a one-time manual setting.
+
+on:
+  schedule:
+    - cron: "41 7 * * *"   # 07:41 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  topics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply repository topics
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          TOPICS='["svg","shadow-box","mandala","cricut","silhouette","laser-cutting","layered-svg","digital-products","generative-art","usdt","crypto-payments","paper-craft","cut-files","design-automation"]'
+          DESCRIPTION="Original layered SVG shadow-box mandalas for Cricut, Silhouette and Glowforge. Automated design pipeline, USDT checkout, no account needed."
+          curl -sS -X PUT \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/topics" \
+            -d "$TOPICS" > /dev/null
+          curl -sS -X PATCH \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO" \
+            -d "$(printf '{"description":"%s"}' "$DESCRIPTION")" > /dev/null
+          echo "topics + description applied"
+
+      - name: Verify
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          CURRENT=$(curl -sS -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/topics" | grep -o '"name"' | wc -l)
+          echo "topics live: $CURRENT"
+          if [ "$CURRENT" -lt 10 ]; then
+            echo "::warning::topic count dropped to $CURRENT"
+          else
+            echo "::notice::discovery surface healthy ($CURRENT topics)"
+          fi
