@@ -156,5 +156,37 @@
     "quality": {
       "layers": 7
     }
+  },
+  {
+    "id": "weekly-compilation-4950f49a",
+    "type": "weekly-compilation",
+    "title": "Weekly Compilation Bundle 2026-W42 | 1 designs",
+    "description": "Best-of-week mega-bundle for 2026-W42 (2026-10-08 to 2026-10-14). Curated compilation of 1 products, 1 total designs across flagship. Theme: Leaves. Every file is a fully usable SVG/PNG from the week's daily batches.",
+    "tags": [
+      "3d layered mandala",
+      "autumn mandala",
+      "botanical svg",
+      "cricut mandala",
+      "flagship",
+      "weekly compilation",
+      "best of week",
+      "mega bundle",
+      "leaves bundle"
+    ],
+    "files": [
+      "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1.svg",
+      "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1-layer-1.svg",
+      "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1-layer-2.svg",
+      "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1-layer-3.svg",
+      "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1-layer-4.svg",
+      "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1-layer-5.svg",
+      "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1-layer-6.svg",
+      "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1-layer-7.svg"
+    ],
+    "folder": "products/2026-W42/weekly-compilation-4950f49a",
+    "preview": "products/2026-W42/weekly-compilation-4950f49a/2026-10-14_flagship-224b6dc5-design-1.svg",
+    "created": "2026-10-14",
+    "designs": 1,
+    "week_id": "2026-W42"
   }
 ]
