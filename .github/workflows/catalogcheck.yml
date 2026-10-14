@@ -1,4 +1,4 @@
-name: catalog-hygiene
+name: catalogcheck
 
 # Keeps the catalog honest for search engines. Duplicate titles are the single
 # most common reason a product page never gets indexed: engines pick one of the
