@@ -58,6 +58,18 @@ main { max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; }
 .actions.big .btn { flex:0 0 auto; padding:12px 18px; }
 .info { background:#101826; border:1px solid #1f2937; border-radius:14px; padding:22px; margin-top:26px; line-height:1.6; }
 .info p { color:#9aa7b4; font-size:.92rem; margin:10px 0; }
+.buy { background:#11161d; border:1px solid #2b3644; border-radius:14px; padding:18px; margin:22px 0; }
+.buy h3 { margin:0 0 8px; font-size:1.1rem; }
+.buy p { color:#9aa7b4; font-size:.92rem; margin:8px 0; }
+.buy .price { font-size:1.25rem; color:#e6edf3; margin:12px 0 4px; }
+.buy .price strong { color:#7ee787; }
+.buy code { word-break:break-all; background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:8px 10px; display:inline-block; font-size:.82rem; color:#7ee787; }
+.buycta { margin-top:14px; }
+table.price-table { width:100%; border-collapse:collapse; margin-top:10px; font-size:.9rem; }
+table.price-table th, table.price-table td { text-align:left; padding:9px 10px; border-bottom:1px solid #21262d; }
+table.price-table th { color:#8b949e; font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; }
+table.price-table td.amt { color:#7ee787; font-family:ui-monospace,monospace; white-space:nowrap; }
+.card-price { color:#7ee787; font-size:.82rem; font-family:ui-monospace,monospace; margin:2px 0 8px; }
 .info h3 { margin-top:20px; font-size:1.05rem; }
 .info h3:first-of-type { margin-top:0; }
 .hero { background:#ffffff; border-radius:14px; border:1px solid #21262d; padding:18px; display:flex; align-items:center; justify-content:center; }
@@ -89,12 +101,12 @@ def money_links(cfg: dict) -> str:
     if cfg.get("patreon_url"):
         parts.append(
             f'<p>Support monthly on <a href="{svgkit.escape(cfg["patreon_url"])}" '
-            'target="_blank" rel="noopener">Patreon</a> - every design here stays free.</p>'
+            'target="_blank" rel="noopener">Patreon</a> - new designs every week.</p>'
         )
     if cfg.get("kofi_url"):
         parts.append(
             f'<p>Tip the machine\'s operator on <a href="{svgkit.escape(cfg["kofi_url"])}" '
-            'target="_blank" rel="noopener">Ko-fi</a> - every file here is free.</p>'
+            'target="_blank" rel="noopener">Ko-fi</a>.</p>'
         )
     if cfg.get("github_sponsors_url"):
         parts.append(
@@ -158,6 +170,68 @@ def file_buttons(item: dict) -> str:
         for f, label in displayed
     )
 
+def product_jsonld(cfg: dict, item: dict) -> str:
+    """schema.org Product markup. Rich results need price/availability, and
+    marking the item honestly is what lets it qualify for product rich results."""
+    import json as _json
+    base = canonical_url(cfg)
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": item["title"],
+        "description": " ".join((item.get("description") or "").split())[:300],
+        "sku": item["id"],
+        "category": item.get("type") or "Digital Design",
+        "brand": {"@type": "Brand", "name": cfg.get("store_name", "VectorForge Daily")},
+        "image": [f"{base}/{rel(item.get('preview', ''))}"],
+        "offers": {
+            "@type": "Offer",
+            "price": checkout_price(cfg, item),
+            "priceCurrency": "USDT",
+            "availability": "https://schema.org/InStock",
+            "url": product_page_url(cfg, item),
+            "seller": {"@type": "Organization", "name": cfg.get("store_name", "VectorForge Daily")},
+        },
+    }
+    return _json.dumps(payload, indent=None)
+
+
+def checkout_price(cfg: dict, item: dict) -> str:
+    """Price in USDT for the paid bundle. Quality-first pricing: a single
+    considered flagship is worth more than a cheap bundle nobody trusts."""
+    override = (item.get("meta") or {}).get("price_usdt") or cfg.get("price_usdt", "7.00")
+    return str(override)
+
+
+def checkout_block(cfg: dict, item: dict) -> str:
+    """Crypto checkout panel. No gateway account, no KYC: the buyer sends
+    USDT BEP20 to the published address and payment is confirmed on-chain
+    by pipeline/checkout.py. Full file list stays public as the free tier."""
+    address = cfg.get("crypto_address", "")
+    network = cfg.get("crypto_network") or "USDT (BEP20)"
+    price = checkout_price(cfg, item)
+    if not address:
+        return ""
+    return (
+        '<section class="buy" id="buy">'
+        f'<h3>Get the full {svgkit.escape(item.get("type", "bundle"))} bundle</h3>'
+        '<p>Every layer file, the combined SVG, and the 6500px print-ready PNG '
+        'render. Delivered instantly as a ZIP - you receive a download link '
+        'the moment the payment is confirmed on-chain.</p>'
+        f'<p class="price"><strong>{svgkit.escape(price)} {svgkit.escape(network)}</strong></p>'
+        '<p class="payaddr">Send exactly <strong>the amount shown on the checkout '
+        'page</strong> to:</p>'
+        f'<p><code id="pay-address">{svgkit.escape(address)}</code>'
+        '<button class="copy-btn" type="button" '
+        'onclick="navigator.clipboard.writeText(document.getElementById(\'pay-address\').textContent)">Copy</button></p>'
+        '<p class="warn">Only ' + svgkit.escape(network) + ' on the BEP20 network '
+        '(BSC). Send anything else and the funds are unrecoverable. '
+        'Payment is verified automatically on-chain; no account needed.</p>'
+        '<p class="buycta"><a class="btn btn-primary" href="../checkout/">Open checkout</a></p>'
+        '</section>'
+    )
+
+
 def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
     """One indexable landing page per product (long-tail SEO).
 
@@ -200,18 +274,22 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         f'<meta property="og:description" content="{svgkit.escape(desc)}"/>'
         f'<meta property="og:image" content="{base}/{svgkit.escape(preview)}"/>'
         '<meta name="twitter:card" content="summary_large_image"/>'
+        '<meta name="robots" content="index,follow,max-image-preview:large"/>'
+        f'<script type="application/ld+json">{product_jsonld(cfg, item)}</script>'
         f"<style>{CSS}</style></head><body>"
         '<header><p><a href="./../..">&larr; Back to all bundles</a></p>'
         f'<h1>{svgkit.escape(title)}</h1>'
         f'<div class="tags">{tag_html}</div>'
-        f'<span class="badge">Free download &middot; commercial use allowed</span>'
+        f'<span class="badge">{svgkit.escape(cfg.get("store_name", "VectorForge Daily"))} '
+        f'&middot; layered SVG cut files &middot; commercial use allowed</span>'
         '</header><main>'
         f'<div class="hero"><img src="{base}/{svgkit.escape(preview)}" alt="{svgkit.escape(title)}"/></div>'
         '<div class="actions big">'
         f'<a class="btn btn-primary" href="{base}/downloads/{item["id"]}.zip" download>Download full bundle (ZIP)</a>'
         f"{file_buttons(item)}"
         '</div>'
-        f'<section class="info">{desc_html}'
+        + checkout_block(cfg, item)
+        + f'<section class="info">{desc_html}'
         '<h3>License</h3>'
         '<p>Free for personal and commercial use. You may use these designs in physical '
         'products, client work and printed goods. Please do not resell or redistribute '
@@ -221,8 +299,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         'most laser software. PNG files (where included) are 1000&times;1000 transparent '
         'rasters for Canva, Procreate and any tool that does not read SVG. All shapes are '
         'vector - scale to any size with no quality loss.</p>'
-        '</section>'
-        + (f'<section class="info"><h3>More {svgkit.escape(item.get("type", ""))} bundles</h3>'
+        '</section>'        + (f'<section class="info"><h3>More {svgkit.escape(item.get("type", ""))} bundles</h3>'
            f'<div class="related">{related_html}</div></section>' if related_html else "")
         + '<section class="support"><h3>Support this machine</h3>'
         + money_links(cfg)
@@ -233,6 +310,56 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         '</body></html>'
     )
 
+def render_checkout(cfg: dict, catalog: list[dict]) -> str:
+    """The checkout page. No account, no KYC, no gateway: buyer sends USDT
+    BEP20 to the published address; payment is confirmed on-chain by
+    pipeline/checkout.py, which assigns each product a unique amount."""
+    base = canonical_url(cfg)
+    address = cfg.get("crypto_address", "")
+    network = cfg.get("crypto_network") or "USDT (BEP20)"
+    price = checkout_price(cfg, {"meta": {}})
+    rows = []
+    for item in sorted(catalog, key=lambda x: x.get("created", ""), reverse=True):
+        rows.append(
+            f'<tr><td>{svgkit.escape(item.get("title", "")[:60])}</td>'
+            f'<td class="amt">{svgkit.escape(checkout_price(cfg, item))} {svgkit.escape(network)}</td>'
+            f'<td><a class="btn btn-ghost" href="{rel(item.get("preview", ""))}">preview</a></td></tr>'
+        )
+    return (
+        '<!DOCTYPE html><html lang="en"><head>'
+        '<meta charset="utf-8"/>'
+        '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
+        f"<title>Crypto checkout | {svgkit.escape(cfg.get('store_name', 'VectorForge Daily'))}</title>"
+        '<meta name="description" content="Buy layered SVG cut files with USDT. No account, no KYC - payment confirmed on-chain."/>'
+        f'<link rel="canonical" href="{base}/checkout/"/>'
+        '<meta name="robots" content="index,follow"/>'
+        f"<style>{CSS}</style></head><body>"
+        '<header><p><a href="./../..">&larr; Back to all bundles</a></p>'
+        '<h1>Checkout</h1>'
+        f'<span class="badge">{svgkit.escape(network)} &middot; no account needed &middot; on-chain verified</span>'
+        '</header><main>'
+        '<section class="info"><h3>How it works</h3>'
+        '<ol><li>Pick a bundle below and note its exact amount.</li>'
+        '<li>Send that amount of ' + svgkit.escape(network) + ' to the address shown.</li>'
+        '<li>Payment is detected automatically on-chain and your download link '
+        'is issued. No account, no login, no KYC - nothing to sign up for.</li></ol>'
+        f'<p class="payaddr">Send only <strong>{svgkit.escape(network)}</strong> on the '
+        'BEP20 network (BSC). Other assets sent here are unrecoverable.</p>'
+        f'<p><code id="pay-address">{svgkit.escape(address)}</code>'
+        '<button class="copy-btn" type="button" '
+        'onclick="navigator.clipboard.writeText(document.getElementById(\'pay-address\').textContent)">Copy</button></p>'
+        '</section>'
+        '<section class="info"><h3>Available bundles</h3>'
+        '<table class="price-table"><thead><tr><th>Bundle</th><th>Price</th><th></th></tr></thead>'
+        '<tbody>' + "".join(rows) + '</tbody></table>'
+        '</section>'
+        + (f'<section class="support">{money_links(cfg)}</section>' if money_links(cfg) else "")
+        + '</main><footer>Payments verified on-chain &middot; '
+        f'<a href="./../..">All bundles</a> &middot; <a href="./../privacy.html">Privacy</a>'
+        + contact_link(cfg) + '</footer></body></html>'
+    )
+
+
 def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
     """robots.txt + sitemap.xml for search engine indexing."""
     base = canonical_url(cfg)
@@ -242,7 +369,7 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
         encoding="utf-8",
     )
 
-    urls: list[str] = [f"{base}/"]
+    urls: list[str] = [f"{base}/", f"{base}/checkout/"]
     for item in sorted(catalog, key=lambda x: x["created"], reverse=True):
         urls.append(product_page_url(cfg, item))
         urls.append(f"{base}/downloads/{item['id']}.zip")
@@ -319,6 +446,15 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
             f"{file_buttons(item)}"
             "</div></div></div>"
         )
+    # Price hint on each card so the catalog itself sells, not just the page.
+    for i, item in enumerate(catalog):
+        price_html = (
+            f'<div class="card-price">{svgkit.escape(checkout_price(cfg, item))} '
+            f'{svgkit.escape(cfg.get("crypto_network", "USDT (BEP20)"))}</div>'
+        )
+        cards[i] = cards[i].replace(
+            '<div class="actions">', price_html + '<div class="actions">', 1
+        )
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     contact_line = contact_link(cfg)
     return (
@@ -326,21 +462,23 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         '<meta charset="utf-8"/>'
         '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
         '<meta name="google-site-verification" content="rj9PdWPw8UQNxgVDfJbn3ISodK8t-0nU51F4L6GtbpI"/>'
-        f"<title>{svgkit.escape(cfg['store_name'])} - Free SVG Bundles Daily</title>"
-        '<meta name="description" content="New generative SVG design bundles published daily by automation. Free download."/>'
+        f"<title>{svgkit.escape(cfg['store_name'])} - Layered SVG Cut Files</title>"
+        '<meta name="description" content="Original 3D layered shadow-box mandala SVG cut files for Cricut, Silhouette and Glowforge. Buy with USDT."/>'
         '<link rel="canonical" href="' + canonical_url(cfg) + '/"/>'
         '<meta property="og:title" content="' + svgkit.escape(cfg["store_name"]) + '"/>'
-        '<meta property="og:description" content="Fresh SVG design bundles generated every day by automation."/>'
+        '<meta property="og:description" content="Fresh layered SVG design bundles generated daily by automation."/>'
         '<meta property="og:image" content="og.png"/>'
+        '<meta name="robots" content="index,follow,max-image-preview:large"/>'
         f"<style>{CSS}</style></head><body>"
         "<header>"
         f"<h1>{svgkit.escape(cfg['store_name'])}</h1>"
         f"<p>{svgkit.escape(cfg['tagline'])}</p>"
-        '<span class="badge">&#9889; 100% automated &middot; free downloads</span>'
+        '<span class="badge">&#9889; 100% automated &middot; USDT checkout &middot; no account needed</span>'
         '<div class="stats">'
         f"<span>{len(catalog)} products</span>"
         f"<span>updated {newest}</span>"
         "<span>SVG vector format</span>"
+        f'<span><a href="{canonical_url(cfg)}/checkout/">Checkout</a></span>'
         "</div></header><main>"
         f'<div class="grid">{"".join(cards)}</div>'
         '<section class="support"><h3>Support this machine</h3>'
@@ -405,6 +543,12 @@ def main() -> None:
         encoding="utf-8",
     )
     (SITE_DIR / "index.html").write_text(render_index(cfg, catalog), encoding="utf-8")
+    # Crypto checkout page (zero-signup: no gateway account, no KYC)
+    checkout_dir = SITE_DIR / "checkout"
+    checkout_dir.mkdir(parents=True, exist_ok=True)
+    (checkout_dir / "index.html").write_text(
+        render_checkout(cfg, catalog), encoding="utf-8"
+    )
     # Per-product landing pages (long-tail SEO: one indexable page each)
     pages = 0
     for item in catalog:
