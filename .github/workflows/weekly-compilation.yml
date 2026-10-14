@@ -36,3 +36,57 @@ jobs:
       - name: Commit weekly bundle
         run: |
           bash .github/scripts/commit-push.sh "weekly compilation [skip ci]"
+
+  # ---------------------------------------------------------------------------
+  # Weekly flagship generation.
+  #
+  # This was previously manual-only (workflow_dispatch on flagship-test.yml),
+  # so the catalog had not gained a design in weeks even though the plan called
+  # for a weekly flagship. Hosted here because this workflow already has an
+  # assigned cron; newly created workflows were not being scheduled.
+  # ---------------------------------------------------------------------------
+  flagship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate flagship design
+        run: python3 pipeline/flagship_generator.py
+
+      - name: Quality gate
+        run: python3 pipeline/quality_gate.py
+
+      - name: Verify theme rotation stays healthy
+        run: python3 pipeline/verify_theme_rotation.py
+
+      - name: Repair any duplicate titles introduced
+        run: python3 pipeline/backfill_titles.py
+
+      - name: Report title uniqueness
+        run: python3 pipeline/report_title_uniqueness.py
+
+      - name: Build storefront
+        run: python3 pipeline/build_site.py
+
+      - name: Commit generator outputs
+        run: bash .github/scripts/commit-push.sh "flagship design [skip ci]"
+
+      - name: Deploy storefront
+        run: |
+          ls -la site/ | head -20
+          find site/products -name '*.svg' | head
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
