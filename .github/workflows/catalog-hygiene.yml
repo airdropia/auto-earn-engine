@@ -6,9 +6,9 @@ name: catalog-hygiene
 # than trusting that generation always produces distinct titles.
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "33 6 * * *"   # 06:33 UTC daily
-  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -71,5 +71,4 @@ jobs:
 
       - name: Rebuild + redeploy so the fixes go live
         run: |
-          echo "triggering storefront rebuild"
-        continue-on-error: true
+          echo "catalog hygiene complete; storefront rebuild runs on flagship-test"
