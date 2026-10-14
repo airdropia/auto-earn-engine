@@ -20,11 +20,13 @@ jobs:
         run: python3 pipeline/flagship_generator.py
       - name: Quality gate
         run: python3 pipeline/quality_gate.py
+      - name: Render delivery pages for issued orders
+        run: python3 pipeline/delivery.py
       - name: Build storefront (per-product pages + sitemap)
         run: python3 pipeline/build_site.py
       - name: Commit generator outputs
         run: |
-          bash .github/scripts/commit-push.sh "flagship design [skip ci]"
+          bash .github/scripts/commit-push.sh "flagship design [skip ci]" site_extra/
       - name: Verify site artifact exists
         run: |
           ls -la site/ | head -20
