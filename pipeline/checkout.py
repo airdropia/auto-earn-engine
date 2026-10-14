@@ -147,8 +147,14 @@ def create_session(state: dict, product: dict) -> dict:
     ).hexdigest()[:20]
     price = price_usdt_for(product)
     amount = price + unique_offset(sid, price)
+    # Reference is the buyer-facing order id. It is derived from the product
+    # slug, NOT from the session id: a session id changes if an invoice is ever
+    # reissued, which would break links the buyer already has. Deriving it from
+    # the slug keeps it stable forever, which is what the static site needs.
+    ref = hashlib.sha1(f"vf-ref:{product['slug']}".encode()).hexdigest()[:10].upper()
     rec = {
         "id": sid,
+        "reference": ref,
         "slug": product["slug"],
         "base_price_usdt": str(price),
         "unique_amount_usdt": str(amount),
@@ -159,9 +165,7 @@ def create_session(state: dict, product: dict) -> dict:
         "tx_hash": None,
         "block": None,
         "download": f"/downloads/{product['slug']}.zip",
-        # Short reference the buyer can quote and the delivery page is keyed by.
-        "reference": sid[:10].upper(),
-        "status_url": f"/delivery/{sid[:10].upper()}/",
+        "status_url": f"/delivery/{ref}/",
     }
     state["sessions"][sid] = rec
     return rec
@@ -297,17 +301,27 @@ def regenerate_delivery_pages(state: dict) -> None:
     out = ROOT / "site_extra" / "delivery"
     out.mkdir(parents=True, exist_ok=True)
     for rec in state["sessions"].values():
-        if not isinstance(rec, dict) or not rec.get("id"):
+        if not isinstance(rec, dict) or not rec.get("slug"):
             continue
-        ref = rec["id"][:10].upper()
+        ref = rec.get("reference") or stable_ref(rec["slug"])
         d = out / ref
         d.mkdir(parents=True, exist_ok=True)
         (d / "index.html").write_text(_delivery_page(rec), encoding="utf-8")
 
 
+def stable_ref(slug: str) -> str:
+    """Buyer-facing order reference for a product slug.
+
+    Single source of truth shared by checkout.py, pipeline/delivery.py and
+    pipeline/build_site.py. Changing this changes buyer-facing URLs, so it is
+    versioned by the "vf-ref:" prefix.
+    """
+    return hashlib.sha1(f"vf-ref:{slug}".encode()).hexdigest()[:10].upper()
+
+
 def _delivery_page(rec: dict) -> str:
     """Minimal inline renderer used by the watcher (mirrors pipeline/delivery.py)."""
-    ref = rec["id"][:10].upper()
+    ref = rec.get("reference") or stable_ref(rec.get("slug", ""))
     status = rec.get("status", "awaiting_payment")
     titles = {
         "awaiting_payment": "Awaiting payment",

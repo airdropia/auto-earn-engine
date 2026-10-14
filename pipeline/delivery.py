@@ -54,12 +54,25 @@ def load() -> dict:
     except json.JSONDecodeError:
         return {}
     sessions = data.get("sessions") if isinstance(data, dict) else None
-    return sessions if isinstance(sessions, dict) else {}
+    if not isinstance(sessions, dict):
+        return {}
+    # Backfill the buyer-facing reference on records issued before it existed,
+    # so their delivery pages keep resolving at the same stable URL.
+    for rec in sessions.values():
+        if isinstance(rec, dict) and not rec.get("reference") and rec.get("slug"):
+            rec["reference"] = stable_ref(rec["slug"])
+    return sessions
 
 
-def order_ref(session_id: str) -> str:
-    """Short, human-quotable reference for an order."""
-    return session_id[:10].upper()
+def order_ref(rec: dict) -> str:
+    """Buyer-facing reference for a session record.
+
+    Prefers the stored `reference`; falls back to deriving it from the slug so
+    records issued before the reference field existed still resolve.
+    """
+    if rec.get("reference"):
+        return str(rec["reference"])
+    return stable_ref(rec.get("slug", ""))
 
 
 def stable_ref(slug: str) -> str:
@@ -73,7 +86,7 @@ def stable_ref(slug: str) -> str:
 
 
 def render_order(rec: dict) -> str:
-    ref = order_ref(rec["id"])
+    ref = order_ref(rec)
     status = rec.get("status", "awaiting_payment")
     title, blurb = STATUS_TEXT.get(status, STATUS_TEXT["awaiting_payment"])
     accent = {"confirmed": "#7ee787", "paid": "#d29922"}.get(status, "#8b949e")
@@ -81,6 +94,9 @@ def render_order(rec: dict) -> str:
     confirmed_at = rec.get("confirmed_at") or ""
     if confirmed_at:
         confirmed_at = confirmed_at.replace("T", " ").replace("Z", " UTC")
+
+    amount = rec.get("unique_amount_usdt") or ""
+    amount_cell = f"{amount} USDT (BEP20)" if amount else "see checkout page"
 
     if status == "confirmed":
         main = (
@@ -99,7 +115,7 @@ def render_order(rec: dict) -> str:
     rows = [
         ("Order reference", ref),
         ("Bundle", rec.get("slug", "")),
-        ("Amount sent", f'{rec.get("unique_amount_usdt", "")} USDT (BEP20)'),
+        ("Amount sent", amount_cell),
         ("Status", title),
     ]
     if rec.get("tx_hash"):
@@ -177,12 +193,12 @@ def main() -> int:
 
     by_slug = {r.get("slug"): r for r in sessions.values() if isinstance(r, dict)}
     entries = dict(by_slug)
-    for item in catalog:
-        slug = item.get("id")
+    for slug, item in ((i.get("id"), i) for i in catalog):
         if not slug or slug in entries:
             continue
         entries[slug] = {
             "id": stable_ref(slug),
+            "reference": stable_ref(slug),
             "slug": slug,
             "unique_amount_usdt": "",
             "status": "awaiting_payment",
@@ -195,12 +211,12 @@ def main() -> int:
 
     counts: dict[str, int] = {}
     for rec in entries.values():
-        if not isinstance(rec, dict) or not rec.get("id"):
+        if not isinstance(rec, dict) or not rec.get("slug"):
             continue
         status = rec.get("status", "awaiting_payment")
         counts[status] = counts.get(status, 0) + 1
         if not args.dry_run:
-            d = OUT_DIR / order_ref(rec["id"])
+            d = OUT_DIR / order_ref(rec)
             d.mkdir(parents=True, exist_ok=True)
             (d / "index.html").write_text(render_order(rec), encoding="utf-8")
 
