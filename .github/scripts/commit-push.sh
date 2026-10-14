@@ -38,6 +38,15 @@ fi
 
 git commit -q -m "$MSG" || { echo "commit failed"; exit 0; }
 
+# Bot commits must never retrigger other workflows. Without this marker a
+# commit that touches a workflow path causes a fresh run, which commits again,
+# which triggers another run: a loop that turns scheduled jobs red.
+# Any commit message containing "skip ci" is ignored by GitHub Actions.
+case "$MSG" in
+  *"skip ci"*) ;;
+  *) git commit -q --amend --no-edit -m "$MSG [skip ci]" 2>/dev/null || true ;;
+esac
+
 attempt_push() {
   # Never force: rebase onto whatever landed, then re-apply our commit.
   if git push origin HEAD:$(git rev-parse --abbrev-ref HEAD) 2>/dev/null; then
@@ -60,7 +69,6 @@ attempt_push() {
     echo "push ok after rebase"
     return 0
   fi
-
   echo "::warning::could not push after rebase; leaving it for the next run"
   return 0
 }

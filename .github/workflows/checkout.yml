@@ -44,4 +44,4 @@ jobs:
         run: python3 pipeline/checkout.py --status
 
       - name: Commit checkout state + earnings
-        run: bash .github/scripts/commit-push.sh "checkout: payment watcher state + earnings" checkout/ metrics/earnings.json
+        run: bash .github/scripts/commit-push.sh "checkout: payment watcher state + earnings [skip ci]" checkout/ metrics/earnings.json
