@@ -45,11 +45,19 @@ METRICS_FILE = ROOT / "metrics" / "earnings.json"
 
 USDT_BEP20_CONTRACT = "0x55d398326f99059fF775485246999027B3197955"
 USDT_DECIMALS = 18
+# Endpoints verified live 2026-10-14: dataseed* REJECT eth_getLogs with
+# -32005 "limit exceeded" (they do not index logs), and publicnode rejects
+# historical ranges without a token. These three answer recent getLogs with
+# no key and no account.
 DEFAULT_RPCS = [
-    "https://bsc-dataseed.binance.org/",
-    "https://bsc-dataseed1.defibit.io/",
-    "https://rpc.ankr.com/bsc",
+    "https://bsc-rpc.publicnode.com",
+    "https://bsc.publicnode.com",
+    "https://1rpc.io/bnb",
 ]
+# BSC blocks are ~3s; 10 minutes of headroom over the cron interval.
+BLOCK_CHUNK = 200
+SCAN_INTERVAL_SEC = 600
+CONFIRMATION_LOOKAHEAD = 30
 
 # Confirmed minimum confirmations before an order is considered paid.
 REQUIRED_CONFIRMATIONS = 3
@@ -59,21 +67,28 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def rpc(method: str, params: list):
-    """Call a BSC RPC, rotating across public endpoints. No API key needed."""
-    url = os.environ.get("BSC_RPC") or DEFAULT_RPCS[0]
-    payload = json.dumps({"jsonrpc": "2.0", "method": method, "params": params, "id": 1})
+def rpc(method: str, params: list, tolerate_error: bool = False):
+    """Call a BSC RPC, rotating across public endpoints. No API key needed.
+
+    tolerate_error=True returns the RPC error object instead of raising, so a
+    run can degrade gracefully rather than failing the whole job.
+    """
+    only = os.environ.get("BSC_RPC")
+    endpoints = [only] if only else DEFAULT_RPCS
     last = None
-    for endpoint in ([url] if os.environ.get("BSC_RPC") else DEFAULT_RPCS):
+    for endpoint in endpoints:
         try:
-            req = urllib_request(endpoint, payload)
-            if not req.get("result") and req.get("error"):
+            req = urllib_request(endpoint, json.dumps(
+                {"jsonrpc": "2.0", "method": method, "params": params, "id": 1}))
+            if req.get("error"):
                 last = req["error"]
                 continue
-            return req["result"]
-        except Exception as exc:  # network hiccup: try the next endpoint
+            return req.get("result")
+        except Exception as exc:
             last = str(exc)
             continue
+    if tolerate_error:
+        return None
     raise RuntimeError(f"all RPC endpoints failed, last error: {last}")
 
 
@@ -166,43 +181,69 @@ def discover_products() -> list:
 def usdt_balance() -> Decimal:
     addr = payout_address()
     data = "0x70a08231" + "0" * 24 + addr[2:].lower()
-    res = rpc("eth_call", [{"to": USDT_BEP20_CONTRACT, "data": data}, "latest"])
+    res = rpc("eth_call", [{"to": USDT_BEP20_CONTRACT, "data": data}, "latest"], tolerate_error=True)
+    if res is None:
+        return Decimal(state_balance_fallback())
     return Decimal(int(res, 16)) / (Decimal(10) ** USDT_DECIMALS)
 
 
+def state_balance_fallback() -> str:
+    st = load_sessions()
+    return st.get("balance_usdt", "0")
+
+
 def scan_transfers(address: str, from_block: int, to_block: int) -> list:
-    """Fetch USDT Transfer events to `address` in a block range.
+    """Fetch USDT Transfer events to `address`, chunked to stay under node limits.
 
     topic0 = Transfer(address,address,uint256)
     topic2 = padded destination address
     """
     topic2 = "0x" + "0" * 24 + address[2:].lower()
-    res = rpc("eth_getLogs", [{
-        "fromBlock": hex(from_block),
-        "toBlock": hex(to_block),
-        "address": USDT_BEP20_CONTRACT,
-        "topics": ["0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", topic2],
-    }])
     out = []
-    for log in res or []:
-        value = Decimal(int(log["data"], 16)) / (Decimal(10) ** USDT_DECIMALS)
-        out.append({
-            "tx_hash": log["transactionHash"],
-            "block": int(log["blockNumber"], 16),
-            "amount": value,
-            "log_index": int(log.get("logIndex", "0x0"), 16),
-        })
+    start = from_block
+    while start <= to_block:
+        end = min(start + BLOCK_CHUNK - 1, to_block)
+        res = rpc("eth_getLogs", [{
+            "fromBlock": hex(start),
+            "toBlock": hex(end),
+            "address": USDT_BEP20_CONTRACT,
+            "topics": ["0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", topic2],
+        }], tolerate_error=True)
+        if res is None:
+            # Degrade: skip this chunk rather than failing the job. A missed
+            # chunk is re-scanned next run because the cursor only advances
+            # across chunks that actually succeeded.
+            print(f"::warning::getLogs chunk {start}-{end} unavailable; skipped")
+            start = end + 1
+            continue
+        for log in res:
+            value = Decimal(int(log["data"], 16)) / (Decimal(10) ** USDT_DECIMALS)
+            out.append({
+                "tx_hash": log["transactionHash"],
+                "block": int(log["blockNumber"], 16),
+                "amount": value,
+                "log_index": int(log.get("logIndex", "0x0"), 16),
+            })
+        start = end + 1
     return out
 
 
-def confirm_payments(state: dict, lookback: int = 4000) -> dict:
+def confirm_payments(state: dict, lookback: int | None = None) -> dict:
     """Match on-chain transfers against open sessions by unique amount."""
     address = payout_address()
-    head = int(rpc("eth_blockNumber", []), 16)
+    head_hex = rpc("eth_blockNumber", [], tolerate_error=True)
+    if head_hex is None:
+        print("::warning::chain unreachable this run; state untouched, nothing lost")
+        return {"matched": 0, "confirmed": 0, "seen": 0,
+                "balance_usdt": state.get("balance_usdt", "0"), "head_block": None}
+    head = int(head_hex, 16)
 
-    if state.get("cursor_block") is None:
-        state["cursor_block"] = max(0, head - lookback)
-    start = max(0, int(state["cursor_block"]) - lookback)
+    # Scan a short window behind the head: covers the interval between cron
+    # runs with margin, and keeps each scan inside node log limits.
+    window = lookback if lookback is not None else SCAN_INTERVAL_SEC // 3 + CONFIRMATION_LOOKAHEAD
+    cursor = state.get("cursor_block")
+    start = max(0, (cursor - window) if cursor is not None else (head - window))
+    start = max(0, head - window) if start > head else start
 
     transfers = scan_transfers(address, start, head)
     matched, already = 0, 0
@@ -243,7 +284,6 @@ def confirm_payments(state: dict, lookback: int = 4000) -> dict:
     state["balance_usdt"] = str(bal)
     return {"matched": matched, "confirmed": confirmed, "seen": len(transfers),
             "balance_usdt": str(bal), "head_block": head}
-
 
 def record_earnings(state: dict) -> dict:
     """Aggregate confirmed sessions into metrics/earnings.json."""
