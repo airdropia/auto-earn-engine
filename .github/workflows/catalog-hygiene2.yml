@@ -33,4 +33,4 @@ jobs:
         run: python3 pipeline/report_title_uniqueness.py
 
       - name: Commit repaired catalog
-        run: bash .github/scripts/commit-push.sh "catalog: unique titles and refreshed theme tags" catalog/
+        run: bash .github/scripts/commit-push.sh "catalog: unique titles and refreshed theme tags" catalog/ metrics/
