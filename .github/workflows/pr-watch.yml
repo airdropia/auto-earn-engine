@@ -1,0 +1,52 @@
+name: pr-watch
+
+# Follows up on the curated-list pull requests. Maintainers sometimes ask for
+# a format change or have questions; an unanswered PR sits forever. This checks
+# for new comments and reports them so the next agent session can reply.
+#
+# It deliberately does NOT auto-reply: a maintainer question deserves an
+# answer, not a template.
+
+on:
+  schedule:
+    - cron: "52 9 * * *"   # 09:52 UTC daily
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check curated-list PRs for maintainer replies
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          # repo:number pairs created by awesome-submit.yml
+          TARGETS="ad-si/awesome-laser-cutting:14 kosmos/awesome-generative-art:22"
+          for t in $TARGETS; do
+            repo="${t%%:*}"; num="${t##*:}"
+            echo "=== $repo#$num ==="
+            state=$(gh api "repos/$repo/pulls/$num" --jq '.state' 2>/dev/null || echo "gone")
+            echo "state: $state"
+            if [ "$state" != "open" ]; then
+              echo "::notice::$repo#$num is $state — no action needed"
+              continue
+            fi
+            comments=$(gh api "repos/$repo/issues/$num/comments" --jq 'length' 2>/dev/null || echo 0)
+            review=$(gh api "repos/$repo/pulls/$num/reviews" --jq 'length' 2>/dev/null || echo 0)
+            echo "comments: $comments  reviews: $review"
+            last=$(gh api "repos/$repo/issues/$num/comments" --jq '.[-1].body // "none"' 2>/dev/null | head -20)
+            echo "latest: $last"
+            # A review request or change request means a human is waiting.
+            state_review=$(gh api "repos/$repo/pulls/$num/reviews" --jq '.[-1].state // "none"' 2>/dev/null)
+            if [ "$state_review" = "CHANGES_REQUESTED" ]; then
+              echo "::warning::$repo#$num has CHANGES_REQUESTED — reply needed"
+            elif [ "${comments:-0}" -gt 0 ]; then
+              echo "::notice::$repo#$num has new comments — review them"
+            else
+              echo "no action needed"
+            fi
+          done
