@@ -54,4 +54,4 @@ jobs:
           ls -la site_extra/brand/
 
       - name: Commit listing assets
-        run: bash .github/scripts/commit-push.sh "brand: profile pic + marketplace assets [skip ci]" products/ site_extra/
+        run: 'bash .github/scripts/commit-push.sh "brand: profile pic + marketplace assets [skip ci]" products/ site_extra/'

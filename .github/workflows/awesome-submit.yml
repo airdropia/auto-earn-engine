@@ -107,29 +107,19 @@ jobs:
             git config user.email "x2newd@gmail.com"
 
             # Append a clearly-structured entry under the first list section.
-            entry="- [$ENTRY_NAME]($PROJECT_URL)
-    Scheduled pipeline generating layered shadow-box SVG cut files (one
-    vector file per physical layer plus a combined design) and 6500px
-    print-ready PNG renders. Public free catalog: $CATALOG_URL"
+            entry="- [$ENTRY_NAME]($PROJECT_URL) Scheduled pipeline generating layered shadow-box SVG cut files (one vector file per physical layer plus a combined design) and 6500px print-ready PNG renders. Public free catalog: $CATALOG_URL"
             printf '\n%s\n' "$entry" >> "$readme_path"
             git add "$readme_path"
             git commit -q -m "Add $ENTRY_NAME to curated list"
             git push -q origin "HEAD:$branch" 2>&1 | tail -1
             cd ..
 
+            body="Adds **$ENTRY_NAME** to this curated list."$'\n\n'"$desc"$'\n\n'"It is a scheduled pipeline that generates layered shadow-box SVG cut files procedurally: one vector file per physical layer plus a combined design, plus 6500px print-ready PNG renders. Stacking the cut layers produces real physical depth."$'\n\n'"Public free catalog: $CATALOG_URL"$'\n'"Source: $PROJECT_URL"$'\n\n'"No signup or account required."
+
             url=$(gh pr create --repo "$full" \
                   --head "airdropia:$branch" --base "$branch" \
                   --title "Add $ENTRY_NAME" \
-                  --body "Adds **$ENTRY_NAME** to this curated list.
-
-$desc
-
-It is a scheduled pipeline that generates layered shadow-box SVG cut files procedurally: one vector file per physical layer plus a combined design, plus 6500px print-ready PNG renders. Stacking the cut layers produces real physical depth.
-
-Public free catalog: $CATALOG_URL
-Source: $PROJECT_URL
-
-No signup or account required." 2>&1 | tail -1)
+                  --body "$body" 2>&1 | tail -1)
             echo "opened: $url"
             opened=$((opened+1))
             rm -rf "tmp-$name"

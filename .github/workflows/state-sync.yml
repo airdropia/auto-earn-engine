@@ -69,7 +69,7 @@ jobs:
         run: python3 pipeline/checkout.py --watch
 
       - name: Commit checkout state + earnings
-        run: bash .github/scripts/commit-push.sh "checkout: payment watcher state + earnings" checkout/ metrics/earnings.json
+        run: 'bash .github/scripts/commit-push.sh "checkout: payment watcher state + earnings" checkout/ metrics/earnings.json'
 
   # ---------------------------------------------------------------------------
   # Catalog hygiene (relocated from catalog-hygiene.yml)
@@ -94,7 +94,7 @@ jobs:
         run: python3 pipeline/report_title_uniqueness.py
 
       - name: Commit repaired catalog
-        run: bash .github/scripts/commit-push.sh "catalog: unique titles and refreshed theme tags" catalog/ metrics/
+        run: 'bash .github/scripts/commit-push.sh "catalog: unique titles and refreshed theme tags" catalog/ metrics/'
 
   # ---------------------------------------------------------------------------
   # Search-engine submission (relocated from indexnow.yml)

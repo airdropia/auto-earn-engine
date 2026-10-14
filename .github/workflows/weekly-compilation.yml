@@ -69,7 +69,7 @@ jobs:
         run: python3 pipeline/checkout.py --init
 
       - name: Commit invoices so buyers see exact amounts
-        run: bash .github/scripts/commit-push.sh "checkout: issue invoices [skip ci]" checkout/
+        run: 'bash .github/scripts/commit-push.sh "checkout: issue invoices [skip ci]" checkout/'
 
       - name: Quality gate
         run: python3 pipeline/quality_gate.py
