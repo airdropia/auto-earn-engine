@@ -449,6 +449,37 @@ COLLECTIONS = [
             "layers reveal the layers beneath, which is what produces the 3D look."
         ),
         "match": ["shadow box", "shadow-box", "layered", "3d layered"],
+        "guide": [
+            ("What a shadow box SVG actually is", (
+                "A shadow box design is not a single image with shading. It is a set "
+                "of separate cut sheets, stacked in order so that the gaps in each "
+                "upper layer reveal the layer beneath. The shadows are cast by real "
+                "physical distance between the sheets, which is why the effect holds "
+                "up from any angle and under any lighting, unlike printed or "
+                "flat-shaded artwork."
+            )),
+            ("What you need to make one", (
+                "Cardstock in the 250-350 gsm range, a craft knife or machine blade, "
+                "foam tape or craft glue, and roughly an hour per piece. Nothing else. "
+                "The SVG files already contain the cut paths, so there is no tracing, "
+                "no cleanup in the software and no test cut needed beyond confirming "
+                "your blade offset."
+            )),
+            ("How to choose the right cardstock weight", (
+                "Heavier cardstock gives cleaner cut edges and holds its shape when "
+                "stacked, but it also needs a sharper blade and more pressure. Below "
+                "250 gsm the layers bow and the depth flattens out. Between 250 and "
+                "350 gsm is the range where most layered designs look their best, and "
+                "it is what the designs here were proportioned for."
+            )),
+            ("Sizing and scaling", (
+                "The artwork is drawn at 300mm and scales without loss because every "
+                "shape is a vector path. If your machine cannot cut that width, scale "
+                "it down proportionally before importing. Avoid scaling up beyond "
+                "roughly twice the original size, because very fine interior details "
+                "in the smallest layer can close up and tear out."
+            )),
+        ],
     },
     {
         "slug": "cricut-mandala-svg",
@@ -460,6 +491,28 @@ COLLECTIONS = [
             "up after import. Sized for cardstock and mat board."
         ),
         "match": ["mandala", "cricut"],
+        "guide": [
+            ("Importing into Cricut Design Space", (
+                "Upload the SVG directly rather than converting it to an image. Design "
+                "Space accepts SVG upload, and keeping it as vector means the cut paths "
+                "stay exact. After uploading, confirm the size reads correctly at the "
+                "top of the canvas, then ungroup only if you need to move individual "
+                "layers independently."
+            )),
+            ("Why one file per layer matters", (
+                "Each layer ships as its own SVG so you can cut it on its own sheet. "
+                "If everything arrived as one flattened file you would have to "
+                "manually separate the tones by colour, which is slow and error-prone. "
+                "Cut in ascending layer order and keep the pieces labelled as you go."
+            )),
+            ("Adhesive and alignment", (
+                "A thin dab of craft glue or a strip of foam tape on the back of each "
+                "layer is enough. Too much adhesive causes the layers to sink into each "
+                "other and the depth disappears. Align from the centre outwards rather "
+                "than corner to corner, so small errors average out instead of "
+                "accumulating across the sheet."
+            )),
+        ],
     },
     {
         "slug": "layered-svg-bundle",
@@ -471,6 +524,27 @@ COLLECTIONS = [
             "and most laser software. Scales to any size with no quality loss."
         ),
         "match": ["layered svg", "bundle", "layered"],
+        "guide": [
+            ("What is in the bundle", (
+                "One combined SVG showing the finished design, one separate SVG per "
+                "physical layer, and print-ready PNG renders. The combined file is for "
+                "preview and for laser software that wants a single job; the per-layer "
+                "files are what you actually cut from cardstock."
+            )),
+            ("Which software reads these files", (
+                "Cricut Design Space, Silhouette Studio, Inkscape, Illustrator, "
+                "Affinity Designer, LightBurn and most laser control software all read "
+                "SVG natively. Nothing needs converting. If a tool only accepts PNG or "
+                "JPG, use the included renders instead, accepting that they are not "
+                "cuttable in the same way."
+            )),
+            ("File conventions", (
+                "Layers are named in ascending order so the cut sequence matches the "
+                "stacking sequence. Files are named with the product slug, which keeps "
+                "them identifiable after downloading and re-importing into a different "
+                "library."
+            )),
+        ],
     },
     {
         "slug": "silhouette-cut-files",
@@ -482,6 +556,21 @@ COLLECTIONS = [
             "no rasterised elements."
         ),
         "match": ["silhouette", "layered", "shadow box"],
+        "guide": [
+            ("Preparing for Silhouette Studio", (
+                "Import each layer SVG separately and confirm the registration "
+                "settings match your blade offset. Silhouette reads SVG directly, so "
+                "there is no trace step. Cut with the mat still attached and standard "
+                "settings for cardstock, then adjust cut pressure only if a layer "
+                "takes more than two passes."
+            )),
+            ("Silhouette-specific tips", (
+                "Silhouette's default blade offset differs between models, so run a "
+                "small test cut on the cheapest layer first. Keep the material "
+                "consistency high across all sheets, because varying thickness across "
+                "layers is what makes the finished shadow box sit unevenly."
+            )),
+        ],
     },
     {
         "slug": "mandala-svg",
@@ -493,6 +582,20 @@ COLLECTIONS = [
             "sharp at any scale."
         ),
         "match": ["mandala"],
+        "guide": [
+            ("How these mandalas are constructed", (
+                "The geometry is computed rather than traced or stock, so the radial "
+                "symmetry is exact at every ring. Motifs repeat around the "
+                "circumference with a controlled phase offset between layers, which is "
+                "what keeps the negative space legible once the layers are stacked."
+            )),
+            ("Why the voids matter", (
+                "A mandala made only of line work reads flat when cut. The design works "
+                "because each upper layer removes more area than the one below it, so "
+                "each successive layer reveals a different portion of the pattern. The "
+                "voids are the design, not gaps in it."
+            )),
+        ],
     },
     {
         "slug": "3d-layered-art",
@@ -503,6 +606,20 @@ COLLECTIONS = [
             "crafters and laser cutters who want depth rather than a flat print."
         ),
         "match": ["3d layered", "layered", "shadow box"],
+        "guide": [
+            ("Real depth versus simulated depth", (
+                "Printable 3D art fakes depth with gradients and drop shadows, so it "
+                "still looks flat from the side and disappears at a viewing angle. A "
+                "layered template is built from separate sheets at real distances, so "
+                "the parallax is genuine and holds up when held, tilted or hung."
+            )),
+            ("Depth planning when assembling", (
+                "Even spacing between layers reads as deliberate; uneven spacing reads "
+                "as an accident. Decide your gap before you start gluing, and use the "
+                "same gap throughout. Foam tape is more forgiving than glue because it "
+                "sets the spacing consistently."
+            )),
+        ],
     },
 ]
 
@@ -552,6 +669,14 @@ def render_collection(cfg: dict, catalog: list[dict], spec: dict) -> str:
         for c in others
     )
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    guide_html = ""
+    guide_sections = spec.get("guide") or []
+    if guide_sections:
+        blocks = "".join(
+            f"<h3>{svgkit.escape(h)}</h3><p>{svgkit.escape(body)}</p>"
+            for h, body in guide_sections
+        )
+        guide_html = f'<section class="info"><h3>Buying guide</h3>{blocks}</section>'
     return (
         '<!DOCTYPE html><html lang="en"><head>'
         '<meta charset="utf-8"/>'
@@ -569,7 +694,8 @@ def render_collection(cfg: dict, catalog: list[dict], spec: dict) -> str:
         f'<span class="badge">{len(items)} design{"" if len(items)==1 else "s"} &middot; instant download &middot; USDT checkout</span>'
         '</header><main>'
         f'<section class="info"><p>{svgkit.escape(spec["intro"])}</p></section>'
-        f'<div class="grid">{"".join(cards)}</div>'
+        + guide_html
+        + f'<div class="grid">{"".join(cards)}</div>'
         f'<section class="info"><h3>Browse other collections</h3><div class="related">{links}</div></section>'
         f'<section class="support"><h3>Support this machine</h3>{money_links(cfg)}</section>'
         '</main><footer>Updated ' + updated + ' &middot; '
