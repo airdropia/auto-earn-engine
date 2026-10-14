@@ -19,9 +19,9 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: state-sync
-  cancel-in-progress: false
+# No concurrency group: this workflow hosts several independent jobs, and a
+# shared group meant one slow job (the chain scan) held up the rest. Each job
+# is independently idempotent, so overlapping runs are safe.
 
 jobs:
   report:
@@ -47,7 +47,6 @@ jobs:
   # ---------------------------------------------------------------------------
   checkout:
     runs-on: ubuntu-latest
-    needs: report
     steps:
       - uses: actions/checkout@v4
 
