@@ -142,8 +142,11 @@ jobs:
               git add "$readme_path"
               git commit -q -m "Add $ENTRY_NAME to curated list"
               pushed=""
+              # Force: the fork branch is our own scratch staging area for
+              # PRs, and forks can carry stale/diverged history that would
+              # otherwise reject a fast-forward from upstream's tip.
               for attempt in 1 2 3; do
-                if git push -q origin "HEAD:refs/heads/$branch"; then pushed=1; break; fi
+                if git push -qf origin "HEAD:refs/heads/$branch"; then pushed=1; break; fi
                 sleep 6
               done
               [ -n "$pushed" ]
