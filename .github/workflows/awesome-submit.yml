@@ -116,19 +116,12 @@ jobs:
             fork="airdropia/$name"
             workdir="$RUNNER_TEMP/fork-$name"
             rm -rf "$workdir"
-            cloned=""
-            # A freshly created fork needs a few seconds before it can be
-            # cloned; the first attempt usually lands too early.
-            for attempt in 1 2 3 4 5; do
-              sleep 6
-              if GH_TOKEN="$VF_GH_PAT" gh repo clone "$fork" "$workdir" -- --depth=1 >/dev/null 2>&1; then
-                cloned=1
-                break
-              fi
-              rm -rf "$workdir"
-            done
-            if [ -z "$cloned" ]; then
-              echo "skip $fork — clone failed after 5 attempts"
+            # Clone the UPSTREAM tree, not the fork: a fork's default branch
+            # can differ from the upstream's (this repo's fork sits on master
+            # while upstream uses main), and pushing a fork-clone onto the
+            # upstream branch name is then a non-fast-forward rejection.
+            if ! GH_TOKEN="$VF_GH_PAT" gh repo clone "$full" "$workdir" -- --depth=1 >/dev/null 2>&1; then
+              echo "skip $full — upstream clone failed"
               continue
             fi
 
@@ -144,10 +137,16 @@ jobs:
               gh auth setup-git >/dev/null 2>&1
               git config user.name "airdropia"
               git config user.email "x2newd@gmail.com"
+              git remote set-url origin "https://github.com/$fork.git"
               printf '\n%s\n' "$entry" >> "$readme_path"
               git add "$readme_path"
               git commit -q -m "Add $ENTRY_NAME to curated list"
-              git push -q origin "HEAD:$branch"
+              pushed=""
+              for attempt in 1 2 3; do
+                if git push -q origin "HEAD:refs/heads/$branch"; then pushed=1; break; fi
+                sleep 6
+              done
+              [ -n "$pushed" ]
             ); then
               echo "skip $full — edit/push failed"
               continue
