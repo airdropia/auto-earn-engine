@@ -88,6 +88,7 @@ jobs:
             echo "::warning::VF_GH_PAT secret missing — cross-repo push/PR impossible, skipping submit"
             exit 0
           fi
+          echo "VF_GH_PAT loaded (length ${#VF_GH_PAT})"
           opened=0
           while IFS=$'\t' read -r stars full branch desc; do
             [ -z "${full:-}" ] && continue
@@ -96,22 +97,21 @@ jobs:
             name="${full##*/}"
 
             # Already present upstream? Then there is nothing to do.
-            if gh api "repos/$full/contents/readme.md" --jq '.content' 2>/dev/null \
+            # The /readme endpoint resolves the real casing (Readme.md, ...).
+            readme_json=$(gh api "repos/$full/readme" 2>/dev/null) || {
+              echo "skip $full — no README found"; continue;
+            }
+            readme_path=$(printf '%s' "$readme_json" | jq -r '.name')
+            if printf '%s' "$readme_json" | jq -r '.content' \
                | tr -d '\n' | base64 -d 2>/dev/null | grep -qi "$ENTRY_NAME"; then
               echo "skip $full — entry already present"
               continue
             fi
-            readme_path="readme.md"
-            if ! gh api "repos/$full/contents/$readme_path" >/dev/null 2>&1; then
-              readme_path="README.md"
-              if ! gh api "repos/$full/contents/$readme_path" >/dev/null 2>&1; then
-                echo "skip $full — no README found"
-                continue
-              fi
-            fi
 
             echo "forking $full"
-            GH_TOKEN="$VF_GH_PAT" gh api -X POST "repos/$full/forks" >/dev/null 2>&1 || true
+            if ! fork_out=$(GH_TOKEN="$VF_GH_PAT" gh api -X POST "repos/$full/forks" 2>&1); then
+              echo "fork api failed for $full: $fork_out"
+            fi
 
             fork="airdropia/$name"
             workdir="$RUNNER_TEMP/fork-$name"
@@ -136,6 +136,9 @@ jobs:
             if ! (
               set -euo pipefail
               cd "$workdir"
+              # gh becomes the git credential helper, so the push
+              # authenticates even when the clone was anonymous.
+              GH_TOKEN="$VF_GH_PAT" gh auth setup-git >/dev/null 2>&1
               git config user.name "airdropia"
               git config user.email "x2newd@gmail.com"
               printf '\n%s\n' "$entry" >> "$readme_path"
