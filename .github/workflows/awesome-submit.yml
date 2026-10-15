@@ -136,9 +136,12 @@ jobs:
             if ! (
               set -euo pipefail
               cd "$workdir"
-              # gh becomes the git credential helper, so the push
-              # authenticates even when the clone was anonymous.
-              GH_TOKEN="$VF_GH_PAT" gh auth setup-git >/dev/null 2>&1
+              # Export the PAT INSIDE the subshell: git's credential helper
+              # (gh auth git-credential) reads GH_TOKEN from its environment,
+              # and the workflow-level GITHUB_TOKEN would otherwise make the
+              # push authenticate as github-actions[bot] and get a 403.
+              export GH_TOKEN="$VF_GH_PAT"
+              gh auth setup-git >/dev/null 2>&1
               git config user.name "airdropia"
               git config user.email "x2newd@gmail.com"
               printf '\n%s\n' "$entry" >> "$readme_path"
