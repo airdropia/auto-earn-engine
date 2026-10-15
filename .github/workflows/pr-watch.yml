@@ -24,8 +24,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -uo pipefail
-          # repo:number pairs created by awesome-submit.yml
-          TARGETS="ad-si/awesome-laser-cutting:14 kosmos/awesome-generative-art:22"
+          # repo:number pairs maintained alongside awesome-submit.yml.
+          # Closed-with-feedback entries (ad-si, kosmos) were replaced on
+          # 2026-10-15 when the second attempt opened PRs on two new lists.
+          TARGETS="willianjusten/awesome-svg:250 camilleroux/awesome-generative-art:42"
           for t in $TARGETS; do
             repo="${t%%:*}"; num="${t##*:}"
             echo "=== $repo#$num ==="
