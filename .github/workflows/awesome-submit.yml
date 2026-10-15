@@ -120,7 +120,7 @@ jobs:
             # can differ from the upstream's (this repo's fork sits on master
             # while upstream uses main), and pushing a fork-clone onto the
             # upstream branch name is then a non-fast-forward rejection.
-            if ! GH_TOKEN="$VF_GH_PAT" gh repo clone "$full" "$workdir" -- --depth=1 >/dev/null 2>&1; then
+            if ! GH_TOKEN="$VF_GH_PAT" gh repo clone "$full" "$workdir" >/dev/null 2>&1; then
               echo "skip $full — upstream clone failed"
               continue
             fi
