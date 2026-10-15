@@ -120,6 +120,8 @@ jobs:
   repo-surface:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Apply repository topics and description
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
