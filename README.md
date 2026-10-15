@@ -35,6 +35,28 @@ and most laser software. All shapes are real vector paths — nothing traced.
 Free for personal and commercial use — physical products, client work, printed
 goods. Please do not resell or redistribute the raw digital files as-is.
 
+## The generator (open source)
+
+The design pipeline in `pipeline/` is the software behind this storefront, and
+it is MIT-licensed (see `LICENSE`):
+
+- `flagship_generator.py` — designs a new 7-layer shadow-box mandala per UTC
+  day (idempotent: the slug derives from the date, existing days are skipped)
+- `svgkit.py` — dependency-free SVG geometry helpers used by every design
+- `quality_gate.py` — floor checks (layer counts, palette, path sanity)
+- `build_site.py` — renders the static storefront, collections and checkout
+
+Requirements: **Python 3.10+, standard library only — no pip installs.**
+
+```bash
+python3 pipeline/flagship_generator.py     # design today's flagship
+python3 pipeline/quality_gate.py           # verify generated output
+python3 pipeline/build_site.py             # render the static site
+```
+
+Everything above also runs unattended on scheduled GitHub Actions; see
+`.github/workflows/`.
+
 ## How this is built
 
 The storefront and every asset here are produced by a scheduled pipeline that
@@ -42,5 +64,6 @@ runs entirely in GitHub Actions. Design generation, rendering, packaging and
 deployment are automated; no manual step sits between the generator and a live
 listing. Payments are confirmed on-chain, so buying needs no account.
 
-This repository contains machine-generated artifacts only. See `LICENSE` for
-usage terms.
+The repository ships both the MIT-licensed generator source and its generated
+artifacts. See `LICENSE`: the code is MIT; design assets keep their own
+commercial-use grant.
