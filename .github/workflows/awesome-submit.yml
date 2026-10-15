@@ -101,19 +101,36 @@ jobs:
             readme_json=$(gh api "repos/$full/readme" 2>/dev/null) || {
               echo "skip $full — no README found"; continue;
             }
-            readme_path=$(printf '%s' "$readme_json" | jq -r '.name')
-            if printf '%s' "$readme_json" | jq -r '.content' \
+            readme_path=$(printf '%s' "$readme_json" | sed -n 's/^.*"name":"\([^"]*\)".*$/\1/p' | head -1)
+            if [ -z "$readme_path" ]; then
+              echo "skip $full — could not parse README name"
+              continue
+            fi
+            readme_content=$(printf '%s' "$readme_json" | sed -n 's/^.*"content":"\([^"]*\)".*$/\1/p' | head -1)
+            if [ -n "$readme_content" ] && printf '%s' "$readme_content" \
                | tr -d '\n' | base64 -d 2>/dev/null | grep -qi "$ENTRY_NAME"; then
               echo "skip $full — entry already present"
               continue
             fi
 
             echo "forking $full"
-            if ! fork_out=$(GH_TOKEN="$VF_GH_PAT" gh api -X POST "repos/$full/forks" 2>&1); then
-              echo "fork api failed for $full: $fork_out"
+            fork="airdropia/$name"
+            # A fork under our name may already exist for a DIFFERENT upstream
+            # (repo names collide: awesome-generative-art exists as a fork of
+            # kosmos while we are targeting camilleroux). PRs can only come
+            # from a fork of the target repo, so verify the parent and rebuild
+            # the fork from scratch when it is the wrong one. This also avoids
+            # the fork API's numbered duplicates (name-1, name-2, ...).
+            parent=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$fork" --jq '.parent.full_name // empty' 2>/dev/null || true)
+            if [ "$parent" != "$full" ]; then
+              if [ -n "$parent" ]; then
+                GH_TOKEN="$VF_GH_PAT" gh api -X DELETE "repos/$fork" >/dev/null 2>&1 || true
+                sleep 3
+              fi
+              GH_TOKEN="$VF_GH_PAT" gh api -X POST "repos/$full/forks" >/dev/null 2>&1 || true
+              sleep 6   # a brand-new fork needs a moment to provision
             fi
 
-            fork="airdropia/$name"
             workdir="$RUNNER_TEMP/fork-$name"
             rm -rf "$workdir"
             # Clone the UPSTREAM tree, not the fork: a fork's default branch
@@ -129,27 +146,23 @@ jobs:
             if ! (
               set -euo pipefail
               cd "$workdir"
-              # Export the PAT INSIDE the subshell: git's credential helper
-              # (gh auth git-credential) reads GH_TOKEN from its environment,
-              # and the workflow-level GITHUB_TOKEN would otherwise make the
-              # push authenticate as github-actions[bot] and get a 403.
-              export GH_TOKEN="$VF_GH_PAT"
-              gh auth setup-git >/dev/null 2>&1
+              # The clone came from upstream; redirect origin to OUR fork
+              # before pushing (upstream itself denies us, by design).
+              git remote set-url origin "https://github.com/$fork.git"
               git config user.name "airdropia"
               git config user.email "x2newd@gmail.com"
-              git remote set-url origin "https://github.com/$fork.git"
               printf '\n%s\n' "$entry" >> "$readme_path"
               git add "$readme_path"
               git commit -q -m "Add $ENTRY_NAME to curated list"
-              pushed=""
-              # Force: the fork branch is our own scratch staging area for
-              # PRs, and forks can carry stale/diverged history that would
-              # otherwise reject a fast-forward from upstream's tip.
-              for attempt in 1 2 3; do
-                if git push -qf origin "HEAD:refs/heads/$branch"; then pushed=1; break; fi
-                sleep 6
-              done
-              [ -n "$pushed" ]
+              # Authenticate the push with an explicit extraheader instead of
+              # gh auth setup-git: on a fresh runner gh has no active account,
+              # and the helper would resolve credentials from the workflow
+              # GITHUB_TOKEN, which is denied 403 on other repositories.
+              # Force: the fork branch is our own scratch staging area, and
+              # forks can carry stale history that would otherwise reject a
+              # fast-forward from upstream's tip.
+              git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$VF_GH_PAT" | base64 | tr -d '\n')" \
+                  push -qf origin "HEAD:refs/heads/$branch"
             ); then
               echo "skip $full — edit/push failed"
               continue
