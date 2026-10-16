@@ -50,7 +50,11 @@ jobs:
         id: discover
         run: |
           set -euo pipefail
-          QUERIES="awesome+laser+cutting awesome+generative+art awesome+paper+craft awesome+svg awesome+cricut awesome+cut+files"
+          # in:name is doing the real filtering here; the words only widen the
+          # net. The last three queries were added after research pointed at
+          # the DIY and maker-tooling lists, which are the ones whose readers
+          # actually own a cutting machine.
+          QUERIES="awesome+laser+cutting awesome+generative+art awesome+paper+craft awesome+svg awesome+cricut awesome+cut+files awesome+diy awesome+maker+tools awesome+crafts"
           : > candidates.txt
           for q in $QUERIES; do
             gh api "search/repositories?q=$q+in:name+archived:false+fork:false&sort=stars&order=desc&per_page=12" \
