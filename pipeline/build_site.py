@@ -1196,6 +1196,46 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
         encoding="utf-8",
     )
 
+def memorial_hero(cfg: dict, catalog: list[dict]) -> str:
+    """A dedicated entry point for the memorial line on the homepage.
+
+    The memorial designs are a different purchase from the mandala bundles,
+    made for a different reason, at a different price. A visitor who landed
+    on a memorial collection page should be able to recognise on arrival that
+    this shop does memorials, and a visitor who came for a mandala should
+    still find those below. The hero only appears once memorial products
+    actually exist, so an empty storefront does not advertise a line that is
+    not there yet.
+    """
+    memorial = [i for i in catalog if i.get("type", "").startswith("memorial")]
+    if not memorial:
+        return ""
+    base = canonical_url(cfg)
+    bundles = [i for i in memorial if i.get("type") == "memorial-bundle"]
+    lead = bundles[0] if bundles else memorial[0]
+    return (
+        '<section class="info" id="memorial">'
+        '<h3>A keepsake for someone you will never stop missing</h3>'
+        '<p>Seven-layer memorial shadow boxes with an <strong>editable name '
+        'plate</strong> on the front layer: open it in Cricut Design Space, '
+        'type their name and the years, cut the sheets and stack them. Pet '
+        'paw, angel wings and rainbow bridge, in midnight, pearl and antique '
+        'gold.</p>'
+        '<div class="related">'
+        f'<a class="rel" href="{product_page_url(cfg, lead)}">'
+        f'<span>{svgkit.escape(lead.get("title", "Memorial collection"))}</span></a>'
+        '<a class="rel" href="' + base + '/c/pet-memorial-shadow-box/">'
+        '<span>Pet memorial shadow boxes</span></a>'
+        '<a class="rel" href="' + base + '/c/in-loving-memory-svg/">'
+        '<span>In loving memory designs</span></a>'
+        '<a class="rel" href="' + base + '/c/dog-memorial-svg/">'
+        '<span>Dog memorial designs</span></a>'
+        '<a class="rel" href="' + base + '/c/cat-memorial-svg/">'
+        '<span>Cat memorial designs</span></a>'
+        '</div></section>'
+    )
+
+
 def render_index(cfg: dict, catalog: list[dict]) -> str:
     newest = max(item["created"] for item in catalog)
     cards: list[str] = []
@@ -1279,8 +1319,8 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         '<meta charset="utf-8"/>'
         '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
         '<meta name="google-site-verification" content="rj9PdWPw8UQNxgVDfJbn3ISodK8t-0nU51F4L6GtbpI"/>'
-        f"<title>{svgkit.escape(cfg['store_name'])} - Layered SVG Cut Files</title>"
-        '<meta name="description" content="Original 3D layered shadow-box mandala SVG cut files for Cricut, Silhouette and Glowforge. Buy with USDT."/>'
+        f"<title>{svgkit.escape(cfg['store_name'])} - Memorial Shadow Boxes & Layered SVG Cut Files</title>"
+        '<meta name="description" content="Pet memorial and in-loving-memory shadow box SVGs with editable name plates, plus original layered mandala bundles for Cricut. Buy with USDT."/>'
         '<link rel="canonical" href="' + canonical_url(cfg) + '/"/>'
         '<meta property="og:title" content="' + svgkit.escape(cfg["store_name"]) + '"/>'
         '<meta property="og:description" content="Fresh layered SVG design bundles generated daily by automation."/>'
@@ -1297,6 +1337,7 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         "<span>SVG vector format</span>"
         f'<span><a href="{canonical_url(cfg)}/checkout/">Checkout</a></span>'
         "</div></header><main>"
+        + memorial_hero(cfg, catalog) +
         f'<section class="info"><h3>Browse by type</h3><div class="related">'
         + "".join(
             f'<a class="rel" href="{canonical_url(cfg)}/c/{c["slug"]}/"><span>{svgkit.escape(c["title"])}</span></a>'
