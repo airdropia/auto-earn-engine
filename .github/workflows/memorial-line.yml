@@ -1,0 +1,20 @@
+name: memorial-line
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  all-variants:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate all three memorial variants
+        run: python3 pipeline/memorial_generator.py --all
+      - name: Quality gate
+        run: python3 pipeline/quality_gate.py
+      - name: Commit memorial variants
+        run: 'bash .github/scripts/commit-push.sh "memorial: full line launched (pet, angel, rainbow) [skip ci]" products/ catalog/'
