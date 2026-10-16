@@ -659,6 +659,107 @@ def render_checkout(cfg: dict, catalog: list[dict]) -> str:
 # one needs hand-written copy that matches real search intent.
 COLLECTIONS = [
     {
+        "slug": "golden-retriever-memorial-svg",
+        "title": "Golden Retriever Memorial SVG",
+        "h1": "Golden Retriever Memorial Shadow Box SVGs",
+        "intro": (
+            "A layered shadow box for a golden retriever who is gone. Seven soft "
+            "layers with an editable name plate on the front layer: type your "
+            "golden's name and dates, cut the sheets, and stack them into a "
+            "keepsake that belongs on a wall rather than in a drawer."
+        ),
+        "match": ["golden retriever", "golden", "retriever"],
+        "pinned": ["memorial-pet", "memorial-bundle"],
+        "guide": [
+            ("Why golden retrievers need their own keepsake", (
+                "A golden retriever is a dog people describe with a specific "
+                "word: gentle. The keepsake you cut for one should carry that, "
+                "which is why the front layer is left blank for their name and "
+                "years rather than printed with a generic caption."
+            )),
+            ("How to personalise the front layer", (
+                "Open the layer-1 file in Cricut Design Space or Silhouette "
+                "Studio, double-click the placeholder text and type the name and "
+                "the years. Nothing else on the sheet changes, so the keepsake "
+                "is personalised without any extra cutting."
+            )),
+        ],
+    },
+    {
+        "slug": "labrador-memorial-svg",
+        "title": "Labrador Memorial SVG",
+        "h1": "Labrador Memorial Shadow Box SVGs",
+        "intro": (
+            "Seven-layer memorial shadow boxes for a labrador, with an editable "
+            "name plate on the front layer so their name and dates go on the "
+            "piece before the first cut. Midnight, pearl and antique gold, built "
+            "for real physical depth."
+        ),
+        "match": ["labrador", "lab", "retriever"],
+        "pinned": ["memorial-pet", "memorial-bundle"],
+        "guide": [
+            ("Cutting for a labrador", (
+                "Labs are big dogs, so most makers cut a 12x12 inch box. The "
+                "artwork is vector and scales without loss, so the same file "
+                "gives a keepsake that fits a mantelpiece or a wall."
+            )),
+            ("Why the name plate matters most here", (
+                "A lab is usually named once and called that for fifteen years. "
+                "Putting that name on the front layer is the whole difference "
+                "between a decoration and a memorial."
+            )),
+        ],
+    },
+    {
+        "slug": "cat-memorial-svg",
+        "title": "Cat Memorial SVG",
+        "h1": "Cat Memorial Shadow Box SVGs",
+        "intro": (
+            "Memorial shadow boxes for a cat: seven layers, an editable name "
+            "plate on the front, and a paw or rainbow bridge motif at the heart. "
+            "Designed to be finished in an evening, and to still mean something "
+            "in twenty years."
+        ),
+        "match": ["cat", "kitten", "feline", "pet memorial"],
+        "pinned": ["memorial-pet", "memorial-rainbow", "memorial-bundle"],
+        "guide": [
+            ("Cats and the keepsake habit", (
+                "Cat owners keep things for a long time: a collar, a card, a "
+                "photograph. A layered shadow box gives that habit a form worth "
+                "hanging rather than a drawer."
+            )),
+            ("Assembly without wet glue", (
+                "Foam tape sets an even gap between layers, which is what keeps "
+                "a seven-layer box sitting flat on a shelf. Glue sinks the "
+                "layers and the depth disappears."
+            )),
+        ],
+    },
+    {
+        "slug": "dog-memorial-svg",
+        "title": "Dog Memorial SVG",
+        "h1": "Dog Memorial Shadow Box SVGs",
+        "intro": (
+            "Seven-layer memorial shadow boxes for a dog, with an editable name "
+            "plate on the front layer and a paw print motif at the centre. "
+            "Personalise the name and dates in Cricut Design Space before you "
+            "cut, then stack the layers for real depth."
+        ),
+        "match": ["dog", "puppy", "dog memorial", "pet memorial"],
+        "pinned": ["memorial-pet", "memorial-bundle"],
+        "guide": [
+            ("One file, any breed", (
+                "The paw motif is breed-neutral on purpose: it is what people "
+                "recognise instantly in a photograph of someone's dog, whatever "
+                "shape the dog was."
+            )),
+            ("What arrives in the download", (
+                "Seven separate layer SVGs in cut order, the combined design, and "
+                "a 6500px print-ready PNG render for shops that cut from images."
+            )),
+        ],
+    },
+    {
         "slug": "shadow-box-svg",
         "title": "Shadow Box SVG Files",
         "h1": "Shadow Box SVG Cut Files",
@@ -935,9 +1036,25 @@ def collection_items(cfg: dict, catalog: list[dict], spec: dict) -> list[dict]:
 
 
 def render_collection(cfg: dict, catalog: list[dict], spec: dict) -> str:
-    """An indexable landing page for one keyword cluster."""
+    """An indexable landing page for one keyword cluster.
+
+    A collection may be pinned: `pinned` names product slugs that always
+    appear regardless of keyword matching. Breed collections use this,
+    because "golden retriever memorial svg" should surface the pet design
+    even though no listing is literally tagged with a breed.
+    """
     base = canonical_url(cfg)
     items = collection_items(cfg, catalog, spec)
+    pinned_ids = spec.get("pinned", [])
+    if pinned_ids:
+        # Slugs are date-derived (memorial-pet-1ca7d789), so match on the
+        # stable prefix rather than the full id.
+        pinned = [
+            i for i in catalog
+            if any(str(i.get("id", "")).startswith(str(p)) for p in pinned_ids)
+        ]
+        have = {i.get("id") for i in items}
+        items = pinned + [i for i in items if i.get("id") not in have]
     if not items:
         return ""
     cards = []
