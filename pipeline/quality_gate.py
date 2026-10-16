@@ -191,6 +191,11 @@ def check_pngs_for_mandala_products() -> list[str]:
         # Weekly-compilation folders (products/YYYY-Wnn/...) are exempt
         # because they're snapshots of older source items that predate
         # the P5 mandate - those bundles are historical archives.
+        # Memorial designs are exempt too: their whole point is the editable
+        # name plate and the layer stack, so a framed wall mockup would show
+        # a placeholder name and mislead the buyer about what they receive.
+        if ptype == "memorial":
+            continue
         try:
             parent_folder = svg_path.parts[svg_path.parts.index("products") + 1]
         except (ValueError, IndexError):
