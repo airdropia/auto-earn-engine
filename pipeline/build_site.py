@@ -59,6 +59,11 @@ main { max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; }
 .info { background:#101826; border:1px solid #1f2937; border-radius:14px; padding:22px; margin-top:26px; line-height:1.6; }
 .info p { color:#9aa7b4; font-size:.92rem; margin:10px 0; }
 .buy { background:#11161d; border:1px solid #2b3644; border-radius:14px; padding:18px; margin:22px 0; }
+.howtopay { margin-top:12px; border-top:1px solid #2b3644; padding-top:10px; }
+.howtopay summary { cursor:pointer; color:#58a6ff; font-size:.9rem; }
+.howtopay ol { color:#9aa7b4; font-size:.88rem; margin:10px 0 4px 18px; }
+.howtopay li { margin:6px 0; }
+.howtopay p { color:#9aa7b4; font-size:.88rem; margin:8px 0; }
 .buy h3 { margin:0 0 8px; font-size:1.1rem; }
 .buy p { color:#9aa7b4; font-size:.92rem; margin:8px 0; }
 .buy .price { font-size:1.25rem; color:#e6edf3; margin:12px 0 4px; }
@@ -417,6 +422,20 @@ def checkout_block(cfg: dict, item: dict) -> str:
         '<p class="warn">Only ' + svgkit.escape(network) + ' on the BEP20 network '
         '(BSC). Send anything else and the funds are unrecoverable. '
         'Payment is verified automatically on-chain; no account needed.</p>'
+        '<details class="howtopay"><summary>No crypto wallet? Here is how to pay in '
+        '3 minutes</summary>'
+        '<ol><li>Open any crypto exchange account you already have (Binance, '
+        'Coinbase, Crypto.com, Kraken, or a wallet app like Trust Wallet or '
+        'MetaMask).</li>'
+        '<li>Buy USDT and send it on the <strong>BEP20 / BSC</strong> network. '
+        'Some apps label it "BNB Smart Chain" or "BSC" - that is the same one. '
+        'Do NOT send on Ethereum (ERC20) or Tron (TRC20).</li>'
+        f'<li>Send exactly the amount shown to the address on this page. The '
+        f'last digits identify your order, so sending a different amount means '
+        f'we cannot match it to your purchase.</li></ol>'
+        '<p>Once the transfer confirms on-chain (usually under 5 minutes), this '
+        'page updates itself and your download link unlocks automatically. There '
+        'is nothing to claim and no account to create.</p></details>'
         '<p class="buycta"><a class="btn btn-primary" href="../checkout/">Open checkout</a></p>'
         '</section>'
     )
