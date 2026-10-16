@@ -1173,7 +1173,9 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
 
     urls: list[str] = [f"{base}/", f"{base}/checkout/"]
     for spec in COLLECTIONS:
-        if collection_items(cfg, catalog, spec):
+        # Pinned (breed) collections render their pinned products even when no
+        # listing matches the keywords, so they deserve a sitemap entry too.
+        if collection_items(cfg, catalog, spec) or spec.get("pinned"):
             urls.append(f"{base}/c/{spec['slug']}/")
     for item in sorted(catalog, key=lambda x: x["created"], reverse=True):
         urls.append(product_page_url(cfg, item))
