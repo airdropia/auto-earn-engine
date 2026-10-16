@@ -808,6 +808,105 @@ COLLECTIONS = [
         ],
     },
     {
+        "slug": "first-anniversary-memorial-svg",
+        "title": "First Anniversary Memorial SVG",
+        "h1": "First Anniversary Memorial Shadow Box SVGs",
+        "intro": (
+            "Pehla saal sabse mushkil hota hai jab koi apna nahi rehta. First "
+            "anniversary memorial shadow box unke liye jo unke pehle barsay ko "
+            "yaad karna chahte hain. Editable name plate par unka naam aur "
+            "saal likhein, kaatein aur rakhein deewar par."
+        ),
+        "match": ["first anniversary", "first death anniversary", "pehla barsay", "first year memorial"],
+        "pinned": ["memorial-angel", "memorial-bundle"],
+        "guide": [
+            ("Pehla saal kyun alag hota hai", (
+                "Pehla saal sabse zyada dard bhara hota hai kyunki har raaz, har "
+                "tyohar, har pehla din unke bina guzarta hai. Ye shadow box us "
+                "pehle saal ko yaad karne ka ek tarika hai."
+            )),
+            ("Naam aur saal kaise likhein", (
+                "Front layer ki file kholein Cricut Design Space mein, "
+                "placeholder text par double click karein aur unka naam aur "
+                "saal likhein. Baaki sab waisa hi rahega jaise hai."
+            )),
+        ],
+    },
+    {
+        "slug": "birthday-remembrance-svg",
+        "title": "Birthday Remembrance SVG",
+        "h1": "Birthday Remembrance Shadow Box SVGs",
+        "intro": (
+            "Unke jaanmdin par unhe yaad karna pehle saal mein sabse mushkil "
+            "hota hai. Birthday remembrance shadow box apne pyare ka jaanmdin "
+            "manane ka ek tareek hai — unka naam, unki saal, aur unka yaad "
+            "rakhne ka ek tareeka."
+        ),
+        "match": ["birthday remembrance", "birthday memorial", "jaanmdin yaadgar", "birthday shadow box"],
+        "pinned": ["memorial-angel", "memorial-bundle"],
+        "guide": [
+            ("Jaanmdin kaise yaad karein", (
+                "Apne pyare ka jaanmdin unke naam ka shadow box banakar manayein. "
+                "Front layer pe unka naam aur saal likhein aur deewar par lagayein."
+            )),
+            ("Syahi ke bina jodna", (
+                "Foam tape se layers jodein taaki box deewar par seedha rahe aur "
+                "gap barabar rahe. Glue se layers neeche jayenge aur depth khatam "
+                "ho jayegi."
+            )),
+        ],
+    },
+    {
+        "slug": "human-loss-sympathy-svg",
+        "title": "Human Loss Sympathy SVG",
+        "h1": "Human Loss Sympathy Shadow Box SVGs",
+        "intro": (
+            "Parivar ke kisi sadasya — maa, baap, behen, bhai, beti, ya beta — "
+            "ko kho dena sabse mushkil hota hai. Human loss sympathy shadow box "
+            "unke naam ki yaad mein banaye gaye hain taaki unki yaad hamesha "
+            "rehe. Editable name plate, pehle saal ke liye, aur shok sandesh."
+        ),
+        "match": ["human loss", "parent loss", "spouse loss", "child loss", "sympathy gift", "bereavement"],
+        "pinned": ["memorial-angel", "memorial-bundle"],
+        "guide": [
+            ("Kiske liye hai ye design", (
+                "Maa, baap, behen, bhai, beti, ya bete — kisi bhi parivar ke "
+                "sadasya ke liye jo ab nahi rahe. Unka naam front layer pe "
+                "likhein aur unki yaad ko deewar par sajayein."
+            )),
+            ("Sympathy gift kaise dein", (
+                "Agar aap kisi ko dena chahte hain jo kisi ko kho chuka hai, toh "
+                "ye shadow box ek behtar tohfa hai. Unka naam likhein aur unke "
+                "ghar le jayein."
+            )),
+        ],
+    },
+    {
+        "slug": "rainbow-bridge-pet-svg",
+        "title": "Rainbow Bridge Pet SVG",
+        "h1": "Rainbow Bridge Pet Memorial Shadow Box SVGs",
+        "intro": (
+            "Rainbow bridge wo jagah hai jahan jaanwar jaate hain jab unka waqt "
+            "pure hota hai. Pet rainbow bridge shadow box unke liye jinke paaltu "
+            "janwar unse jud chuke hain. Paw print motif, editable name plate, "
+            "aur saalon ki yaad."
+        ),
+        "match": ["rainbow bridge", "pet rainbow bridge", "pet loss gift", "pet memorial rainbow"],
+        "pinned": ["memorial-rainbow", "memorial-pet", "memorial-bundle"],
+        "guide": [
+            ("Rainbow bridge kya hai", (
+                "Rainbow bridge ek aisi kalpana hai jahan jaanwar apne malikon "
+                "se milne ke liye intezaar karte hain. Is shadow box mein paw "
+                "print aur stars hain jo unki yaad ko zinda rakhte hain."
+            )),
+            ("Cutting aur assembly", (
+                "Paw print center mein rakhein, layers ke beech foam tape "
+                "lagayein, aur box ko us jagah lagayein jahan aap unhe dekh "
+                "sakein har roz."
+            )),
+        ],
+    },
+    {
         "slug": "shadow-box-svg",
         "title": "Shadow Box SVG Files",
         "h1": "Shadow Box SVG Cut Files",
