@@ -1252,7 +1252,8 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         f'<section class="info"><h3>Browse by type</h3><div class="related">'
         + "".join(
             f'<a class="rel" href="{canonical_url(cfg)}/c/{c["slug"]}/"><span>{svgkit.escape(c["title"])}</span></a>'
-            for c in COLLECTIONS if collection_items(cfg, catalog, c)
+            for c in COLLECTIONS
+            if collection_items(cfg, catalog, c) or c.get("pinned")
         )
         + "</div></section>"
         f'<div class="grid">{"".join(cards)}</div>'
@@ -1324,14 +1325,21 @@ def main() -> None:
     (checkout_dir / "index.html").write_text(
         render_checkout(cfg, catalog), encoding="utf-8"
     )
-    # SEO collection pages: one indexable page per keyword cluster
+    # SEO collection pages: one indexable page per keyword cluster.
+    # A pinned collection (breed pages) renders even when no listing matches
+    # its keywords: the pinned products are the page's content, and the breed
+    # term is the search that page exists to answer.
     coll_pages = 0
     for spec in COLLECTIONS:
-        if not collection_items(cfg, catalog, spec):
+        has_pins = bool(spec.get("pinned"))
+        if not has_pins and not collection_items(cfg, catalog, spec):
             continue
         cdir = SITE_DIR / "c" / spec["slug"]
         cdir.mkdir(parents=True, exist_ok=True)
-        (cdir / "index.html").write_text(render_collection(cfg, catalog, spec), encoding="utf-8")
+        rendered = render_collection(cfg, catalog, spec)
+        if not rendered:
+            continue
+        (cdir / "index.html").write_text(rendered, encoding="utf-8")
         coll_pages += 1
     # Per-product landing pages (long-tail SEO: one indexable page each)
     pages = 0
