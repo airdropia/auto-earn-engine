@@ -63,7 +63,10 @@ def source_date_of(path: Path) -> str:
 
 
 def count_elements(text: str) -> int:
-    return sum(text.count(f"<{tag}") for tag in ("path", "circle", "rect", "line"))
+    # polygon counts too: memorial designs build stars and other faceted
+    # shapes with <polygon>, and a gate that ignored them undercounted a
+    # valid layer.
+    return sum(text.count(f"<{tag}") for tag in ("path", "circle", "rect", "line", "polygon"))
 
 
 def check_svg(path: Path) -> list[str]:
