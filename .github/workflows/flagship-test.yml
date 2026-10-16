@@ -27,11 +27,20 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin
           for svg in products/*/*/*-design-1.svg; do
             [ -f "$svg" ] || continue
-            id=$(basename "$(dirname "$svg")")
-            out="$(dirname "$svg")/${id}-6500.png"
-            [ -f "$out" ] && continue
-            rsvg-convert -w 6500 -h 6500 --background-color '#ffffff' "$svg" -o "$out"
-            echo "rendered: ${id}-6500.png"
+            dir=$(dirname "$svg")
+            id=$(basename "$dir")
+            print="$dir/${id}-6500.png"
+            thumb="$dir/${id}-1000.png"
+            # 1000px web thumbnail: phones do not render inline SVG, and the
+            # 6500px print render is far too heavy to load in a page.
+            if [ ! -f "$thumb" ]; then
+              rsvg-convert -w 1000 -h 1000 --background-color '#ffffff' "$svg" -o "$thumb"
+              echo "thumbnail: ${id}-1000.png ($(du -h "$thumb" | cut -f1))"
+            fi
+            if [ ! -f "$print" ]; then
+              rsvg-convert -w 6500 -h 6500 --background-color '#ffffff' "$svg" -o "$print"
+              echo "rendered: ${id}-6500.png ($(du -h "$print" | cut -f1))"
+            fi
           done
       - name: Issue invoices for the new products
         env:

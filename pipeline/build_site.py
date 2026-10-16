@@ -147,6 +147,25 @@ def product_page_url(cfg: dict, item: dict) -> str:
     """Canonical URL of a single product's landing page."""
     return f"{canonical_url(cfg)}/p/{item['id']}/"
 
+def hero_image(item: dict) -> tuple[str, bool]:
+    """Best image for the product hero, and whether it is a raster.
+
+    A phone browser will not render an inline SVG thumbnail, so an SVG hero
+    means the buyer sees a blank box on the device most people actually shop
+    from. A 1000px raster is used where one exists; the 6500px print render
+    stays available as a download but is far too heavy to load inline.
+    """
+    preview = item.get("preview", "")
+    folder = item.get("folder", "")
+    pid = item.get("id", "")
+    if folder:
+        for suffix in ("-1000.png", "-6500.png"):
+            candidate = f"{folder}/{pid}{suffix}"
+            if (ROOT / candidate).exists():
+                return candidate, True
+    return preview, False
+
+
 def file_buttons(item: dict) -> str:
     """Download buttons for a product: one per format (SVG, PNG, MOCKUP),
     falling back to the first two files when no preferred format exists."""
@@ -160,6 +179,15 @@ def file_buttons(item: dict) -> str:
     by_fmt: dict[str, list[str]] = {}
     for f in item.get("files", []):
         by_fmt.setdefault(fmt_of(f), []).append(f)
+    # The print render is not in the catalog file list (it is generated
+    # separately), but it is the format buyers without a cutting machine
+    # actually want, so offer it explicitly.
+    pid = item.get("id", "")
+    folder = item.get("folder", "")
+    if folder and not by_fmt.get("PNG"):
+        render = f"{folder}/{pid}-6500.png"
+        if (ROOT / render).exists():
+            by_fmt["PNG"] = [render]
     displayed: list[tuple[str, str]] = []
     per_fmt: dict[str, int] = {}
     for fmt in ("SVG", "PNG", "MOCKUP"):
@@ -404,7 +432,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
     base = canonical_url(cfg)
     title = item["title"]
     desc = " ".join((item.get("description") or "").split())[:155]
-    preview = rel(item.get("preview", ""))
+    preview, preview_is_raster = hero_image(item)
     tag_html = "".join(f"<em>{svgkit.escape(t)}</em>" for t in item.get("tags", [])[:8])
     zip_href = f"{base}/downloads/{item['id']}.zip"
     # Description paragraphs (split on blank lines to keep the bullet list)
@@ -474,7 +502,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         f'<link rel="canonical" href="{product_page_url(cfg, item)}"/>'
         f'<meta property="og:title" content="{svgkit.escape(title)}"/>'
         f'<meta property="og:description" content="{svgkit.escape(desc)}"/>'
-        f'<meta property="og:image" content="{base}/{svgkit.escape(preview)}"/>'
+        f'<meta property="og:image" content="{base}/{svgkit.escape(rel(preview))}"/>'
         '<meta name="twitter:card" content="summary_large_image"/>'
         '<meta name="robots" content="index,follow,max-image-preview:large"/>'
         f'<script type="application/ld+json">{product_jsonld(cfg, item)}</script>'
@@ -485,7 +513,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         f'<div class="tags">{tag_html}</div>'
         + badge +
         '</header><main>'
-        f'<div class="hero"><img src="{base}/{svgkit.escape(preview)}" alt="{svgkit.escape(title)}"/></div>'
+        f'<div class="hero"><img src="{base}/{svgkit.escape(rel(preview))}" alt="{svgkit.escape(title)}"/></div>'
         '<div class="actions big">'
         f'<a class="btn btn-primary" href="{base}/downloads/{item["id"]}.zip" download>Download full bundle (ZIP)</a>'
         f"{file_buttons(item)}"
@@ -974,7 +1002,7 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
     for item in ordered:
         tag_html = "".join(f"<em>{svgkit.escape(t)}</em>" for t in item["tags"][:5])
         zip_href = f"downloads/{item['id']}.zip"
-        preview_href = rel(item["preview"])
+        preview_href = rel(hero_image(item)[0])
         # Per-format counters for clarity. P5: show one of each format if
         # available (SVG + PNG + MOCKUP if all three exist), up to 3
         # buttons. Otherwise fall back to first 2 files of any type.
