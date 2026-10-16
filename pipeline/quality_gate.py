@@ -167,9 +167,12 @@ def check_pngs_for_mandala_products() -> list[str]:
             continue
         png_path = svg_path.with_suffix(".png")
         if not png_path.exists():
-            # Newer renders use the -6500 suffix (the resolution is part of
-            # the name so a buyer can tell a print render from a thumbnail).
-            alt = png_path.with_name(png_path.stem + "-6500.png")
+            # Renders are named '<product-id>-6500.png' (the resolution is in
+            # the name so a buyer can tell a print render from a thumbnail),
+            # while the SVG here is '<product-id>-design-1.svg'. Match on the
+            # product id, not on the design filename.
+            product_id = svg_path.parent.name
+            alt = svg_path.parent / f"{product_id}-6500.png"
             if alt.exists():
                 png_path = alt
             else:
