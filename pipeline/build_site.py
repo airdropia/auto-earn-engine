@@ -107,6 +107,32 @@ def rel(path: str) -> str:
     return path.replace("\\", "/")
 
 
+def trust_block(cfg: dict, item: dict) -> str:
+    """Remove the buyer's risk before the payment, not after.
+
+    Someone buying a memorial design is not comparing features, they are
+    buying reassurance that this will not turn into a disappointment on the
+    evening they are already sad. Three things do that work: saying the
+    licence is real and perpetual, saying the download arrives the moment
+    payment is confirmed, and giving a real address to write to if it does
+    not. A crypto address with no human behind it is not enough.
+    """
+    contact = cfg.get("contact_email", "")
+    lines = [
+        '<h3>If anything is wrong, write to us</h3>',
+        '<p>Every layer file opens in Cricut Design Space, Silhouette Studio, '
+        'Inkscape and Illustrator. If a file does not open, or the bundle is '
+        'not what you expected, email it and you will get a working one - no '
+        'forms, no account, no support ticket system.</p>',
+    ]
+    if contact:
+        lines.append(
+            f'<p class="payaddr">Email: <a href="mailto:{svgkit.escape(contact)}">'
+            f'{svgkit.escape(contact)}</a></p>'
+        )
+    return '<section class="info">' + "".join(lines) + '</section>'
+
+
 def money_links(cfg: dict) -> str:
     parts: list[str] = []
     if cfg.get("patreon_url"):
@@ -494,7 +520,28 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         f'&middot; layered SVG cut files &middot; commercial use allowed</span>'
     )
     if is_memorial:
+        is_bundle = item.get("type") == "memorial-bundle"
+        if is_bundle:
+            lead_html = (
+                f'<h3>All {item.get("designs", 3)} memorial designs, one download</h3>'
+                '<p>Pet paw, angel wings and rainbow bridge, each seven layers deep '
+                'and each with its own editable name plate on the front layer. '
+                'One purchase can produce several keepsakes: cut one for yourself '
+                'and give another to someone who is losing the same kind of animal. '
+                'This is the bundle to buy if you are not sure which motif is right '
+                '- and it is cheaper than buying them one at a time.</p>'
+            )
+        else:
+            lead_html = (
+                f'<h3>A keepsake for someone you will never stop missing</h3>'
+                '<p>Seven layers with an editable name plate on the front layer. '
+                'Type their name and dates in Cricut Design Space before you '
+                'cut, and it becomes a keepsake rather than a decoration. '
+                'Personalisation takes about two minutes and no extra '
+                'material.</p>'
+            )
         how_html = (
+            lead_html +
             '<h3>How to put their name on it</h3>'
             '<ol><li>Open the front layer file ('
             f'<code>{svgkit.escape(item["id"])}-design-1-layer-1.svg</code>) in Cricut '
@@ -552,6 +599,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         + how_html +
         '</section>'
         + faq_block(cfg, item)
+        + (trust_block(cfg, item) if is_memorial else "")
         + (f'<section class="info"><h3>More {svgkit.escape(item.get("type", ""))} bundles</h3>'
            f'<div class="related">{related_html}</div></section>' if related_html else "")
         + '<section class="support"><h3>Support this machine</h3>'
