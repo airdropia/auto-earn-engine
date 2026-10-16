@@ -167,8 +167,15 @@ def check_pngs_for_mandala_products() -> list[str]:
             continue
         png_path = svg_path.with_suffix(".png")
         if not png_path.exists():
-            defects.append(f"{png_path.relative_to(ROOT)}: PNG preview missing for {svg_path.name}")
-            continue
+            # Newer renders use the -6500 suffix (the resolution is part of
+            # the name so a buyer can tell a print render from a thumbnail).
+            alt = png_path.with_name(png_path.stem + "-6500.png")
+            if alt.exists():
+                png_path = alt
+            else:
+                defects.append(
+                    f"{png_path.relative_to(ROOT)}: PNG preview missing for {svg_path.name}")
+                continue
         head = png_path.read_bytes()[:8]
         if head != png_signature:
             defects.append(f"{png_path.relative_to(ROOT)}: not a valid PNG")
