@@ -209,5 +209,82 @@
     "created": "2026-10-14",
     "designs": 3,
     "week_id": "2026-W42"
+  },
+  {
+    "id": "flagship-4e4b0523",
+    "type": "flagship",
+    "title": "Layered Autumn Mandala | 7-Layer Shadow Box Design",
+    "description": "Premium 7-layer 3D shadow-box mandala. Cut each layer from cardstock and stack for real depth - voids in upper layers reveal lower layers. Theme: Autumn.",
+    "tags": [
+      "3d layered mandala",
+      "autumn mandala",
+      "autumn svg",
+      "cozy svg",
+      "cricut mandala",
+      "fall svg",
+      "flagship",
+      "harvest svg",
+      "layered svg",
+      "leaves svg",
+      "pumpkin svg",
+      "shadow box svg",
+      "thanksgiving svg"
+    ],
+    "files": [
+      "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1.svg",
+      "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1-layer-1.svg",
+      "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1-layer-2.svg",
+      "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1-layer-3.svg",
+      "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1-layer-4.svg",
+      "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1-layer-5.svg",
+      "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1-layer-6.svg",
+      "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1-layer-7.svg"
+    ],
+    "folder": "products/2026-10-16/flagship-4e4b0523",
+    "preview": "products/2026-10-16/flagship-4e4b0523/flagship-4e4b0523-design-1.svg",
+    "created": "2026-10-16",
+    "designs": 1,
+    "quality": {
+      "layers": 7
+    }
+  },
+  {
+    "id": "memorial-angel-1547558f",
+    "type": "memorial",
+    "title": "Memorial Angel Wings Cut File | 7 Layer Shadow Box SVG",
+    "description": "Seven layers of soft midnight and ivory stack into an angel-winged memorial shadow box for someone you will never stop missing. The front name plate is editable: add their name and the years that bracket a whole life, in Cricut Design Space or Silhouette Studio, and the keepsake is ready to cut.",
+    "tags": [
+      "in loving memory svg",
+      "angel wings svg",
+      "memorial shadow box",
+      "sympathy gift svg",
+      "memorial keepsake svg",
+      "cricut memorial",
+      "layered memorial svg",
+      "bereavement gift",
+      "remembrance svg"
+    ],
+    "files": [
+      "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1.svg",
+      "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1-layer-1.svg",
+      "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1-layer-2.svg",
+      "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1-layer-3.svg",
+      "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1-layer-4.svg",
+      "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1-layer-5.svg",
+      "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1-layer-6.svg",
+      "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1-layer-7.svg"
+    ],
+    "folder": "products/2026-10-16/memorial-angel-1547558f",
+    "preview": "products/2026-10-16/memorial-angel-1547558f/memorial-angel-1547558f-design-1.svg",
+    "created": "2026-10-16",
+    "designs": 1,
+    "quality": {
+      "layers": 7,
+      "personalizable": true
+    },
+    "price_usdt": "9.99",
+    "meta": {
+      "price_usdt": "9.99"
+    }
   }
 ]
