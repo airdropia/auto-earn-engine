@@ -134,8 +134,13 @@ def check_package_paperwork() -> list[str]:
 
 
 def check_pngs_for_mandala_products() -> list[str]:
-    """P3 multi-format: mandala and layered-mandala must ship a PNG preview
-    alongside each SVG (per-design PNG download, see AUDIT.md P3).
+    """P3 multi-format: mandala, layered-mandala and memorial designs must
+    ship a PNG preview alongside each SVG (per-design PNG download, see
+    AUDIT.md P3).
+
+    Memorial designs are included because their buyer decides from the image
+    on a phone: a grieving buyer does not read a layer list, they look. A
+    memorial page without a render is a page that does not sell.
 
     Only items generated on or after the P3 deploy date (2026-09-06) are
     required to have a matching PNG. Older items are grandfathered (their
@@ -149,7 +154,7 @@ def check_pngs_for_mandala_products() -> list[str]:
     png_signature = b"\x89PNG\r\n\x1a\n"
     for svg_path in sorted(PRODUCTS_DIR.rglob("*.svg")):
         ptype = svg_type_of(svg_path)
-        if ptype not in ("mandala", "layered-mandala"):
+        if ptype not in ("mandala", "layered-mandala", "memorial"):
             continue
         # Only require PNG for the combined design SVGs (not per-layer
         # _layer-1/2/3/ files) - those are auxiliary cut files.

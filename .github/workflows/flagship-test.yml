@@ -22,6 +22,17 @@ jobs:
         run: python3 pipeline/flagship_generator.py
       - name: Generate memorial design (emotional line)
         run: python3 pipeline/memorial_generator.py
+      - name: Render high-res PNG for new designs (6500px)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin
+          for svg in products/*/*/*-design-1.svg; do
+            [ -f "$svg" ] || continue
+            id=$(basename "$(dirname "$svg")")
+            out="$(dirname "$svg")/${id}-6500.png"
+            [ -f "$out" ] && continue
+            rsvg-convert -w 6500 -h 6500 --background-color '#ffffff' "$svg" -o "$out"
+            echo "rendered: ${id}-6500.png"
+          done
       - name: Issue invoices for the new products
         env:
           VF_PAYOUT_ADDRESS: ${{ vars.VF_PAYOUT_ADDRESS }}

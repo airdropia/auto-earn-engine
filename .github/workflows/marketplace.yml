@@ -34,18 +34,27 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin
           mkdir -p /tmp/pngs
-          for svg in products/*/flagship-*/*-design-1.svg; do
+          # Every product type, not just flagship: the memorial line ships the
+          # same combined SVG and a buyer decides from the image, not the slug.
+          for svg in products/*/*/*-design-1.svg; do
+            [ -f "$svg" ] || continue
             id=$(basename "$(dirname "$svg")")
+            out="$(dirname "$svg")/${id}-6500.png"
+            # Skip unchanged work so repeat runs stay cheap and idempotent.
+            if [ -f "$out" ] && [ "$out" -nt "$svg" ]; then
+              echo "cached: ${id}-6500.png"
+              continue
+            fi
             rsvg-convert -w 6500 -h 6500 --background-color '#ffffff' "$svg" \
               -o "/tmp/pngs/${id}-6500.png"
-            cp "/tmp/pngs/${id}-6500.png" "$(dirname "$svg")/"
+            cp "/tmp/pngs/${id}-6500.png" "$out"
             echo "rendered: ${id}-6500.png ($(du -h "/tmp/pngs/${id}-6500.png" | cut -f1))"
           done
 
-      - name: Render brand profile pic (1024x1024, newest flagship)
+      - name: Render brand profile pic (1024x1024, newest product)
         run: |
-          latest=$(ls -d products/*/flagship-* | sort | tail -1)
-          svg="$latest/$(basename "$latest")-design-1.svg"
+          latest=$(ls -d products/*/*/ | sort | tail -1)
+          svg="$latest$(basename "$latest")-design-1.svg"
           test -f "$svg"
           mkdir -p site_extra/brand
           rsvg-convert -w 1024 -h 1024 --background-color '#ffffff' "$svg" \
