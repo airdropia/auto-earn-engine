@@ -75,8 +75,12 @@ jobs:
             case "$full" in ad-si/awesome-laser-cutting|kosmos/awesome-generative-art) continue ;; esac
             # Any previous PR by this account (open, closed or merged) means
             # the list already knows us; a duplicate submission is noise.
-            prior=$(gh api "search/issues?q=repo:$full+is:pr+author:airdropia" --jq '.total_count' 2>/dev/null || echo 0)
-            if [ "${prior:-0}" -gt 0 ]; then
+            # The full "search/issues" path is required: a bare "search/..."
+            # is a 404, and the || echo 0 swallowed it, so every target with
+            # a prior PR looked like a fresh one.
+            prior=$(gh api "search/issues?q=repo:$full+is:pr+author:airdropia" --jq '.total_count' 2>/dev/null)
+            if [ "${prior:-1}" != "0" ]; then
+              echo "skip $full — prior PR by this account (${prior:-query failed})"
               continue
             fi
             printf '%s\t%s\t%s\t%.120s\n' "$stars" "$full" "$branch" "$desc" >> candidates.txt
