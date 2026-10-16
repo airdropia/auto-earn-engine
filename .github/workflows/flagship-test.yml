@@ -16,6 +16,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Byte-compile the pipeline (fail fast on syntax errors)
+        run: python3 -m compileall -q pipeline
       - name: Generate flagship design
         run: python3 pipeline/flagship_generator.py
       - name: Generate memorial design (emotional line)

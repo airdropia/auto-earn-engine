@@ -483,7 +483,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         '<header><p><a href="./../..">&larr; Back to all bundles</a></p>'
         f'<h1>{svgkit.escape(title)}</h1>'
         f'<div class="tags">{tag_html}</div>'
-        + badge
+        + badge +
         '</header><main>'
         f'<div class="hero"><img src="{base}/{svgkit.escape(preview)}" alt="{svgkit.escape(title)}"/></div>'
         '<div class="actions big">'
