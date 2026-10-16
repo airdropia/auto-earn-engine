@@ -182,10 +182,54 @@ def product_faq(cfg: dict, item: dict) -> list[tuple[str, str]]:
     These are the questions buyers actually ask before purchasing digital cut
     files. Answering them on the page earns expandable rich results in search,
     which lifts click-through without any ad spend.
+
+    Memorial products get their own question set. A grieving buyer is not
+    asking "do I need a Cricut?" first — they are asking whether the name
+    can be changed, whether the design will feel cheap, and whether it can be
+    finished in an evening. Answering those is what the copy has to do; the
+    generic questions are answerable by every competitor, so they are not
+    what makes the page rank or convert.
     """
     t = item.get("title", "")
     layers = "7"
     size = "300mm"
+    if item.get("type") == "memorial":
+        return [
+            (f"Can I put my pet's or a family member's name on this design?",
+             f"Yes, and that is the point of it. The front layer carries an "
+             f"editable name plate with placeholder text. Open the front layer "
+             f"in Cricut Design Space or Silhouette Studio, double-click the "
+             f"text and type their name and the years that bracket their life. "
+             f"Everything else on the sheet cuts exactly as drawn, so it takes "
+             f"about two minutes and no extra material."),
+            ("Is this design appropriate for a gift, or only for me?",
+             f"Either. It ships as a plain digital bundle with no preset name, "
+             f"so it can be cut for yourself or for someone you are losing. "
+             f"Many people cut one for their own wall and a second one to give "
+             f"away; the licence covers both."),
+            ("How long does it take to make one?",
+             f"An evening. Cut the {layers} layers in size order, roughly an "
+             f"hour on a Cricut, then stack them with foam tape, about twenty "
+             f"minutes. There is no wet glue, no curing time and no hardware "
+             f"beyond a backing board."),
+            ("Will it look handmade or cheap?",
+             f"It is built from {layers} separate sheets with real voids "
+             f"between them, so it throws an actual shadow and holds up when "
+             f"tilted under light. That physical depth is what separates a "
+             f"keepsake from a printed picture, and it is why the piece is "
+             f"built as a stack rather than drawn with shading."),
+            ("What if I am not able to cut it myself?",
+             f"The SVGs open in Cricut Design Space, Silhouette Studio, "
+             f"Inkscape, Illustrator, Affinity Designer and most laser "
+             f"software, so a craft shop or a laser cutter can produce it from "
+             f"the same files. Print-ready PNG renders are included for shops "
+             f"that work from images."),
+            ("Can I use this design commercially?",
+             f"Yes. You may use it for physical products you make and sell, "
+             f"for client work and for printed goods. The only restriction is "
+             f"that you may not resell or redistribute the raw digital files "
+             f"as-is."),
+        ]
     return [
         (f"What do I get when I buy the {t}?",
          f"You get the complete {layers}-layer bundle: the combined SVG, one "
@@ -381,6 +425,46 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
     )
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     contact_line = contact_link(cfg)
+    # Memorial pages lead with sympathy, not with a licence badge. The buyer
+    # arriving here has just lost someone; the first thing on the page should
+    # acknowledge that, and the personalisation step should be the first
+    # instruction they read.
+    is_memorial = item.get("type") == "memorial"
+    badge = (
+        '<span class="badge">A keepsake you will keep for years</span>'
+        if is_memorial else
+        f'<span class="badge">{svgkit.escape(cfg.get("store_name", "VectorForge Daily"))} '
+        f'&middot; layered SVG cut files &middot; commercial use allowed</span>'
+    )
+    if is_memorial:
+        how_html = (
+            '<h3>How to put their name on it</h3>'
+            '<ol><li>Open the front layer file ('
+            f'<code>{svgkit.escape(item["id"])}-design-1-layer-1.svg</code>) in Cricut '
+            'Design Space or Silhouette Studio.</li>'
+            '<li>Double-click the placeholder text in the centre and type their name '
+            'and the years that bracket their life.</li>'
+            '<li>Cut the layers largest to smallest, stack them with foam tape, and '
+            'the keepsake is done.</li></ol>'
+            '<p>That is the whole process. There is no wet glue, no curing time and no '
+            'hardware beyond a backing board, so it can be finished in an evening.</p>'
+            '<h3>License</h3>'
+            '<p>Free for personal and commercial use. You may cut these designs into '
+            'physical products, use them for client work and printed goods. Please do '
+            'not resell or redistribute the raw digital files as-is.</p>'
+        )
+    else:
+        how_html = (
+            '<h3>License</h3>'
+            '<p>Free for personal and commercial use. You may use these designs in physical '
+            'products, client work and printed goods. Please do not resell or redistribute '
+            'the raw digital files as-is.</p>'
+            '<h3>How to use</h3>'
+            '<p>SVG opens in Cricut Design Space, Silhouette Studio, Inkscape, Illustrator and '
+            'most laser software. PNG files (where included) are 1000&times;1000 transparent '
+            'rasters for Canva, Procreate and any tool that does not read SVG. All shapes are '
+            'vector - scale to any size with no quality loss.</p>'
+        )
     return (
         '<!DOCTYPE html><html lang="en"><head>'
         '<meta charset="utf-8"/>'
@@ -399,8 +483,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         '<header><p><a href="./../..">&larr; Back to all bundles</a></p>'
         f'<h1>{svgkit.escape(title)}</h1>'
         f'<div class="tags">{tag_html}</div>'
-        f'<span class="badge">{svgkit.escape(cfg.get("store_name", "VectorForge Daily"))} '
-        f'&middot; layered SVG cut files &middot; commercial use allowed</span>'
+        + badge
         '</header><main>'
         f'<div class="hero"><img src="{base}/{svgkit.escape(preview)}" alt="{svgkit.escape(title)}"/></div>'
         '<div class="actions big">'
@@ -409,15 +492,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         '</div>'
         + checkout_block(cfg, item)
         + f'<section class="info">{desc_html}'
-        '<h3>License</h3>'
-        '<p>Free for personal and commercial use. You may use these designs in physical '
-        'products, client work and printed goods. Please do not resell or redistribute '
-        'the raw digital files as-is.</p>'
-        '<h3>How to use</h3>'
-        '<p>SVG opens in Cricut Design Space, Silhouette Studio, Inkscape, Illustrator and '
-        'most laser software. PNG files (where included) are 1000&times;1000 transparent '
-        'rasters for Canva, Procreate and any tool that does not read SVG. All shapes are '
-        'vector - scale to any size with no quality loss.</p>'
+        + how_html +
         '</section>'
         + faq_block(cfg, item)
         + (f'<section class="info"><h3>More {svgkit.escape(item.get("type", ""))} bundles</h3>'
@@ -426,7 +501,8 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         + money_links(cfg)
         + '</section></main>'
         '<footer>Generated by the VectorForge Daily pipeline on ' + updated + '.<br/>'
-        '<a href="./../..">All free SVG bundles</a> &middot; '
+        '<a href="./../..">All SVG bundles</a> &middot; '
+        '<a href="../../checkout.html">Checkout</a> &middot; '
         '<a href="./../../privacy.html">Privacy Policy</a>' + contact_line + '</footer>'
         '</body></html>'
     )
@@ -887,7 +963,15 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
 def render_index(cfg: dict, catalog: list[dict]) -> str:
     newest = max(item["created"] for item in catalog)
     cards: list[str] = []
-    for item in sorted(catalog, key=lambda x: x["created"], reverse=True):
+    # Memorial designs lead the grid. They are the differentiated product and
+    # the ones whose buyer arrives already emotional, so burying them below a
+    # wall of interchangeable mandalas hides the only thing worth arriving for.
+    by_date = sorted(catalog, key=lambda x: x["created"], reverse=True)
+    ordered = (
+        [i for i in by_date if i.get("type") == "memorial"]
+        + [i for i in by_date if i.get("type") != "memorial"]
+    )
+    for item in ordered:
         tag_html = "".join(f"<em>{svgkit.escape(t)}</em>" for t in item["tags"][:5])
         zip_href = f"downloads/{item['id']}.zip"
         preview_href = rel(item["preview"])
