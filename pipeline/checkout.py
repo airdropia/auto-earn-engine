@@ -176,12 +176,28 @@ def discover_products() -> list:
     out = []
     if not pdir.exists():
         return out
+    # Catalog prices are per-product overrides (memorial designs carry their own
+    # premium price), so read them rather than falling back to the global
+    # default for every product.
+    catalog_prices: dict[str, str] = {}
+    catalog_path = ROOT / "catalog" / "catalog.json"
+    if catalog_path.exists():
+        try:
+            for item in json.loads(catalog_path.read_text(encoding="utf-8")):
+                price = (item.get("meta") or {}).get("price_usdt") or item.get("price_usdt")
+                if price and item.get("id"):
+                    catalog_prices[item["id"]] = str(price)
+        except (ValueError, OSError):
+            pass
     for date_dir in sorted(pdir.iterdir()):
         if not date_dir.is_dir():
             continue
         for prod in sorted(date_dir.iterdir()):
             if prod.is_dir() and list(prod.glob("*.svg")):
-                out.append({"slug": prod.name, "date": date_dir.name, "path": prod})
+                entry = {"slug": prod.name, "date": date_dir.name, "path": prod}
+                if prod.name in catalog_prices:
+                    entry["price_usdt"] = catalog_prices[prod.name]
+                out.append(entry)
     return out
 
 

@@ -18,6 +18,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate flagship design
         run: python3 pipeline/flagship_generator.py
+      - name: Generate memorial design (emotional line)
+        run: python3 pipeline/memorial_generator.py
+      - name: Issue invoices for the new products
+        env:
+          VF_PAYOUT_ADDRESS: ${{ vars.VF_PAYOUT_ADDRESS }}
+        run: python3 pipeline/checkout.py --init
       - name: Quality gate
         run: python3 pipeline/quality_gate.py
       - name: Render delivery pages for issued orders
@@ -26,7 +32,7 @@ jobs:
         run: python3 pipeline/build_site.py
       - name: Commit generator outputs
         run: |
-          bash .github/scripts/commit-push.sh "flagship design [skip ci]" site_extra/
+          bash .github/scripts/commit-push.sh "flagship design [skip ci]" site_extra/ checkout/ catalog/ products/
       - name: Verify site artifact exists
         run: |
           ls -la site/ | head -20

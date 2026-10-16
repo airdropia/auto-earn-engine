@@ -280,7 +280,8 @@ def checkout_price(cfg: dict, item: dict) -> str:
     rec = invoices.get(item.get("id", ""))
     if rec and rec.get("unique_amount_usdt"):
         return str(rec["unique_amount_usdt"])
-    override = (item.get("meta") or {}).get("price_usdt") or cfg.get("price_usdt", "7.00")
+    override = (item.get("meta") or {}).get("price_usdt") or item.get("price_usdt") \
+        or cfg.get("price_usdt", "7.00")
     return str(override)
 
 
@@ -690,6 +691,79 @@ COLLECTIONS = [
                 "as an accident. Decide your gap before you start gluing, and use the "
                 "same gap throughout. Foam tape is more forgiving than glue because it "
                 "sets the spacing consistently."
+            )),
+        ],
+    },
+    {
+        "slug": "pet-memorial-shadow-box",
+        "title": "Pet Memorial Shadow Box",
+        "h1": "Pet Memorial Shadow Box SVGs",
+        "intro": (
+            "A keepsake for the one who is waiting at the rainbow bridge. Seven soft "
+            "layers of midnight blue, pearl and antique gold, with a paw print or a "
+            "rainbow arc at the heart and an editable name plate on the front layer: "
+            "type your dog's or cat's name and dates before you cut, and the design "
+            "becomes yours. Built to be held, not just framed."
+        ),
+        "match": [
+            "pet memorial", "dog memorial", "cat memorial", "rainbow bridge",
+            "pet loss", "in loving memory", "sympathy", "memorial",
+        ],
+        "guide": [
+            ("How to use the editable name plate", (
+                "Open the front layer file in Cricut Design Space or Silhouette Studio, "
+                "double-click the placeholder text and type your pet's name and the "
+                "years that bracket their life. Everything else on the sheet cuts "
+                "exactly as drawn, so the personalisation costs you about two minutes "
+                "and no extra material."
+            )),
+            ("Why a keepsake box rather than a print", (
+                "A framed print of a pet is a picture of a memory. A layered shadow box "
+                "has physical depth and casts a real shadow on the wall, which reads as "
+                "an object rather than a picture - the difference matters when you are "
+                "keeping something for twenty years."
+            )),
+            ("Materials and sizing", (
+                "Cut each layer from cardstock in ascending size order and stack them "
+                "with foam tape rather than glue; foam sets a consistent gap, so the "
+                "depth stays even. A 12x12 inch box is the most common shelf size, and "
+                "every design scales without loss because the artwork is vector."
+            )),
+        ],
+    },
+    {
+        "slug": "in-loving-memory-svg",
+        "title": "In Loving Memory SVG",
+        "h1": "In Loving Memory SVG Designs",
+        "intro": (
+            "Memorial shadow boxes with angel wings, a halo and a quiet gold medallion, "
+            "made for the people you will never stop missing. Seven layers, soft ivory "
+            "and midnight palette, and an editable name plate on the front so their "
+            "name and dates belong on the piece before the first cut. Sympathy gifts "
+            "that arrive already personal."
+        ),
+        "match": [
+            "in loving memory", "angel wings", "memorial", "sympathy",
+            "bereavement", "remembrance", "rainbow bridge",
+        ],
+        "guide": [
+            ("Making a sympathy gift that is not generic", (
+                "The most common sympathy gift fails because it could have been given "
+                "to anyone. Personalising the name plate is what makes this one "
+                "impossible to confuse with a basket of flowers - the name is on the "
+                "artwork itself, not on a card tucked in beside it."
+            )),
+            ("What the front layer carries", (
+                "The front layer is the ivory medallion with the editable name and "
+                "dates, ringed in gold. It is deliberately the highest-contrast layer "
+                "in the stack, so the name stays readable from across a room once the "
+                "box is assembled and hung."
+            )),
+            ("Timing", (
+                "Memorial designs are searched for in the first weeks after a loss and "
+                "again around anniversaries and birthdays of the year. Cutting one "
+                "ahead of time means the keepsake exists before the family has found "
+                "the words for what they lost."
             )),
         ],
     },
