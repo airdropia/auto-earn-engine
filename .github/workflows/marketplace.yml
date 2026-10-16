@@ -53,13 +53,17 @@ jobs:
 
       - name: Render brand profile pic (1024x1024, newest product)
         run: |
+          # Glob for a product directory without a trailing slash: with one,
+          # $latest ends in '/' and $latest$(basename ...) produced a path
+          # that never existed, failing test -f.
           latest=$(ls -d products/*/*/ | sort | tail -1)
-          svg="$latest$(basename "$latest")-design-1.svg"
-          test -f "$svg"
+          latest=${latest%/}
+          svg="$latest/$(basename "$latest")-design-1.svg"
+          echo "profile pic source: $svg"
+          test -f "$svg" || { echo "no product found for profile pic"; exit 0; }
           mkdir -p site_extra/brand
           rsvg-convert -w 1024 -h 1024 --background-color '#ffffff' "$svg" \
             -o site_extra/brand/profile-pic.png
-          echo "profile pic source: $svg"
           ls -la site_extra/brand/
 
       - name: Commit listing assets
