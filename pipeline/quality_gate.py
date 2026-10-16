@@ -20,6 +20,7 @@ MIN_ELEMENTS = {
     "mandala": 120,
     "layered-mandala": 18,
     "memorial": 8,
+    "memorial-bundle": 8,
     "patterns": 10,
     "quotes": 5,
     "planner": 40,
@@ -154,7 +155,7 @@ def check_pngs_for_mandala_products() -> list[str]:
     png_signature = b"\x89PNG\r\n\x1a\n"
     for svg_path in sorted(PRODUCTS_DIR.rglob("*.svg")):
         ptype = svg_type_of(svg_path)
-        if ptype not in ("mandala", "layered-mandala", "memorial"):
+        if ptype not in ("mandala", "layered-mandala", "memorial", "memorial-bundle"):
             continue
         # Only require PNG for the combined design SVGs (not per-layer
         # _layer-1/2/3/ files) - those are auxiliary cut files.
@@ -194,7 +195,7 @@ def check_pngs_for_mandala_products() -> list[str]:
         # Memorial designs are exempt too: their whole point is the editable
         # name plate and the layer stack, so a framed wall mockup would show
         # a placeholder name and mislead the buyer about what they receive.
-        if ptype == "memorial":
+        if ptype in ("memorial", "memorial-bundle"):
             continue
         try:
             parent_folder = svg_path.parts[svg_path.parts.index("products") + 1]
@@ -240,7 +241,7 @@ def check_memorial_tags() -> list[str]:
     if not isinstance(catalog, list):
         return []
     for item in catalog:
-        if item.get("type") != "memorial":
+        if item.get("type") not in ("memorial", "memorial-bundle"):
             continue
         for tag in item.get("tags") or []:
             low = tag.lower()

@@ -226,15 +226,25 @@ def product_faq(cfg: dict, item: dict) -> list[tuple[str, str]]:
     t = item.get("title", "")
     layers = "7"
     size = "300mm"
-    if item.get("type") == "memorial":
+    if item.get("type") in ("memorial", "memorial-bundle"):
+        designs = item.get("designs", 1)
+        is_bundle = item.get("type") == "memorial-bundle"
+        bundle_note = (
+            f"This bundle contains {designs} complete memorial designs (pet paw, "
+            f"angel wings, rainbow bridge), each seven layers with its own "
+            f"editable name plate, so you can cut more than one keepsake from "
+            f"a single purchase."
+            if is_bundle else
+            "This is a seven-layer design with one editable name plate, so "
+            "you can cut a single keepsake sized and named exactly as needed."
+        )
         return [
             (f"Can I put my pet's or a family member's name on this design?",
-             f"Yes, and that is the point of it. The front layer carries an "
-             f"editable name plate with placeholder text. Open the front layer "
-             f"in Cricut Design Space or Silhouette Studio, double-click the "
-             f"text and type their name and the years that bracket their life. "
-             f"Everything else on the sheet cuts exactly as drawn, so it takes "
-             f"about two minutes and no extra material."),
+             f"Yes, and that is the point of it. Every design here carries an "
+             f"editable name plate on its front layer with placeholder text. "
+             f"Open the front layer in Cricut Design Space or Silhouette Studio, "
+             f"double-click the text and type their name and the years that "
+             f"bracket their life. {bundle_note}"),
             ("Is this design appropriate for a gift, or only for me?",
              f"Either. It ships as a plain digital bundle with no preset name, "
              f"so it can be cut for yourself or for someone you are losing. "
@@ -476,7 +486,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
     # arriving here has just lost someone; the first thing on the page should
     # acknowledge that, and the personalisation step should be the first
     # instruction they read.
-    is_memorial = item.get("type") == "memorial"
+    is_memorial = item.get("type") in ("memorial", "memorial-bundle")
     badge = (
         '<span class="badge">A keepsake you will keep for years</span>'
         if is_memorial else
@@ -1027,10 +1037,14 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
     # Memorial designs lead the grid. They are the differentiated product and
     # the ones whose buyer arrives already emotional, so burying them below a
     # wall of interchangeable mandalas hides the only thing worth arriving for.
+    # The collection bundle leads even them: it is the product a buyer should
+    # be aimed at, since a single design loses on price against the market.
     by_date = sorted(catalog, key=lambda x: x["created"], reverse=True)
+    lead = ("memorial-bundle", "memorial")
     ordered = (
-        [i for i in by_date if i.get("type") == "memorial"]
-        + [i for i in by_date if i.get("type") != "memorial"]
+        [i for i in by_date if i.get("type") == "memorial-bundle"]
+        + [i for i in by_date if i.get("type") == "memorial"]
+        + [i for i in by_date if i.get("type") not in lead]
     )
     for item in ordered:
         tag_html = "".join(f"<em>{svgkit.escape(t)}</em>" for t in item["tags"][:5])
