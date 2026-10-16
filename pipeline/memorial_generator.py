@@ -166,12 +166,15 @@ def _icon_paw(cx, cy, r, fill):
         f"C {_fmt(cx - 0.3 * r, cy + 0.86 * r)} {_fmt(cx - 0.62 * r, cy + 0.74 * r)} {_fmt(cx - 0.62 * r, cy + 0.42 * r)} Z"
     )
     parts.append(f'<path d="{pad}" fill="{fill}"/>')
+    # Toes must clear MIN_PART as well: a paw print is drawn as one pad plus
+    # four toe islands, and undersized islands tear out on the mat.
+    toe_r = max(0.19 * r, MIN_PART + 1.5)
     for deg in (-62, -21, 21, 62):
         a = math.radians(deg)
         # toes sit above the pad
         tx = cx + math.sin(a) * 0.55 * r
         ty = cy - 0.42 * r + math.sin(a) * 0.3 * r
-        parts.append(f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="{0.19 * r:.1f}" fill="{fill}"/>')
+        parts.append(f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="{toe_r:.1f}" fill="{fill}"/>')
     return "".join(parts)
 
 
@@ -240,8 +243,11 @@ def _icon_rainbow(cx, cy, r, fill):
             f'<path d="{d}" fill="none" stroke="{col}" '
             f'stroke-width="{0.16 * r:.1f}" stroke-linecap="round"/>'
         )
-    parts.append(f'<circle cx="{cx - 0.72 * r:.1f}" cy="{cy + 0.52 * r:.1f}" r="{0.14 * r:.1f}" fill="{fill}"/>')
-    parts.append(f'<circle cx="{cx + 0.72 * r:.1f}" cy="{cy + 0.52 * r:.1f}" r="{0.14 * r:.1f}" fill="{fill}"/>')
+    # Foot dots must clear MIN_PART: a sub-14px island is a choking hazard on
+    # a Cricut blade, not a decorative detail.
+    dot_r = max(0.14 * r, MIN_PART + 1.5)
+    parts.append(f'<circle cx="{cx - 0.72 * r:.1f}" cy="{cy + 0.52 * r:.1f}" r="{dot_r:.1f}" fill="{fill}"/>')
+    parts.append(f'<circle cx="{cx + 0.72 * r:.1f}" cy="{cy + 0.52 * r:.1f}" r="{dot_r:.1f}" fill="{fill}"/>')
     return "".join(parts)
 
 
@@ -283,7 +289,7 @@ def _front_layer(variant, cx, cy, max_r, palette):
     for i in range(12):
         a = i * math.pi / 6
         x, y = _p(cx, cy, max_r * 0.845, a)
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{MIN_PART:.1f}" fill="{gold}"/>')
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{MIN_PART + 1.5:.1f}" fill="{gold}"/>')
     # medallion
     med = max_r * 0.46
     parts.append(f'<circle cx="{cx:.0f}" cy="{cy:.0f}" r="{med:.1f}" fill="#ffffff"/>')
@@ -310,10 +316,11 @@ def _motif_layer(variant, cx, cy, max_r, palette, rng):
     parts = [f'<circle cx="{cx:.0f}" cy="{cy:.0f}" r="{max_r * 0.30:.1f}" fill="{fill}"/>']
     parts.append(_big_icon(variant["icon"], cx, cy, max_r * 0.155, icon_fill))
     ring_r = max_r * 0.245
+    small = max(max_r * 0.028, MIN_PART + 1.5)
     for i in range(10):
         a = i * 2 * math.pi / 10 - math.pi / 2
         x, y = _p(cx, cy, ring_r, a)
-        parts.append(_small_icon(variant["icon"], x, y, max_r * 0.028, palette[2]))
+        parts.append(_small_icon(variant["icon"], x, y, small, palette[2]))
     return "".join(parts)
 
 
