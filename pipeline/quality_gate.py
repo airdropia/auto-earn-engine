@@ -215,6 +215,42 @@ def check_pngs_for_mandala_products() -> list[str]:
     return defects
 
 
+def check_memorial_tags() -> list[str]:
+    """Memorial designs must not carry seasonal tags.
+
+    A grief design tagged "pumpkin svg" or "thanksgiving svg" is worse than
+    untagged: it puts the wrong product in front of someone who is looking
+    for a way to honour a pet, and it teaches the search engine that this
+    page is about autumn. The generic line legitimately uses those tags; the
+    memorial line never does.
+    """
+    catalog_path = ROOT / "catalog" / "catalog.json"
+    if not catalog_path.exists():
+        return []
+    seasonal = (
+        "pumpkin", "thanksgiving", "harvest", "autumn", "fall svg", "cozy",
+        "leaves", "halloween", "christmas", "valentine", "easter",
+        "backtoschool", "floral", "geometric", "boho", "sunburst",
+    )
+    defects: list[str] = []
+    try:
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return []
+    if not isinstance(catalog, list):
+        return []
+    for item in catalog:
+        if item.get("type") != "memorial":
+            continue
+        for tag in item.get("tags") or []:
+            low = tag.lower()
+            if any(word in low for word in seasonal):
+                defects.append(
+                    f"{item.get('id')}: seasonal tag {tag!r} on a memorial design"
+                )
+    return defects
+
+
 def main() -> int:
     all_defects: list[str] = []
     checked = 0
@@ -230,6 +266,8 @@ def main() -> int:
 
     for defect in check_package_paperwork():
         all_defects.append(defect)
+
+    all_defects.extend(check_memorial_tags())
 
     print(f"quality gate: checked={checked} svgs, defects={len(all_defects)}")
     for defect in all_defects[:20]:
