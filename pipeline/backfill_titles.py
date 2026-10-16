@@ -47,6 +47,13 @@ def main() -> int:
     seen_titles: dict[str, str] = {}
 
     for item in catalog:
+        # Memorial titles are written by memorial_generator.py and carry the
+        # emotional wording ("In Loving Memory Pet Shadow Box"). The generic
+        # seasonal title shapes would replace them with "Stacked Autumn Mandala",
+        # which is both wrong for the buyer and a duplicate of the generic line.
+        if item.get("type") == "memorial":
+            seen_titles.setdefault(item.get("title", ""), item.get("id", ""))
+            continue
         created = item.get("created") or date.today().isoformat()
         # Resolve the theme the same way the generator would have.
         try:
