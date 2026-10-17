@@ -1,10 +1,10 @@
 # SEO HEALTH (auto-generated)
 
-_Auto-updated 2026-10-17T15:26:06Z by `pipeline/report_title_uniqueness.py`_
+_Auto-updated 2026-10-17T18:02:52Z by `pipeline/report_title_uniqueness.py`_
 
 | Check | Value |
 |---|---|
-| Catalog entries | 18 |
-| Distinct titles | 18 |
+| Catalog entries | 21 |
+| Distinct titles | 21 |
 | Duplicate titles | 0 |
 | Entries missing a title | 0 |
