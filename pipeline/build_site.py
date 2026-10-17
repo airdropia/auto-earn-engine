@@ -1279,6 +1279,9 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
         "memorial-shadow-box-materials-guide",
         "sympathy-gift-loss-of-parent",
         "how-to-personalize-memorial-svg-cricut",
+        "memorial-shadow-box-for-dog",
+        "memorial-shadow-box-for-cat",
+        "memorial-shadow-box-size-guide",
     ]
     for slug in blog_slugs:
         urls.append(f"{base}/blog/{slug}/")
@@ -1705,6 +1708,57 @@ def main() -> None:
 <h3>Step 5: Mount and display</h3>
 <p>Mount on backing board. Hang on wall. Your beloved's name is on the front layer - not just "In Loving Memory," but their actual name.</p>
 <p><strong>Total time:</strong> About an evening. No wet glue, no curing time.</p>
+""",
+        },
+        {
+            "slug": "memorial-shadow-box-for-dog",
+            "title": "Memorial Shadow Box for Dog - Keepsake Ideas",
+            "description": "Memorial shadow box ideas specifically for dog lovers - paw print motif, name plate, and assembly guide.",
+            "content": """
+<h2>Memorial Shadow Box for Dog</h2>
+<p>Losing a dog is losing a family member. Here's how to make a memorial shadow box for your dog:</p>
+<h3>1. Choose the paw print motif</h3>
+<p>The paw print is breed-neutral - it works for golden retrievers, labradors, beagles, poodles, and every other breed. It's instantly recognizable as a dog's paw.</p>
+<h3>2. Edit your dog's name</h3>
+<p>The front layer has an editable name plate. Type your dog's name and their birth and death years.</p>
+<h3>3. Cut and stack</h3>
+<p>Cut all 7 layers from cardstock. Stack largest to smallest with foam tape. The paw print sits at the heart of the shadow box.</p>
+<h3>4. Where to hang it</h3>
+<p>Above your desk, in the hallway where you used to walk them, or on a bedroom shelf. Wherever you'll see it every day.</p>
+""",
+        },
+        {
+            "slug": "memorial-shadow-box-for-cat",
+            "title": "Memorial Shadow Box for Cat - Keepsake Ideas",
+            "description": "Memorial shadow box ideas for cat lovers - paw print motif, name plate, and assembly guide.",
+            "content": """
+<h2>Memorial Shadow Box for Cat</h2>
+<p>Losing a cat is losing a family member. Here's how to make a memorial shadow box for your cat:</p>
+<h3>1. Choose the paw print motif</h3>
+<p>The paw print works for cats too - tabby, siamese, maine coon, and every other breed. It's instantly recognizable.</p>
+<h3>2. Edit your cat's name</h3>
+<p>The front layer has an editable name plate. Type your cat's name and their birth and death years.</p>
+<h3>3. Cut and stack</h3>
+<p>Cut all 7 layers from cardstock. Stack largest to smallest with foam tape. The paw print sits at the heart of the shadow box.</p>
+<h3>4. Where to hang it</h3>
+<p>Near their favorite window, above their feeding spot, or on a bedroom shelf. Wherever they used to be.</p>
+""",
+        },
+        {
+            "slug": "memorial-shadow-box-size-guide",
+            "title": "Memorial Shadow Box Size Guide - A4, 12x12, and Deep Frame",
+            "description": "What size shadow box to build - A4, 12x12 inch, and deep frame options for memorial SVGs.",
+            "content": """
+<h2>Memorial Shadow Box Size Guide</h2>
+<p>Here are the common sizes for memorial shadow boxes:</p>
+<h3>1. A4 size (8.3 x 11.7 inches)</h3>
+<p>Good for desks and small shelves. All 7 layers fit on A4 cardstock. Portable and easy to gift.</p>
+<h3>2. 12x12 inch size</h3>
+<p>The most common size. Good for wall hanging and mantelpieces. More presence, more impact.</p>
+<h3>3. Deep frame</h3>
+<p>A shadow box frame with depth built in. No foam tape needed - just stack the layers inside the frame.</p>
+<h3>4. How to choose</h3>
+<p>A4 for gifts and small spaces. 12x12 for wall hanging. Deep frame if you want the easiest assembly.</p>
 """,
         },
     ]

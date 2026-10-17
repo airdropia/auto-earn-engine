@@ -198,6 +198,75 @@ VARIANTS: dict[str, dict] = {
             "layered memorial svg", "remembrance svg", "ocean shadow box",
         ],
     },
+    "candle": {
+        "label": "Candle Memorial",
+        "icon": "heart",
+        "palette": ["#3d2b1f", "#6a4c93", "#9b59b6", "#f4e9e2", "#c9a227"],
+        "accent": "#d4a5a5",
+        "plate_line": "Your light remains",
+        "titles": [
+            "Candle Memorial Shadow Box | {layers}-Layer SVG",
+            "Candle Memorial Cut File | {layers} Layer Shadow Box SVG",
+            "Candle Remembrance Shadow Box | {layers}-Layer Keepsake SVG",
+        ],
+        "description": (
+            "Seven layers of deep amber, plum, and ivory stack into a candle "
+            "memorial shadow box with a heart motif at its heart. The front "
+            "name plate is editable: type your beloved's name and dates in "
+            "Cricut Design Space and it becomes yours in minutes."
+        ),
+        "tags": [
+            "candle memorial svg", "memorial shadow box svg", "in loving memory svg",
+            "sympathy gift svg", "memorial keepsake svg", "cricut memorial",
+            "layered memorial svg", "remembrance svg", "candle shadow box",
+        ],
+    },
+    "star": {
+        "label": "Star Memorial",
+        "icon": "star",
+        "palette": ["#1a2a3a", "#3d5a7d", "#5a7da0", "#e8f0f8", "#c9a227"],
+        "accent": "#f0d9b5",
+        "plate_line": "A star in our sky",
+        "titles": [
+            "Star Memorial Shadow Box | {layers}-Layer SVG",
+            "Star Memorial Cut File | {layers} Layer Shadow Box SVG",
+            "Star Remembrance Shadow Box | {layers}-Layer Keepsake SVG",
+        ],
+        "description": (
+            "Seven layers of deep night blue, teal, and ivory stack into a "
+            "star memorial shadow box with a star motif at its heart. The "
+            "front name plate is editable: type your beloved's name and dates "
+            "in Cricut Design Space and it becomes yours in minutes."
+        ),
+        "tags": [
+            "star memorial svg", "memorial shadow box svg", "in loving memory svg",
+            "sympathy gift svg", "memorial keepsake svg", "cricut memorial",
+            "layered memorial svg", "remembrance svg", "star shadow box",
+        ],
+    },
+    "cross": {
+        "label": "Cross Memorial",
+        "icon": "star",
+        "palette": ["#2a2a3a", "#4a4a5d", "#6a6a8d", "#f4f4f8", "#c9a227"],
+        "accent": "#b0b0c0",
+        "plate_line": "Forever in our hearts",
+        "titles": [
+            "Cross Memorial Shadow Box | {layers}-Layer SVG",
+            "Cross Memorial Cut File | {layers} Layer Shadow Box SVG",
+            "Cross Remembrance Shadow Box | {layers}-Layer Keepsake SVG",
+        ],
+        "description": (
+            "Seven layers of deep charcoal, slate, and ivory stack into a "
+            "cross memorial shadow box with a star motif at its heart. The "
+            "front name plate is editable: type your beloved's name and dates "
+            "in Cricut Design Space and it becomes yours in minutes."
+        ),
+        "tags": [
+            "cross memorial svg", "memorial shadow box svg", "in loving memory svg",
+            "sympathy gift svg", "memorial keepsake svg", "cricut memorial",
+            "layered memorial svg", "remembrance svg", "cross shadow box",
+        ],
+    },
 }
 
 _FONT = "Georgia, 'Times New Roman', serif"
@@ -360,6 +429,69 @@ def _icon_wave(cx, cy, r, fill):
     return "".join(parts)
 
 
+def _icon_candle(cx, cy, r, fill):
+    """A candle motif: flame on top of a rectangular body."""
+    parts = []
+    # Candle body
+    body = (
+        f"M {_fmt(cx - 0.2 * r, cy + 0.3 * r)} "
+        f"L {_fmt(cx + 0.2 * r, cy + 0.3 * r)} "
+        f"L {_fmt(cx + 0.2 * r, cy - 0.2 * r)} "
+        f"L {_fmt(cx - 0.2 * r, cy - 0.2 * r)} Z"
+    )
+    parts.append(f'<path d="{body}" fill="{fill}"/>')
+    # Flame
+    flame = (
+        f"M {_fmt(cx, cy - 0.2 * r)} "
+        f"Q {_fmt(cx - 0.1 * r, cy - 0.35 * r)} {_fmt(cx, cy - 0.45 * r)} "
+        f"Q {_fmt(cx + 0.1 * r, cy - 0.35 * r)} {_fmt(cx, cy - 0.2 * r)} Z"
+    )
+    parts.append(f'<path d="{flame}" fill="#f0d9b5"/>')
+    # Wick
+    wick = (
+        f"M {_fmt(cx, cy - 0.2 * r)} "
+        f"L {_fmt(cx, cy - 0.1 * r)} Z"
+    )
+    parts.append(f'<path d="{wick}" fill="none" stroke="#8a7a6a" stroke-width="{0.05 * r:.1f}"/>')
+    return "".join(parts)
+
+
+def _icon_star(cx, cy, r, fill):
+    """A five-pointed star motif."""
+    pts = []
+    for i in range(10):
+        rr = r if i % 2 == 0 else r * 0.4
+        a = -math.pi / 2 + i * math.pi / 5
+        x, y = _p(cx, cy, rr, a)
+        pts.append(_fmt(x, y))
+    poly = " ".join(pts)
+    return f'<polygon points="{poly}" fill="{fill}"/>'
+
+
+def _icon_cross(cx, cy, r, fill):
+    """A cross motif: vertical and horizontal bars."""
+    parts = []
+    bar_w = 0.18 * r
+    bar_h = 0.7 * r
+    # Vertical bar
+    vbar = (
+        f"M {_fmt(cx - bar_w / 2, cy - bar_h / 2)} "
+        f"L {_fmt(cx + bar_w / 2, cy - bar_h / 2)} "
+        f"L {_fmt(cx + bar_w / 2, cy + bar_h / 2)} "
+        f"L {_fmt(cx - bar_w / 2, cy + bar_h / 2)} Z"
+    )
+    parts.append(f'<path d="{vbar}" fill="{fill}"/>')
+    # Horizontal bar
+    hbar = (
+        f"M {_fmt(cx - bar_h / 2, cy - bar_w / 2)} "
+        f"L {_fmt(cx + bar_h / 2, cy - bar_w / 2)} "
+        f"L {_fmt(cx + bar_h / 2, cy + bar_w / 2)} "
+        f"L {_fmt(cx - bar_h / 2, cy + bar_w / 2)} Z"
+    )
+    parts.append(f'<path d="{hbar}" fill="{fill}"/>')
+    return "".join(parts)
+
+
 def _big_icon(kind, cx, cy, r, fill):
     if kind == "paw":
         return _icon_paw(cx, cy, r, fill)
@@ -373,6 +505,12 @@ def _big_icon(kind, cx, cy, r, fill):
         return _icon_wave(cx, cy, r, fill)
     if kind == "heart":
         return _icon_heart(cx, cy, r, fill)
+    if kind == "candle":
+        return _icon_candle(cx, cy, r, fill)
+    if kind == "star":
+        return _icon_star(cx, cy, r, fill)
+    if kind == "cross":
+        return _icon_cross(cx, cy, r, fill)
     return _icon_rainbow(cx, cy, r, fill)
 
 
@@ -383,6 +521,12 @@ def _small_icon(kind, cx, cy, r, fill):
         return _icon_heart(cx, cy, r, fill)
     if kind == "wave":
         return _icon_heart(cx, cy, r, fill)
+    if kind == "candle":
+        return _icon_star(cx, cy, r, fill)
+    if kind == "star":
+        return _icon_star(cx, cy, r, fill)
+    if kind == "cross":
+        return _icon_star(cx, cy, r, fill)
     return _star(cx, cy, r, fill)
 
 
