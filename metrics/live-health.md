@@ -1,11 +1,11 @@
 # LIVE HEALTH (auto-generated)
 
-_Auto-updated 2026-10-17T08:38:14Z by `pipeline/sync_state.py` (CI: state-sync workflow). 
+_Auto-updated 2026-10-17T15:26:06Z by `pipeline/sync_state.py` (CI: state-sync workflow). 
 Do not hand-edit; next run overwrites._
 
 | Check | Value |
 |---|---|
 | Storefront `/` | 200 |
 | Buyer page | https://airdropia.github.io/auto-earn-engine/p/flagship-22acf7b3/ |
-| Catalog products | 13 |
-| Latest flagship CI run | success @ 2026-10-17T08:00:54Z |
+| Catalog products | 18 |
+| Latest flagship CI run | success @ 2026-10-17T15:10:08Z |
