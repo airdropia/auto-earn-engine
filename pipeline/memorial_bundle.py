@@ -101,7 +101,15 @@ def build(today: str, catalog: list[dict]) -> dict | None:
         "antique gold, stacked for real depth, with print-ready PNG renders. "
         "One download, every memorial design we make."
     )
-    tags = sorted({
+    # Seasonal tags belong to the commodity line, never to a memorial bundle.
+    # Filter them out so the bundle page never shows "pumpkin svg" etc.
+    _SEASONAL = {
+        "pumpkin", "thanksgiving", "harvest", "autumn svg", "fall svg",
+        "cozy svg", "leaves svg", "halloween", "christmas", "valentine",
+        "easter", "backtoschool", "spring svg", "summer svg", "floral",
+        "geometric", "boho", "sunburst", "hearts", "stars",
+    }
+    raw_tags = {
         t
         for item in designs
         for t in item.get("tags", [])
@@ -109,7 +117,8 @@ def build(today: str, catalog: list[dict]) -> dict | None:
         "memorial bundle", "memorial shadow box collection", "memorial svg bundle",
         "editable name svg", "pet loss svg bundle", "sympathy gift bundle",
         "cricut memorial bundle", "layered memorial bundle",
-    })
+    }
+    tags = sorted(t for t in raw_tags if t.lower() not in _SEASONAL)
 
     return {
         "id": slug,
