@@ -1637,6 +1637,65 @@ def main() -> None:
 <p>If someone you know lost a pet, a memorial shadow box is a sympathy gift that won't be forgotten. Cut it yourself and give it with their name on it.</p>
 """,
         },
+        {
+            "slug": "memorial-shadow-box-materials-guide",
+            "title": "Memorial Shadow Box Materials: Cardstock, Foam Tape, Backing Board",
+            "description": "What materials to buy for a memorial shadow box - cardstock weight, foam tape thickness, and backing board options.",
+            "content": """
+<h2>Memorial Shadow Box Materials Guide</h2>
+<p>Here's exactly what to buy for a memorial shadow box:</p>
+<h3>Cardstock</h3>
+<p>Use 250-350 gsm cardstock. Thinner paper won't hold depth; thicker cardstock is hard to cut. White, ivory, black, and midnight blue work best for memorials.</p>
+<h3>Foam Tape</h3>
+<p>3mm or 5mm foam tape between layers. Too thin and you won't see depth; too thick and the box looks bulky. One roll does 5-10 shadow boxes.</p>
+<h3>Backing Board</h3>
+<p>A4 or 12x12 inch backing board, or a deep picture frame without glass. The shadow box casts a real shadow on the wall behind it - that's what makes it look 3D.</p>
+<h3>Tools</h3>
+<ul>
+<li>Cricut or Silhouette cutting machine</li>
+<li>Scissors for trimming foam tape</li>
+<li>Ruler for alignment</li>
+</ul>
+<p><strong>Estimated cost:</strong> Under $20 for materials that make 5-10 shadow boxes.</p>
+""",
+        },
+        {
+            "slug": "sympathy-gift-loss-of-parent",
+            "title": "Sympathy Gift Ideas for Loss of Mother or Father",
+            "description": "What to give someone who lost a mother or father - shadow boxes, keepsakes, and words that help.",
+            "content": """
+<h2>Sympathy Gift Ideas for Loss of Mother or Father</h2>
+<p>Losing a parent is one of the hardest things. Here's what to give:</p>
+<h3>1. Memorial shadow box with their name</h3>
+<p>A seven-layer shadow box with your mother's or father's name on the front layer. Cut it from cardstock and stack it for real depth. It hangs on their wall as a daily reminder.</p>
+<h3>2. Name plate keepsake</h3>
+<p>Edit the name plate with their full name and birth/death years. Every time they look at it, they see their loved one's name - not just "In Loving Memory."</p>
+<h3>3. Hang it where they'll see it</h3>
+<p>Above a desk, in a hallway, or on a bedroom shelf. The shadow box casts a real shadow that changes through the day as light moves.</p>
+<h3>4. Words that help</h3>
+<p>Write their name and dates on the shadow box. Add "In Loving Memory" or a short phrase like "Forever in our hearts." Keep it simple - the name matters most.</p>
+""",
+        },
+        {
+            "slug": "how-to-personalize-memorial-svg-cricut",
+            "title": "How to Personalize a Memorial SVG in Cricut Design Space",
+            "description": "Step-by-step: open the front layer SVG, edit the name plate text, cut, and assemble a personalized memorial shadow box.",
+            "content": """
+<h2>How to Personalize a Memorial SVG in Cricut Design Space</h2>
+<p>Here's exactly how to put your beloved's name on a memorial shadow box:</p>
+<h3>Step 1: Open the front layer file</h3>
+<p>Import memorial-design-1-layer-1.svg into Cricut Design Space. This is the front layer with the name plate placeholder.</p>
+<h3>Step 2: Edit the placeholder text</h3>
+<p>Double-click the placeholder text in the center. Type your beloved's name. Below it, type their birth and death years. Click Done.</p>
+<h3>Step 3: Cut all layers</h3>
+<p>Send all 7 layer SVGs to your Cricut. Cut largest layer first, smallest last. Use cardstock (250-350 gsm).</p>
+<h3>Step 4: Stack with foam tape</h3>
+<p>Apply foam tape to the back of each layer. Stack largest to smallest. The voids in upper layers reveal the layers beneath - that's the depth.</p>
+<h3>Step 5: Mount and display</h3>
+<p>Mount on backing board. Hang on wall. Your beloved's name is on the front layer - not just "In Loving Memory," but their actual name.</p>
+<p><strong>Total time:</strong> About an evening. No wet glue, no curing time.</p>
+""",
+        },
     ]
     blog_pages = 0
     for post in blog_posts:

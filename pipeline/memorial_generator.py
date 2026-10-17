@@ -129,6 +129,75 @@ VARIANTS: dict[str, dict] = {
             "layered memorial svg", "cricut pet memorial", "keepsake shadow box",
         ],
     },
+    "sunset": {
+        "label": "Sunset Memorial",
+        "icon": "heart",
+        "palette": ["#2a1b3d", "#5a2d82", "#8e44ad", "#f4e1d2", "#c9a227"],
+        "accent": "#b76e79",
+        "plate_line": "Forever in the sunset",
+        "titles": [
+            "Sunset Memorial Shadow Box | {layers}-Layer SVG",
+            "Sunset Memorial Cut File | {layers} Layer Shadow Box SVG",
+            "Sunset Remembrance Shadow Box | {layers}-Layer Keepsake SVG",
+        ],
+        "description": (
+            "Seven layers of deep purple, plum, and ivory stack into a sunset "
+            "memorial shadow box with a heart motif at its heart. The front "
+            "name plate is editable: type your beloved's name and dates in "
+            "Cricut Design Space and it becomes yours in minutes."
+        ),
+        "tags": [
+            "sunset memorial svg", "memorial shadow box svg", "in loving memory svg",
+            "sympathy gift svg", "memorial keepsake svg", "cricut memorial",
+            "layered memorial svg", "remembrance svg", "sunset shadow box",
+        ],
+    },
+    "forest": {
+        "label": "Forest Memorial",
+        "icon": "leaf",
+        "palette": ["#1b3a2a", "#2d5a3d", "#5a8a5d", "#f4efe1", "#c9a227"],
+        "accent": "#8a9b7d",
+        "plate_line": "Rooted in memory",
+        "titles": [
+            "Forest Memorial Shadow Box | {layers}-Layer SVG",
+            "Forest Memorial Cut File | {layers} Layer Shadow Box SVG",
+            "Forest Remembrance Shadow Box | {layers}-Layer Keepsake SVG",
+        ],
+        "description": (
+            "Seven layers of deep forest green, moss, and ivory stack into a "
+            "forest memorial shadow box with a leaf motif at its heart. The "
+            "front name plate is editable: type your beloved's name and dates "
+            "in Cricut Design Space and it becomes yours in minutes."
+        ),
+        "tags": [
+            "forest memorial svg", "memorial shadow box svg", "in loving memory svg",
+            "sympathy gift svg", "memorial keepsake svg", "cricut memorial",
+            "layered memorial svg", "remembrance svg", "forest shadow box",
+        ],
+    },
+    "ocean": {
+        "label": "Ocean Memorial",
+        "icon": "wave",
+        "palette": ["#0a2a3a", "#1d4a5d", "#3d6a7d", "#e8f4f8", "#c9a227"],
+        "accent": "#7da0b3",
+        "plate_line": "Forever in the tide",
+        "titles": [
+            "Ocean Memorial Shadow Box | {layers}-Layer SVG",
+            "Ocean Memorial Cut File | {layers} Layer Shadow Box SVG",
+            "Ocean Remembrance Shadow Box | {layers}-Layer Keepsake SVG",
+        ],
+        "description": (
+            "Seven layers of deep ocean blue, teal, and ivory stack into an "
+            "ocean memorial shadow box with a wave motif at its heart. The "
+            "front name plate is editable: type your beloved's name and dates "
+            "in Cricut Design Space and it becomes yours in minutes."
+        ),
+        "tags": [
+            "ocean memorial svg", "memorial shadow box svg", "in loving memory svg",
+            "sympathy gift svg", "memorial keepsake svg", "cricut memorial",
+            "layered memorial svg", "remembrance svg", "ocean shadow box",
+        ],
+    },
 }
 
 _FONT = "Georgia, 'Times New Roman', serif"
@@ -251,16 +320,68 @@ def _icon_rainbow(cx, cy, r, fill):
     return "".join(parts)
 
 
+def _icon_leaf(cx, cy, r, fill):
+    """A single leaf motif: stem plus leaf blade."""
+    parts = []
+    # Stem
+    stem = (
+        f"M {_fmt(cx, cy + 0.4 * r)} "
+        f"Q {_fmt(cx, cy + 0.05 * r)} {_fmt(cx, cy - 0.3 * r)} Z"
+    )
+    parts.append(f'<path d="{stem}" fill="{fill}"/>')
+    # Leaf blade - curved teardrop shape
+    blade = (
+        f"M {_fmt(cx - 0.35 * r, cy - 0.25 * r)} "
+        f"Q {_fmt(cx - 0.6 * r, cy - 0.55 * r)} {_fmt(cx - 0.4 * r, cy - 0.8 * r)} "
+        f"Q {_fmt(cx, cy - 0.7 * r)} {_fmt(cx + 0.4 * r, cy - 0.8 * r)} "
+        f"Q {_fmt(cx + 0.6 * r, cy - 0.55 * r)} {_fmt(cx + 0.35 * r, cy - 0.25 * r)} "
+        f"Q {_fmt(cx + 0.15 * r, cy - 0.15 * r)} {_fmt(cx, cy + 0.05 * r)} Z"
+    )
+    parts.append(f'<path d="{blade}" fill="{fill}"/>')
+    # Vein
+    vein = (
+        f"M {_fmt(cx, cy - 0.3 * r)} "
+        f"Q {_fmt(cx, cy - 0.5 * r)} {_fmt(cx, cy - 0.7 * r)} Z"
+    )
+    parts.append(f'<path d="{vein}" fill="none" stroke="{fill}" stroke-width="{0.05 * r:.1f}"/>')
+    return "".join(parts)
+
+
+def _icon_wave(cx, cy, r, fill):
+    """A wave motif: three overlapping arcs."""
+    parts = []
+    for i, offset in enumerate([-0.3, 0.0, 0.3]):
+        d = (
+            f"M {_fmt(cx - r, cy + offset * r)} "
+            f"Q {_fmt(cx - r * 0.5, cy + (offset + 0.15) * r)} {_fmt(cx, cy + offset * r)} "
+            f"Q {_fmt(cx + r * 0.5, cy + (offset - 0.15) * r)} {_fmt(cx + r, cy + offset * r)}"
+        )
+        parts.append(f'<path d="{d}" fill="none" stroke="{fill}" stroke-width="{0.1 * r:.1f}"/>')
+    return "".join(parts)
+
+
 def _big_icon(kind, cx, cy, r, fill):
     if kind == "paw":
         return _icon_paw(cx, cy, r, fill)
     if kind == "angel":
         return _icon_wings(cx, cy, r, fill)
+    if kind == "rainbow":
+        return _icon_rainbow(cx, cy, r, fill)
+    if kind == "leaf":
+        return _icon_leaf(cx, cy, r, fill)
+    if kind == "wave":
+        return _icon_wave(cx, cy, r, fill)
+    if kind == "heart":
+        return _icon_heart(cx, cy, r, fill)
     return _icon_rainbow(cx, cy, r, fill)
 
 
 def _small_icon(kind, cx, cy, r, fill):
     if kind == "paw":
+        return _icon_heart(cx, cy, r, fill)
+    if kind == "leaf":
+        return _icon_heart(cx, cy, r, fill)
+    if kind == "wave":
         return _icon_heart(cx, cy, r, fill)
     return _star(cx, cy, r, fill)
 
