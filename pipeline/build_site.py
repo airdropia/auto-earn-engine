@@ -1271,6 +1271,17 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
     )
 
     urls: list[str] = [f"{base}/", f"{base}/checkout/"]
+    # Blog posts - each is an indexable page for search traffic
+    blog_slugs = [
+        "how-to-make-memorial-shadow-box",
+        "memorial-shadow-box-buying-guide",
+        "pet-loss-memorial-gift-ideas",
+        "memorial-shadow-box-materials-guide",
+        "sympathy-gift-loss-of-parent",
+        "how-to-personalize-memorial-svg-cricut",
+    ]
+    for slug in blog_slugs:
+        urls.append(f"{base}/blog/{slug}/")
     for spec in COLLECTIONS:
         # Pinned (breed) collections render their pinned products even when no
         # listing matches the keywords, so they deserve a sitemap entry too.

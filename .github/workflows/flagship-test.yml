@@ -21,7 +21,7 @@ jobs:
       - name: Generate flagship design
         run: python3 pipeline/flagship_generator.py
       - name: Generate memorial design (emotional line)
-        run: python3 pipeline/memorial_generator.py
+        run: python3 pipeline/memorial_generator.py --all
       - name: Generate memorial collection bundle (all variants)
         run: python3 pipeline/memorial_bundle.py
       - name: Render high-res PNG for new designs (6500px)
