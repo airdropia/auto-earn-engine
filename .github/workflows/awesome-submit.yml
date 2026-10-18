@@ -80,7 +80,11 @@ jobs:
           # A submission target is a repository whose NAME starts with
           # "awesome". Everything else that matched the words (icon kits,
           # unrelated tools) is filtered out here.
-          while IFS=$'\t' read -r stars kind full branch desc; do
+          # The raw TSV holds stars/full_name/branch/description (exactly what
+          # the search returns). `kind` is added only when writing
+          # candidates.txt, so reading five fields here would shift every
+          # column by one and silently drop every candidate.
+          while IFS=$'\t' read -r stars full branch desc; do
             [ -z "${full:-}" ] && continue
             [ "${stars:-0}" -ge 50 ] || continue
             case "$full" in airdropia/*) continue ;; esac
@@ -93,15 +97,28 @@ jobs:
             # someone's project repo, which is the easiest way to get an
             # account flagged as spam.
             kind=""
-            case "$base_lc" in awesome-*) kind="list" ;; esac
+            # Curated lists qualify whether the "awesome" prefix leads the name
+            # or closes it (image2svg-awesome). A name that merely CONTAINS
+            # "awesome" is not a list — Font-Awesome-SVG-PNG is a converter
+            # tool, and adding a shop link to it would be pure noise.
+            case "$base_lc" in awesome-*|*-awesome|*-awesome-*) kind="list" ;; esac
             if [ -z "$kind" ]; then
               topics_lc=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/topics" --jq '.names | join(" ")' 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
-              case "$topics_lc" in
-                *cricut*|*papercraft*|*paper-craft*|*laser-cutting*|*lasercutting*|*shadow-box*|*svg*|*crafts*|*3d-printing*)
-                  [ "${stars:-0}" -ge 100 ] || continue
-                  kind="craft" ;;
-                *) continue ;;
+              # Only genuinely adjacent targets. Papercraft template
+              # collections and generic "svg" repos match by vocabulary but a
+              # shop link is off-topic there, and an off-topic PR is worse than
+              # no PR: it burns the one submission a maintainer will ever read.
+              case "$base_lc" in
+                *cricut*|*laser*|*cut-file*|*cutfile*|*shadow-box*|*silhouette*|*die-cut*|*stencil*) kind="craft" ;;
               esac
+              if [ -z "$kind" ]; then
+                case "$topics_lc" in
+                  *cricut*|*laser-cutting*|*lasercutting*|*shadow-box*|*cricutting*|*die-cut*|*diecut*)
+                    kind="craft" ;;
+                  *) continue ;;
+                esac
+              fi
+              [ "${stars:-0}" -ge 100 ] || continue
             fi
             # Lists that already reviewed us stay skipped forever.
             case "$full" in ad-si/awesome-laser-cutting|kosmos/awesome-generative-art) continue ;; esac
