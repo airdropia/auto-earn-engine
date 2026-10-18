@@ -1,0 +1,10 @@
+{
+  "note": "Search-engine crawl signal, not page views. Page-view counting needs an analytics account, which the zero-account rule forbids; every no-auth hit counter is dead.",
+  "series": [
+    {
+      "date": "2026-10-18",
+      "status": "unknown",
+      "reason": "bing served a challenge page"
+    }
+  ]
+}
