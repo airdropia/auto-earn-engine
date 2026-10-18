@@ -49,8 +49,22 @@ def maker_page_html(store_name: str, tagline: str, checkout_url: str,
                     bundle_href: str, maker_url: str) -> str:
     """Render the maker page. Kept as one self-contained file on purpose."""
     data = json.dumps({"motifs": MOTIFS, "palettes": PALETTES})
+    schema = json.dumps({
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Free memorial shadow box maker",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Any (runs in the browser)",
+        "url": maker_url,
+        "description": (
+            "Type a name and dates to see a memorial shadow box instantly. "
+            "Free, no signup, nothing installed."
+        ),
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+    })
     return MAKER_TEMPLATE.replace("__STORE__", store_name) \
         .replace("__TAGLINE__", tagline) \
+        .replace("__SCHEMA__", schema) \
         .replace("__MAKER__", maker_url) \
         .replace("__CHECKOUT__", checkout_url) \
         .replace("__BUNDLE__", bundle_href) \
@@ -68,6 +82,7 @@ MAKER_TEMPLATE = r"""<!DOCTYPE html><html lang="en"><head>
 <meta property="og:description" content="Type their name, see the keepsake instantly. No signup, no account."/>
 <meta property="og:image" content="__CHECKOUT__"/>
 <meta name="twitter:card" content="summary_large_image"/>
+<script type="application/ld+json">__SCHEMA__</script>
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box;margin:0;padding:0}

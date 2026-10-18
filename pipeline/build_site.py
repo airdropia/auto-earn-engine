@@ -1308,6 +1308,7 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
         "memorial-shadow-box-for-dog",
         "memorial-shadow-box-for-cat",
         "memorial-shadow-box-size-guide",
+        "free-memorial-shadow-box-maker",
     ]
     for slug in blog_slugs:
         urls.append(f"{base}/blog/{slug}/")
@@ -1878,6 +1879,43 @@ def main() -> None:
 <p>Above a desk, in a hallway, or on a bedroom shelf. The shadow box casts a real shadow that changes through the day as light moves.</p>
 <h3>4. Words that help</h3>
 <p>Write their name and dates on the shadow box. Add "In Loving Memory" or a short phrase like "Forever in our hearts." Keep it simple - the name matters most.</p>
+""",
+        },
+        {
+            "slug": "free-memorial-shadow-box-maker",
+            "title": "Free Memorial Shadow Box Maker: See Their Name Before You Buy Anything",
+            "description": "A free browser maker for memorial shadow boxes. Type a name and dates, pick a motif, see the design instantly. No signup, nothing to install.",
+            "content": """
+<h2>Free memorial shadow box maker</h2>
+<p>If you are here, you already know you want a memorial shadow box. What you
+do not know yet is whether it will look like <em>them</em>. That is the whole
+difficulty, and it is not a technical problem, so a technical answer does not help.</p>
+<p>So try it first, for nothing. Our <a href="./../maker/">free memorial maker</a>
+runs entirely in your browser: type their name, add the years if you want them,
+pick a motif and a colourway, and the design updates as you type. Nothing is
+uploaded, no account is created, nothing is emailed.</p>
+<h3>How to use it</h3>
+<p>Type the name in the first box. Add the dates in the second, or leave it
+empty. The line under the name is editable too, so you can have nothing there
+at all, or the dates alone, or a line you have been carrying around for weeks
+and cannot find words for.</p>
+<p>Pick the motif that is theirs, not the one you think is prettiest. A paw
+for a dog. A leaf if they were the outdoors one. Waves if they loved the sea.
+A candle if you are not sure yet what you are making.</p>
+<h3>Then download it</h3>
+<p>The download button gives you a free flattened SVG: a single file, good for
+printing, for a phone wallpaper, for showing someone before they are ready.
+It is not a cut file, because it is not separated into layers.</p>
+<h3>What the paid version actually is</h3>
+<p>Same design, cut into seven separate layer files, one per sheet of
+cardstock, plus a 6500px print render and a materials list. You cut them,
+stack them with foam tape, and the gaps become depth. The name goes on the
+front layer as text you can edit before cutting, so it is their name and not
+a font choice we made for you.</p>
+<h3>If cutting it yourself is the part you dread</h3>
+<p>Then do not. Pay someone who does this, or give the free preview to
+someone who does. Either way the maker output tells them exactly what to make,
+which is more than a photograph ever would.</p>
 """,
         },
         {
