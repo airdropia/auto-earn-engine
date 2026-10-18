@@ -38,7 +38,7 @@ env:
   PROJECT_URL: https://github.com/airdropia/auto-earn-engine
   CATALOG_URL: https://airdropia.github.io/auto-earn-engine/
   ENTRY_NAME: "VectorForge Daily"
-  MAX_NEW_PER_RUN: "2"
+  MAX_NEW_PER_RUN: "3"
 
 jobs:
   submit:
@@ -51,10 +51,10 @@ jobs:
         run: |
           set -euo pipefail
           # in:name is doing the real filtering here; the words only widen the
-          # net. The last three queries were added after research pointed at
-          # the DIY and maker-tooling lists, which are the ones whose readers
-          # actually own a cutting machine.
-          QUERIES="awesome+laser+cutting awesome+generative+art awesome+paper+craft awesome+svg awesome+cricut awesome+cut+files awesome+diy awesome+maker+tools awesome+crafts"
+          # net. The craft-specific queries were added because a Cricut maker
+          # reads "cricut svg" or "papercraft" repos, not only "awesome-" ones,
+          # and those repos are the same buyer.
+          QUERIES="awesome+laser+cutting awesome+generative+art awesome+paper+craft awesome+svg awesome+cricut awesome+cut+files awesome+diy awesome+maker+tools awesome+crafts cricut+svg papercraft laser+cutting+projects craft+svg shadow+box+svg svg+cut+files cricut+templates cricut+ideas"
           : > candidates.txt
           for q in $QUERIES; do
             gh api "search/repositories?q=$q+in:name+archived:false+fork:false&sort=stars&order=desc&per_page=12" \
@@ -65,12 +65,29 @@ jobs:
           # A submission target is a repository whose NAME starts with
           # "awesome". Everything else that matched the words (icon kits,
           # unrelated tools) is filtered out here.
-          while IFS=$'\t' read -r stars full branch desc; do
+          while IFS=$'\t' read -r stars kind full branch desc; do
             [ -z "${full:-}" ] && continue
             [ "${stars:-0}" -ge 50 ] || continue
             case "$full" in airdropia/*) continue ;; esac
             base_lc="$(printf '%s' "${full##*/}" | tr '[:upper:]' '[:lower:]')"
-            case "$base_lc" in awesome-*) ;; *) continue ;; esac
+            # Two classes of target qualify:
+            #   1. curated lists (basename starts with awesome-)
+            #   2. craft repos that carry an explicit making/Cricut/SVG topic
+            # Class 2 needs a higher star floor because we are not editing a
+            # list whose whole purpose is to collect tools — we are adding to
+            # someone's project repo, which is the easiest way to get an
+            # account flagged as spam.
+            kind=""
+            case "$base_lc" in awesome-*) kind="list" ;; esac
+            if [ -z "$kind" ]; then
+              topics_lc=$(gh api "repos/$full/topics" --jq '.names | join(" ")' 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
+              case "$topics_lc" in
+                *cricut*|*papercraft*|*paper-craft*|*laser-cutting*|*lasercutting*|*shadow-box*|*svg*|*crafts*|*3d-printing*)
+                  [ "${stars:-0}" -ge 100 ] || continue
+                  kind="craft" ;;
+                *) continue ;;
+              esac
+            fi
             # Lists that already reviewed us stay skipped forever.
             case "$full" in ad-si/awesome-laser-cutting|kosmos/awesome-generative-art) continue ;; esac
             # Any previous PR by this account (open, closed or merged) means
@@ -83,11 +100,11 @@ jobs:
               echo "skip $full — prior PR by this account (${prior:-query failed})"
               continue
             fi
-            printf '%s\t%s\t%s\t%.120s\n' "$stars" "$full" "$branch" "$desc" >> candidates.txt
+            printf '%s\t%s\t%s\t%s\t%.120s\n' "$stars" "$kind" "$full" "$branch" "$desc" >> candidates.txt
           done < all_candidates.tsv
 
           echo "candidates: $(wc -l < candidates.txt)"
-          cut -f1-3 candidates.txt || true
+          cut -f1-4 candidates.txt || true
 
       - name: Open pull requests where an entry is missing
         run: |
@@ -98,7 +115,7 @@ jobs:
           fi
           echo "VF_GH_PAT loaded (length ${#VF_GH_PAT})"
           opened=0
-          while IFS=$'\t' read -r stars full branch desc; do
+          while IFS=$'\t' read -r stars kind full branch desc; do
             [ -z "${full:-}" ] && continue
             [ "$opened" -ge "$MAX_NEW_PER_RUN" ] && break
 
@@ -150,7 +167,7 @@ jobs:
               continue
             fi
 
-            entry="- [$ENTRY_NAME]($PROJECT_URL) — MIT-licensed, dependency-free Python pipeline that procedurally generates 7-layer shadow-box SVG mandalas (one file per physical layer) plus 6500px PNG renders, with quality gates and a static storefront; runs entirely on GitHub Actions."
+            entry="- [$ENTRY_NAME]($PROJECT_URL) — MIT-licensed, dependency-free Python pipeline that generates memorial shadow box SVGs with an editable name plate (you type the name inside Cricut, no custom order needed) plus original 7-layer mandala bundles; one file per physical layer, 6500px PNG renders, quality gates and a static storefront, running entirely on GitHub Actions."
             if ! (
               set -euo pipefail
               cd "$workdir"
