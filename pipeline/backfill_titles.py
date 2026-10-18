@@ -28,6 +28,14 @@ import themes  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "catalog" / "catalog.json"
 
+# Substring seeds so "halloween mandala" and "thanksgiving svg" are caught,
+# not just the bare words.
+SEASONAL_TAG_WORDS = (
+    "pumpkin", "thanksgiving", "harvest", "autumn", "fall ", "cozy",
+    "halloween", "christmas", "valentine", "easter", "backtoschool", "leaves",
+    "spring ", "summer ", "snow", "spooky", "advent",
+)
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -79,7 +87,20 @@ def main() -> int:
             changed += 1
         seen_titles[title] = slug
 
-        # Keep tags fresh with the theme's own search terms.
+        # Keep tags fresh with the theme's own search terms — but never on the
+        # memorial line. This merge was the original source of the seasonal
+        # tag defects: it stamped pumpkin/thanksgiving onto grief designs, the
+        # bundle then re-aggregated them, and the quality gate correctly
+        # refused the build. The catalog was cleaned three times before the
+        # merge itself was stopped here, so it cleans instead of adding.
+        is_memorial = item.get("type") in ("memorial", "memorial-bundle")
+        if is_memorial:
+            kept = [t for t in (item.get("tags") or [])
+                    if not any(s in t.lower() for s in SEASONAL_TAG_WORDS)]
+            if kept != (item.get("tags") or []):
+                item["tags"] = kept
+            continue
+
         theme_tags = themes.theme_tags(theme)
         existing = item.get("tags") or []
         merged = sorted(set(existing) | set(theme_tags))

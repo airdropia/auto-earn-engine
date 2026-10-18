@@ -103,12 +103,14 @@ def build(today: str, catalog: list[dict]) -> dict | None:
     )
     # Seasonal tags belong to the commodity line, never to a memorial bundle.
     # Filter them out so the bundle page never shows "pumpkin svg" etc.
-    _SEASONAL = {
-        "pumpkin", "thanksgiving", "harvest", "autumn svg", "fall svg",
-        "cozy svg", "leaves svg", "halloween", "christmas", "valentine",
-        "easter", "backtoschool", "spring svg", "summer svg", "floral",
-        "geometric", "boho", "sunburst", "hearts", "stars",
-    }
+    # Substring seeds, not an exact set: variants arrive carrying variants of
+    # the same word ("pumpkin svg", "halloween mandala", "autumn leaves"), and
+    # exact membership let every new shape straight through to the gate.
+    _SEASONAL = (
+        "pumpkin", "thanksgiving", "harvest", "autumn", "fall ", "cozy",
+        "halloween", "christmas", "valentine", "easter", "backtoschool", "leaves",
+        "spring ", "summer ", "snow", "spooky", "advent",
+    )
     raw_tags = {
         t
         for item in designs
@@ -118,7 +120,7 @@ def build(today: str, catalog: list[dict]) -> dict | None:
         "editable name svg", "pet loss svg bundle", "sympathy gift bundle",
         "cricut memorial bundle", "layered memorial bundle",
     }
-    tags = sorted(t for t in raw_tags if t.lower() not in _SEASONAL)
+    tags = sorted(t for t in raw_tags if not any(s in t.lower() for s in _SEASONAL))
 
     return {
         "id": slug,
