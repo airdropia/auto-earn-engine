@@ -1564,7 +1564,7 @@ def memorial_guide_links(cfg: dict) -> str:
     )
 
 
-def render_blog_index(cfg: dict, posts: list[dict]) -> str:
+def render_blog_index(cfg: dict, posts: list[dict], hero: str = "") -> str:
     """A hub page for the guides.
 
     Nine posts that only appear in a sitemap are nine orphan pages: nothing on
@@ -1589,7 +1589,7 @@ def render_blog_index(cfg: dict, posts: list[dict]) -> str:
         f'<link rel="canonical" href="{base}/blog/"/>'
         '<meta property="og:title" content="Memorial shadow box guides"/>'
         '<meta property="og:description" content="Free step-by-step guides to making and personalising memorial shadow box SVGs."/>'
-        f'<meta property="og:image" content="{base}/og.png"/>'
+        f'<meta property="og:image" content="{svgkit.escape(hero or base + "/og.png")}"/>'
         '<meta name="twitter:card" content="summary_large_image"/>'
         '<meta name="robots" content="index,follow,max-image-preview:large"/>'
         f'<script type="application/ld+json">{breadcrumb_jsonld([("Home", base + "/"), ("Guides", base + "/blog/")])}</script>'
@@ -1613,7 +1613,7 @@ def render_blog_index(cfg: dict, posts: list[dict]) -> str:
     )
 
 
-def render_blog_post(post: dict, cfg: dict) -> str:
+def render_blog_post(post: dict, cfg: dict, hero: str = "") -> str:
     """Render a blog post page for SEO traffic."""
     base = canonical_url(cfg)
     post_url = f"{base}/blog/{post['slug']}/"
@@ -1625,7 +1625,7 @@ def render_blog_post(post: dict, cfg: dict) -> str:
         '<link rel="canonical" href="' + base + f"/blog/{post['slug']}/" + '"/>'
         f'<meta property="og:title" content="{svgkit.escape(post["title"])}"/>'
         f'<meta property="og:description" content="{svgkit.escape(post["description"])}"/>'
-        f'<meta property="og:image" content="{base}/og.png"/>'
+        f'<meta property="og:image" content="{svgkit.escape(hero or base + "/og.png")}"/>'
         '<meta name="twitter:card" content="summary_large_image"/>'
         '<meta name="robots" content="index,follow,max-image-preview:large"/>'
         f'<script type="application/ld+json">{blogposting_jsonld(post, cfg)}</script>'
@@ -1910,15 +1910,25 @@ def main() -> None:
         },
     ]
     blog_pages = 0
+    # Social preview image for every guide: a real memorial render, not the
+    # generated gradient. A shared og:image is what makes a link look like a
+    # brand-less link when it is reposted, and the click is decided before
+    # anyone reaches the page.
+    hero_rel = ""
+    for item in catalog:
+        if item.get("type") in ("memorial", "memorial-bundle"):
+            hero_rel, _is_raster = hero_image(item)
+            break
+    blog_hero = f"{canonical_url(cfg)}/{rel(hero_rel)}" if hero_rel else ""
     for post in blog_posts:
         post_dir = blog_dir / post["slug"]
         post_dir.mkdir(parents=True, exist_ok=True)
         (post_dir / "index.html").write_text(
-            render_blog_post(post, cfg), encoding="utf-8"
+            render_blog_post(post, cfg, blog_hero), encoding="utf-8"
         )
         blog_pages += 1
     (blog_dir / "index.html").write_text(
-        render_blog_index(cfg, blog_posts), encoding="utf-8"
+        render_blog_index(cfg, blog_posts, blog_hero), encoding="utf-8"
     )
     print(f"blog posts: {blog_pages}")
     write_seo_files(SITE_DIR, cfg, catalog)
