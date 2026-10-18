@@ -97,11 +97,12 @@ jobs:
             # someone's project repo, which is the easiest way to get an
             # account flagged as spam.
             kind=""
-            # Curated lists qualify whether the "awesome" prefix leads the name
-            # or closes it (image2svg-awesome). A name that merely CONTAINS
-            # "awesome" is not a list — Font-Awesome-SVG-PNG is a converter
-            # tool, and adding a shop link to it would be pure noise.
-            case "$base_lc" in awesome-*|*-awesome|*-awesome-*) kind="list" ;; esac
+            # Curated lists qualify when the name STARTS with "awesome-" or ENDS with
+            # "-awesome" (image2svg-awesome). Do not use a *-awesome-* pattern
+            # to mean "ends with": that glob matches any name CONTAINING
+            # "-awesome-", which is how Font-Awesome-SVG-PNG (an icon
+            # converter, not a list) got a storefront PR opened against it.
+            case "$base_lc" in awesome-*|*-awesome) kind="list" ;; esac
             if [ -z "$kind" ]; then
               topics_lc=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/topics" --jq '.names | join(" ")' 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
               # Only genuinely adjacent targets. Papercraft template
