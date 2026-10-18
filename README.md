@@ -1,5 +1,9 @@
 # VectorForge Daily
 
+**Free memorial shadow box maker** — type a pet's or someone's name, see the
+keepsake instantly, download it. No signup, nothing to install, runs in the
+browser: https://airdropia.github.io/auto-earn-engine/maker/
+
 Original layered SVG cut files for paper crafters and laser cutters — built by
 an automated design pipeline, sold with USDT, no account required.
 
