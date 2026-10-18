@@ -583,6 +583,7 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         '<meta name="robots" content="index,follow,max-image-preview:large"/>'
         f'<script type="application/ld+json">{product_jsonld(cfg, item)}</script>'
         f'<script type="application/ld+json">{faq_jsonld(cfg, item)}</script>'
+        f'<script type="application/ld+json">{breadcrumb_jsonld([("Home", base + "/"), ("Shop", base + "/"), (title, product_page_url(cfg, item))])}</script>'
         f"<style>{CSS}</style></head><body>"
         '<header><p><a href="./../..">&larr; Back to all bundles</a></p>'
         f'<h1>{svgkit.escape(title)}</h1>'
@@ -1245,6 +1246,7 @@ def render_collection(cfg: dict, catalog: list[dict], spec: dict) -> str:
         f'<meta property="og:title" content="{svgkit.escape(spec["h1"])}"/>'
         f'<meta property="og:description" content="{svgkit.escape(" ".join(spec["intro"].split())[:155])}"/>'
         f'<meta property="og:image" content="{base}/{svgkit.escape(rel(items[0].get("preview", "")))}"/>'
+        f'<script type="application/ld+json">{breadcrumb_jsonld([("Home", base + "/"), (spec["title"], base + "/c/" + spec["slug"] + "/")])}</script>'
         f"<style>{CSS}</style></head><body>"
         '<header><p><a href="./../..">&larr; All bundles</a></p>'
         f"<h1>{svgkit.escape(spec['h1'])}</h1>"
@@ -1270,7 +1272,7 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
         encoding="utf-8",
     )
 
-    urls: list[str] = [f"{base}/", f"{base}/checkout/"]
+    urls: list[str] = [f"{base}/", f"{base}/checkout/", f"{base}/blog/"]
     # Blog posts - each is an indexable page for search traffic
     blog_slugs = [
         "how-to-make-memorial-shadow-box",
@@ -1451,6 +1453,7 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         f"<span>updated {newest}</span>"
         "<span>SVG vector format</span>"
         f'<span><a href="{canonical_url(cfg)}/checkout/">Checkout</a></span>'
+        f'<span><a href="{canonical_url(cfg)}/blog/">Free guides</a></span>'
         "</div></header><main>"
         + memorial_hero(cfg, catalog) +
         f'<section class="info"><h3>Browse by type</h3><div class="related">'
@@ -1471,9 +1474,128 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
     )
 
 
+def breadcrumb_jsonld(trail: list[tuple[str, str]]) -> str:
+    """schema.org BreadcrumbList for a trail of (name, absolute url) pairs.
+
+    Search engines use this to show a path instead of a bare URL in results,
+    and it is the clearest statement that pages below the homepage are real
+    sections rather than orphaned landings.
+    """
+    import json as _json
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": i + 1, "name": name, "item": url}
+            for i, (name, url) in enumerate(trail)
+        ],
+    }
+    return _json.dumps(payload)
+
+
+def blogposting_jsonld(post: dict, cfg: dict) -> str:
+    """schema.org BlogPosting for a tutorial page.
+
+    Without this the posts are still indexable, but they cannot qualify for
+    article rich results, which is most of the click advantage a long tail
+    tutorial can win.
+    """
+    import json as _json
+    base = canonical_url(cfg)
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": post["title"],
+        "description": post["description"],
+        "url": f"{base}/blog/{post['slug']}/",
+        "mainEntityOfPage": f"{base}/blog/{post['slug']}/",
+        "inLanguage": "en",
+        "publisher": {
+            "@type": "Organization",
+            "name": cfg["store_name"],
+            "url": base,
+        },
+    }
+    return _json.dumps(payload)
+
+
+def memorial_guide_links(cfg: dict) -> str:
+    """Internal links from every guide to the memorial buying pages.
+
+    This is the only path that passes search authority from the tutorials
+    (which rank) to the money pages (which convert), so it is deliberately
+    identical on every post instead of context-wrapped text.
+    """
+    base = canonical_url(cfg)
+    picks = [
+        c for c in COLLECTIONS
+        if any(w in c["slug"] for w in ("memorial", "sympathy", "remembrance"))
+    ][:6]
+    if not picks:
+        return ""
+    links = "".join(
+        f'<a class="rel" href="{base}/c/{c["slug"]}/"><span>{svgkit.escape(c["title"])}</span></a>'
+        for c in picks
+    )
+    return (
+        '<section class="info"><h3>Where to buy the designs this guide uses</h3>'
+        f'<div class="related">{links}</div></section>'
+    )
+
+
+def render_blog_index(cfg: dict, posts: list[dict]) -> str:
+    """A hub page for the guides.
+
+    Nine posts that only appear in a sitemap are nine orphan pages: nothing on
+    the site links to them, so they crawl rarely and rank weakly. The hub
+    gives them an entry point and one link hop from the homepage.
+    """
+    base = canonical_url(cfg)
+    rows = "".join(
+        '<div class="card"><div class="card-body">'
+        f'<h2><a href="{base}/blog/{p["slug"]}/">{svgkit.escape(p["title"])}</a></h2>'
+        f'<p>{svgkit.escape(p["description"])}</p>'
+        "</div></div>"
+        for p in posts
+    )
+    updated = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return (
+        '<!DOCTYPE html><html lang="en"><head>'
+        '<meta charset="utf-8"/>'
+        '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
+        f"<title>Memorial shadow box guides | {svgkit.escape(cfg['store_name'])}</title>"
+        '<meta name="description" content="Free step-by-step guides to making, sizing, buying and personalising memorial shadow box SVGs for Cricut, from a working SVG shop."/>'
+        f'<link rel="canonical" href="{base}/blog/"/>'
+        '<meta property="og:title" content="Memorial shadow box guides"/>'
+        '<meta property="og:description" content="Free step-by-step guides to making and personalising memorial shadow box SVGs."/>'
+        f'<meta property="og:image" content="{base}/og.png"/>'
+        '<meta name="twitter:card" content="summary_large_image"/>'
+        '<meta name="robots" content="index,follow,max-image-preview:large"/>'
+        f'<script type="application/ld+json">{breadcrumb_jsonld([("Home", base + "/"), ("Guides", base + "/blog/")])}</script>'
+        f"<style>{CSS}</style></head><body>"
+        '<header><p><a href="./../">&larr; Back to storefront</a></p>'
+        "<h1>Memorial shadow box guides</h1>"
+        '<span class="badge">Free tutorials &middot; written by the makers of the SVGs</span>'
+        '</header><main>'
+        f'<section class="info"><p>Every guide here comes from actually building these '
+        f"designs. Read one, then buy the cut files on the "
+        f'<a href="{base}/checkout/">checkout page</a>.</p></section>'
+        f'<div class="grid">{rows}</div>'
+        + memorial_guide_links(cfg)
+        + '<section class="support"><h3>Support this machine</h3>'
+        f"{money_links(cfg)}"
+        "</section></main>"
+        f"<footer>Updated {updated} &middot; "
+        '<a href="./../">All bundles</a> &middot; <a href="./../checkout/">Checkout</a>'
+        + contact_link(cfg)
+        + "</footer></body></html>"
+    )
+
+
 def render_blog_post(post: dict, cfg: dict) -> str:
     """Render a blog post page for SEO traffic."""
     base = canonical_url(cfg)
+    post_url = f"{base}/blog/{post['slug']}/"
     return (
         '<!DOCTYPE html><html lang="en"><head>'
         '<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>'
@@ -1485,19 +1607,23 @@ def render_blog_post(post: dict, cfg: dict) -> str:
         f'<meta property="og:image" content="{base}/og.png"/>'
         '<meta name="twitter:card" content="summary_large_image"/>'
         '<meta name="robots" content="index,follow,max-image-preview:large"/>'
+        f'<script type="application/ld+json">{blogposting_jsonld(post, cfg)}</script>'
+        f'<script type="application/ld+json">{breadcrumb_jsonld([("Home", base + "/"), ("Guides", base + "/blog/"), (post["title"], post_url)])}</script>'
         f"<style>{CSS}</style></head><body>"
         '<header><p><a href="./../..">&larr; Back to storefront</a></p>'
         f"<h1>{svgkit.escape(post['title'])}</h1>"
         f'<p>{svgkit.escape(post["description"])}</p>'
         '</header><main>'
         f"{post['content']}"
-        '<hr/><p>Looking for a memorial shadow box? Visit our <a href="./../checkout/">checkout page</a> '
+        + memorial_guide_links(cfg)
+        + '<hr/><p>Looking for a memorial shadow box? Visit our <a href="./../checkout/">checkout page</a> '
         'and buy with USDT - no account needed.</p>'
         '<section class="support"><h3>Support this machine</h3>'
         f"{money_links(cfg)}"
         "</section></main>"
-        "<footer>Generated by the VectorForge Daily pipeline.<br/>"
-        "<a href=\"./../privacy.html\">Privacy Policy</a>" + contact_link(cfg) + "</footer>"
+        f"<footer>Generated by the VectorForge Daily pipeline. "
+        f'<a href="./../">All bundles</a> &middot; <a href="./../">All guides</a> &middot; '
+        '<a href="./../privacy.html">Privacy Policy</a>' + contact_link(cfg) + "</footer>"
         "</body></html>"
     )
 
@@ -1770,6 +1896,9 @@ def main() -> None:
             render_blog_post(post, cfg), encoding="utf-8"
         )
         blog_pages += 1
+    (blog_dir / "index.html").write_text(
+        render_blog_index(cfg, blog_posts), encoding="utf-8"
+    )
     print(f"blog posts: {blog_pages}")
     write_seo_files(SITE_DIR, cfg, catalog)
     extra = ROOT / "site_extra"
