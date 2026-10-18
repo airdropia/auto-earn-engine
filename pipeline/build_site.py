@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pngio
 import svgkit
+import maker
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCTS_DIR = ROOT / "products"
@@ -1274,6 +1275,7 @@ def render_collection(cfg: dict, catalog: list[dict], spec: dict) -> str:
         f'<span class="badge">{len(items)} design{"" if len(items)==1 else "s"} &middot; instant download &middot; USDT checkout</span>'
         '</header><main>'
         f'<section class="info"><p>{svgkit.escape(spec["intro"])}</p></section>'
+        + maker_cta(cfg, spec["slug"])
         + guide_html
         + f'<div class="grid">{"".join(cards)}</div>'
         f'<section class="info"><h3>Browse other collections</h3><div class="related">{links}</div></section>'
@@ -1293,7 +1295,8 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
         encoding="utf-8",
     )
 
-    urls: list[str] = [f"{base}/", f"{base}/checkout/", f"{base}/blog/"]
+    urls: list[str] = [f"{base}/", f"{base}/checkout/", f"{base}/blog/",
+                       f"{base}/maker/"]
     # Blog posts - each is an indexable page for search traffic
     blog_slugs = [
         "how-to-make-memorial-shadow-box",
@@ -1360,6 +1363,8 @@ def memorial_hero(cfg: dict, catalog: list[dict]) -> str:
         'paw, angel wings and rainbow bridge, in midnight, pearl and antique '
         'gold.</p>'
         '<div class="related">'
+        f'<a class="rel" href="{base}/maker/">'
+        '<span>Free maker &mdash; type their name, see it now</span></a>'
         f'<a class="rel" href="{product_page_url(cfg, lead)}">'
         f'<span>{svgkit.escape(lead.get("title", "Memorial collection"))}</span></a>'
         '<a class="rel" href="' + base + '/c/pet-memorial-shadow-box/">'
@@ -1540,6 +1545,25 @@ def blogposting_jsonld(post: dict, cfg: dict) -> str:
     return _json.dumps(payload)
 
 
+def maker_cta(cfg: dict, slug: str) -> str:
+    """Free-maker block, shown only on memorial intent pages.
+
+    Someone who reached a memorial page has already decided they want a
+    memorial. The maker costs them nothing and puts their own name on it,
+    which is the step that turns hesitation into a basket.
+    """
+    if not any(w in slug for w in ("memorial", "sympathy", "remembrance")):
+        return ""
+    return (
+        '<section class="info"><h3>Want to see their name on it first?</h3>'
+        '<p>Use the free maker: type the name and the years, pick a motif, and '
+        'the preview updates as you type. No signup, nothing to install, and '
+        'you can download a free flattened SVG of your own design.</p>'
+        f'<p><a class="btn btn-primary" href="{canonical_url(cfg)}/maker/">'
+        'Open the free memorial maker</a></p></section>'
+    )
+
+
 def memorial_guide_links(cfg: dict) -> str:
     """Internal links from every guide to the memorial buying pages.
 
@@ -1560,6 +1584,8 @@ def memorial_guide_links(cfg: dict) -> str:
     )
     return (
         '<section class="info"><h3>Where to buy the designs this guide uses</h3>'
+        f'<p><a class="btn btn-primary" href="{base}/maker/">Try the free '
+        'memorial maker &mdash; type their name first</a></p>'
         f'<div class="related">{links}</div></section>'
     )
 
@@ -1706,6 +1732,23 @@ def main() -> None:
     checkout_dir.mkdir(parents=True, exist_ok=True)
     (checkout_dir / "index.html").write_text(
         render_checkout(cfg, catalog), encoding="utf-8"
+    )
+    # Free maker: the buyer's own name on the design before any money moves.
+    maker_dir = SITE_DIR / "maker"
+    maker_dir.mkdir(parents=True, exist_ok=True)
+    bundle_for_maker = next(
+        (i for i in catalog if i.get("type") == "memorial-bundle"), None
+    )
+    (maker_dir / "index.html").write_text(
+        maker.maker_page_html(
+            cfg["store_name"],
+            cfg.get("tagline", ""),
+            canonical_url(cfg),
+            product_page_url(cfg, bundle_for_maker) if bundle_for_maker
+            else f"{canonical_url(cfg)}/checkout/",
+            f"{canonical_url(cfg)}/maker/",
+        ),
+        encoding="utf-8",
     )
     # SEO collection pages: one indexable page per keyword cluster.
     # A pinned collection (breed pages) renders even when no listing matches
