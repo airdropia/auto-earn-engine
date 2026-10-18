@@ -70,6 +70,9 @@ jobs:
             # sort, so a plain echo would land in the TSV as a junk row and
             # every real candidate would then fail the integer test silently.
             echo "query [$q] -> $n rows${err:+ ERROR: $err}" >&2
+            # The rows themselves go to stdout: that is what the pipeline
+            # collects into the candidate TSV.
+            cat /tmp/q.out
             sleep 2
           done | sort -u -k2,2 > all_candidates.tsv
           echo "raw candidate rows: $(wc -l < all_candidates.tsv)"
