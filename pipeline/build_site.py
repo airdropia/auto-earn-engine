@@ -54,6 +54,9 @@ main { max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; }
 .copy-btn { background:#21262d; border:1px solid #30363d; color:#c9d1d9; border-radius:6px; padding:5px 12px; font-size:.75rem; cursor:pointer; margin-left:8px; vertical-align:middle; }
 .copy-btn:hover { border-color:#58a6ff; color:#fff; }
 .warn { display:block; font-size:.72rem; color:#d29922; margin-top:4px; }
+.anchor { font-size:.9rem; color:#8b949e; margin-top:6px; }
+.anchor strong { color:#e6edf3; }
+.anchor a { text-decoration: underline; }
 .actions.big { margin:22px 0 8px; }
 .actions.big .btn { flex:0 0 auto; padding:12px 18px; }
 .info { background:#101826; border:1px solid #1f2937; border-radius:14px; padding:22px; margin-top:26px; line-height:1.6; }
@@ -434,7 +437,7 @@ def load_invoices() -> dict:
     }
 
 
-def checkout_block(cfg: dict, item: dict) -> str:
+def checkout_block(cfg: dict, item: dict, bundle: dict | None = None) -> str:
     """Crypto checkout panel. No gateway account, no KYC: the buyer sends
     USDT BEP20 to the published address and payment is confirmed on-chain
     by pipeline/checkout.py. Full file list stays public as the free tier."""
@@ -450,6 +453,20 @@ def checkout_block(cfg: dict, item: dict) -> str:
         'render. Delivered instantly as a ZIP - you receive a download link '
         'the moment the payment is confirmed on-chain.</p>'
         f'<p class="price"><strong>{svgkit.escape(price)} {svgkit.escape(network)}</strong></p>'
+        + (
+            # A single design is the cheaper way in, but the buyer who is
+            # grieving is usually making more than one keepsake. Naming the
+            # collection and its price next to the single price is the anchor
+            # that makes the bundle the obvious choice.
+            f'<p class="anchor">Making more than one? All '
+            f'<a href="{product_page_url(cfg, bundle)}">memorial designs together</a> '
+            f'come to <strong>{svgkit.escape(checkout_price(cfg, bundle))} '
+            f'{svgkit.escape(network)}</strong> &mdash; every design, every '
+            'name plate, one payment.</p>'
+            if bundle and bundle.get("id") != item.get("id")
+            and item.get("type") == "memorial"
+            else ""
+        ) +
         '<p class="payaddr">Send exactly <strong>the amount shown on the checkout '
         'page</strong> to:</p>'
         f'<p><code id="pay-address">{svgkit.escape(address)}</code>'
@@ -595,7 +612,11 @@ def render_product_page(cfg: dict, item: dict, catalog: list[dict]) -> str:
         f'<a class="btn btn-primary" href="{base}/downloads/{item["id"]}.zip" download>Download full bundle (ZIP)</a>'
         f"{file_buttons(item)}"
         '</div>'
-        + checkout_block(cfg, item)
+        + checkout_block(
+            cfg,
+            item,
+            next((i for i in catalog if i.get("type") == "memorial-bundle"), None),
+        )
         + f'<section class="info">{desc_html}'
         + how_html +
         '</section>'
