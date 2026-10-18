@@ -30,6 +30,9 @@ ROOT = Path(__file__).resolve().parent.parent
 METRICS = ROOT / "metrics" / "traffic.json"
 
 HOST = "airdropia.github.io"
+SITE = "airdropia.github.io/auto-earn-engine"
+CC_API = "https://index.commoncrawl.org/"
+CC_COLLINFO = CC_API + "collinfo.json"
 # A handful of pages that must be indexed before the lane is working at all.
 KEY_PAGES = [
     "/auto-earn-engine/maker/",
@@ -55,6 +58,44 @@ def _fetch(url: str, timeout: int = 25) -> tuple[int, str]:
         return exc.code, ""
     except Exception:
         return 0, ""
+
+
+def probe_commoncrawl(collections: int = 3) -> dict:
+    """Ask the Common Crawl indexes whether any crawler has fetched us.
+
+    This is the probe that actually works from CI. Bing serves its captcha to
+    GitHub's runner ranges — the same class of problem as the public BSC RPCs
+    — so a Bing-only probe reported "unknown" forever and would have looked
+    like instrumentation while measuring nothing. Common Crawl answers a plain
+    API request from a runner and is a real crawler: a capture here means the
+    site is discoverable to the web at all.
+    """
+    code, body = _fetch(CC_COLLINFO)
+    if code != 200 or not body:
+        return {"status": "unknown", "reason": f"commoncrawl collinfo http {code}"}
+    try:
+        colls = json.loads(body)[:collections]
+    except ValueError:
+        return {"status": "unknown", "reason": "collinfo not json"}
+
+    found_any = False
+    checked = []
+    for coll in colls:
+        cid = coll.get("id", "")
+        if not cid:
+            continue
+        url = (CC_API + cid + "-index?url="
+               + urllib.parse.quote(SITE + "*") + "&output=json&limit=20")
+        ccode, cbody = _fetch(url)
+        lines = [l for l in cbody.splitlines() if l.strip().startswith("{")]
+        checked.append({"index": cid, "captures": len(lines)})
+        if lines:
+            found_any = True
+    return {
+        "status": "ok",
+        "captured": found_any,
+        "indexes_checked": checked,
+    }
 
 
 def probe_bing() -> dict:
@@ -86,7 +127,10 @@ def probe_bing() -> dict:
 
 def main() -> int:
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    result = probe_bing()
+    result = probe_commoncrawl()
+    # Bing stays as a secondary signal: it is the index that matters for
+    # revenue, but it challenges runner IPs, so its answer is optional.
+    result["bing"] = probe_bing()
 
     history = []
     if METRICS.exists():
@@ -113,9 +157,13 @@ def main() -> int:
     )
 
     if result.get("status") == "ok":
-        print(f"bing indexed_urls={result['indexed_urls']} "
-              f"key_pages={result['key_pages_indexed']}/{len(KEY_PAGES)} "
-              f"no_results_banner={result['no_results_banner']}")
+        detail = ", ".join(
+            f"{c['index']}={c['captures']}" for c in result.get("indexes_checked", [])
+        )
+        bing = result.get("bing", {})
+        bing_txt = (f"bing indexed_urls={bing.get('indexed_urls')}"
+                    if bing.get("status") == "ok" else "bing=unknown")
+        print(f"commoncrawl captured={result['captured']} ({detail}) {bing_txt}")
     else:
         print(f"::warning::serp probe unavailable ({result.get('reason')})")
     return 0
