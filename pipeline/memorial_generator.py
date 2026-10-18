@@ -734,10 +734,40 @@ def main() -> None:
         variant = VARIANTS[vname]
         digest = hashlib.sha1(f"memorial-{vname}-{today}".encode()).hexdigest()[:8]
         slug = f"memorial-{vname}-{digest}"
-        if slug in existing:
+        # One listing per design, forever. The slug used to be minted from the
+        # date, so every daily run created a *new* product id for a variant
+        # that already existed: the storefront ended up selling the same paw
+        # print three times, and the same collection bundle three times at
+        # 17.99 USDT. Duplicate listings confuse a grieving buyer and make
+        # three pages compete with each other in search. Reuse the id that is
+        # already published for this variant and refresh its files in place.
+        reused = next(
+            (item.get("id") for item in catalog
+             if str(item.get("id", "")).startswith(f"memorial-{vname}-")),
+            None,
+        )
+        if reused:
+            slug = reused
+        elif slug in existing:
             print(f"memorial already exists for {today}: {slug}")
             continue
         rng = random.Random(f"memorial:{vname}:{today}")
+        if reused:
+            prev = next(item for item in catalog if item.get("id") == slug)
+            prev_folder = prev.get("folder", "")
+            built = build(rng, (ROOT / prev_folder).parent, slug, variant)
+            prev.update({
+                "title": variant["titles"][int(digest, 16) % len(variant["titles"])]
+                         .format(layers=LAYERS),
+                "description": variant["description"],
+                "tags": variant["tags"],
+                "files": built["files"],
+                "folder": built["folder"],
+                "preview": built["preview"],
+            })
+            made += 1
+            print(f"memorial refreshed in place: {slug}")
+            continue
         item = build(rng, PRODUCTS_DIR / today, slug, variant)
         discriminator = int(digest, 16) % len(variant["titles"])
         title = variant["titles"][discriminator].format(layers=LAYERS)

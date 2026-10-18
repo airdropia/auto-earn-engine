@@ -55,11 +55,15 @@ def main() -> int:
     seen_titles: dict[str, str] = {}
 
     for item in catalog:
-        # Memorial titles are written by memorial_generator.py and carry the
-        # emotional wording ("In Loving Memory Pet Shadow Box"). The generic
-        # seasonal title shapes would replace them with "Stacked Autumn Mandala",
-        # which is both wrong for the buyer and a duplicate of the generic line.
-        if item.get("type") == "memorial":
+        # memorial/memorial-bundle titles are written by memorial_generator.py and
+        # memorial_bundle.py and carry the emotional wording ("In Loving Memory
+        # Pet Shadow Box"). The generic seasonal title shapes would replace
+        # them with "Stacked Autumn Mandala", which is both wrong for the buyer
+        # and a duplicate of the generic line. The bundle was missed here once
+        # and got published as "Autumn Mandala | 7-Layer 3D Shadow-Box" — the
+        # 17.99 USDT product, carrying a mandala title, on the page a grieving
+        # buyer is asked to pay for.
+        if item.get("type") in ("memorial", "memorial-bundle"):
             seen_titles.setdefault(item.get("title", ""), item.get("id", ""))
             continue
         created = item.get("created") or date.today().isoformat()

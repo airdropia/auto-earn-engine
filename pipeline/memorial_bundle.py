@@ -148,13 +148,32 @@ def main() -> None:
     existing = {item.get("id") for item in catalog}
     digest = hashlib.sha1(f"memorial-bundle-{today}".encode()).hexdigest()[:8]
     slug = f"memorial-bundle-{digest}"
-    if slug in existing:
+    # Same trap as the variants: minting the slug from the date created a new
+    # collection bundle every day, so the storefront sold three identical
+    # 17.99 USDT bundles under three URLs. One listing, refreshed in place.
+    reused = next(
+        (item.get("id") for item in catalog
+         if str(item.get("id", "")).startswith("memorial-bundle-")),
+        None,
+    )
+    if slug in existing and not reused:
         print(f"bundle already exists for {today}: {slug}")
         return
     entry = build(today, catalog)
     if entry is None:
         return
-    catalog.append(entry)
+    if reused:
+        entry["id"] = reused
+        index = next((i for i, item in enumerate(catalog)
+                      if item.get("id") == reused), None)
+        if index is None:
+            catalog.append(entry)
+        else:
+            entry["created"] = catalog[index].get("created", today)
+            catalog[index] = entry
+        slug = reused
+    else:
+        catalog.append(entry)
     CATALOG_DIR.mkdir(parents=True, exist_ok=True)
     CATALOG_PATH.write_text(json.dumps(catalog, indent=2) + "\n", encoding="utf-8")
     print(f"memorial bundle built: {slug} designs={entry['designs']} price={BUNDLE_PRICE_USDT} USDT")

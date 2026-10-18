@@ -34,11 +34,21 @@ MAKER_URL = "airdropia.github.io/auto-earn-engine/maker"
 
 
 def _inner_svg(path: Path) -> str:
-    """Body of a generated design SVG, with its header and <svg> tag removed."""
+    """Body of a generated design SVG, with its header and <svg> tag removed.
+
+    Bare ampersands are escaped on the way in: inlining the design into a
+    larger document exposes any unescaped "&" in the source, which rsvg then
+    rejects as a parse error and takes the whole pin step down with it.
+    """
     text = path.read_text(encoding="utf-8")
     body = re.sub(r"^.*?<svg[^>]*>", "", text, flags=re.S)
     body = re.sub(r"</svg>\s*$", "", body, flags=re.S)
+    body = re.sub(r"&(?!(?:#\d+|#x[0-9a-fA-F]+|[A-Za-z][A-Za-z0-9]*);)", "&amp;", body)
     return body.strip()
+
+
+def _xml_safe(value: str) -> str:
+    return (value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 
 
 def pin_svg(design_path: Path, headline: str, subline: str) -> str:
@@ -84,6 +94,8 @@ def main() -> int:
             pid, (str(item.get("title", "Memorial shadow box"))[:26].upper(),
                   "Editable name plate, 7 layers")
         )
+        headline = _xml_safe(headline)
+        subline = _xml_safe(subline)
         out = PINS / f"{pid}-pin.svg"
         out.write_text(pin_svg(design, headline, subline), encoding="utf-8")
         written += 1
