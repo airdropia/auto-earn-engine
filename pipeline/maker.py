@@ -129,6 +129,7 @@ footer{padding:24px 16px 48px;text-align:center;color:#6e7681;font-size:.82rem}
 <label for="palette">Colours</label>
 <select id="palette"></select>
 <button class="btn btn-primary" id="download" type="button">Download free preview SVG</button>
+<button class="btn" id="share" type="button">Share this design</button>
 <p class="note">Free preview: one flattened SVG file for printing or sharing. It is not a cut file &mdash; there are no separated layers.</p>
 <a class="btn btn-buy" id="buy" href="__CHECKOUT__">Get the full 7-layer cut file bundle</a>
 <p class="note">The bundle is the real product: 7 separate layer files sized for Cricut, Silhouette and Glowforge, plus a 6500px print-ready PNG. __BUNDLE__</p>
@@ -157,6 +158,7 @@ Built by __STORE__ &middot; <a href="__CHECKOUT__">All designs</a> &middot; <a h
 </footer>
 <script>
 const DATA = __DATA__;
+const MK_URL = "__MAKER__";
 const S = 1200, C = 600;
 const esc = (s) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const f = (n) => Math.round(n * 10) / 10;
@@ -279,13 +281,24 @@ function buildSvg() {
     s += '<text x="' + C + '" y="964" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="' + gold
       + '" letter-spacing="7" font-style="italic">' + esc(line) + '</text>';
   }
-  return '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + S + ' ' + S + '" width="' + S + '" height="' + S + '">\n' + s + '\n</svg>\n';
+  return '<?xml version="1.0" encoding="UTF-8"?>\n'
+    // Honest attribution, invisible in the artwork: this is a free tool and
+    // the file says where it came from. Every copy that gets shared in a
+    // group chat carries the maker's URL with it, which is distribution we
+    // do not have to pay for.
+    + '<!-- Free preview made with the memorial shadow box maker at '
+    + esc(MK_URL) + ' - full 7-layer cut file bundle: ' + esc(MK_URL) + ' -->\n'
+    + '<metadata>' + esc('Made with the free memorial shadow box maker at ' + MK_URL) + '</metadata>\n'
+    + '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + S + ' ' + S + '" width="' + S + '" height="' + S + '">\n' + s + '\n</svg>\n';
 }
 
 function render() {
   const art = document.getElementById('art');
   try {
-    art.innerHTML = buildSvg().replace(/^<\?xml[^>]*\?>\n/, '').replace(/<\/?svg[^>]*>/g, '');
+    art.innerHTML = buildSvg().replace(/^<\?xml[^>]*\?>\n/, '')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<metadata>[\s\S]*?<\/metadata>/g, '')
+      .replace(/<\/?svg[^>]*>/g, '');
     document.getElementById('fallback').style.display = 'none';
   } catch (e) {
     document.getElementById('fallback').style.display = 'block';
@@ -319,6 +332,20 @@ function init() {
     a.download = 'memorial-shadow-box-' + (document.getElementById('name').value.trim() || 'preview')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.svg';
     document.body.appendChild(a); a.click(); a.remove();
+  });
+  document.getElementById('share').addEventListener('click', () => {
+    // WhatsApp is where this actually travels: a keepsake for a pet is the
+    // kind of thing people send to the group chat they just created for the
+    // family. No account, no upload, just a link and a sentence.
+    const who = (document.getElementById('name').value.trim() || 'a name');
+    const text = 'I made this for ' + who + ' - free memorial shadow box maker: ' + MK_URL;
+    const wa = 'https://wa.me/?text=' + encodeURIComponent(text);
+    if (navigator.share) {
+      navigator.share({ title: 'Memorial shadow box', text: text, url: MK_URL })
+        .catch(() => { window.open(wa, '_blank'); });
+      return;
+    }
+    window.open(wa, '_blank');
   });
   render();
 }
