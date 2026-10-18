@@ -129,6 +129,7 @@ footer{padding:24px 16px 48px;text-align:center;color:#6e7681;font-size:.82rem}
 <label for="palette">Colours</label>
 <select id="palette"></select>
 <button class="btn btn-primary" id="download" type="button">Download free preview SVG</button>
+<button class="btn" id="png" type="button">Download PNG to share</button>
 <button class="btn" id="share" type="button">Share this design</button>
 <p class="note">Free preview: one flattened SVG file for printing or sharing. It is not a cut file &mdash; there are no separated layers.</p>
 <a class="btn btn-buy" id="buy" href="__CHECKOUT__">Get the full 7-layer cut file bundle</a>
@@ -332,6 +333,41 @@ function init() {
     a.download = 'memorial-shadow-box-' + (document.getElementById('name').value.trim() || 'preview')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.svg';
     document.body.appendChild(a); a.click(); a.remove();
+  });
+  // PNG, not just SVG: nobody posts an SVG file to a group chat, but
+  // everybody posts a picture. The credit line at the bottom is the same
+  // honest attribution the SVG carries, rendered into the pixels, so a
+  // repost still points back here.
+  document.getElementById('png').addEventListener('click', () => {
+    const svgText = buildSvg();
+    const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const W = 1200, H = 1330;
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const g = c.getContext('2d');
+      g.fillStyle = '#0d1117'; g.fillRect(0, 0, W, H);
+      g.drawImage(img, 0, 0, W, W);
+      g.fillStyle = '#8b949e';
+      g.font = '28px Georgia, serif';
+      g.textAlign = 'center';
+      g.fillText('Free memorial shadow box maker', W / 2, W + 55);
+      g.fillStyle = '#6e7681';
+      g.font = '22px Georgia, serif';
+      g.fillText(MK_URL.replace(/^https:\/\//, ''), W / 2, W + 95);
+      c.toBlob((out) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(out);
+        a.download = 'memorial-shadow-box-' + (document.getElementById('name').value.trim() || 'preview')
+          .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.png';
+        document.body.appendChild(a); a.click(); a.remove();
+      }, 'image/png');
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { document.getElementById('fallback').style.display = 'block'; };
+    img.src = url;
   });
   document.getElementById('share').addEventListener('click', () => {
     // WhatsApp is where this actually travels: a keepsake for a pet is the

@@ -55,6 +55,11 @@ jobs:
           # reads "cricut svg" or "papercraft" repos, not only "awesome-" ones,
           # and those repos are the same buyer.
           QUERIES="awesome+laser+cutting awesome+generative+art awesome+paper+craft awesome+svg awesome+cricut awesome+cut+files awesome+diy awesome+maker+tools awesome+crafts cricut+svg papercraft laser+cutting+projects craft+svg shadow+box+svg svg+cut+files cricut+templates cricut+ideas"
+          # Name matching alone runs the list dry: the buyer-facing repos are
+          # called "my-cricut-journal" or "sticker-sheets", not "awesome-*".
+          # These search README *content*, which is what actually identifies a
+          # repo whose readers own a cutting machine.
+          RQUERIES="cricut+in%3Areadme+stars%3A%3E100 cricut+in%3Areadme+stars%3A%3E50+%22cutting+file%22 +%22shadow+box%22+svg+in%3Areadme+stars%3A%3E50 +silhouette+cricut+in%3Areadme+stars%3A%3E50 +glowforge+in%3Areadme+stars%3A%3E50 +%22vinyl+decal%22+svg+in%3Areadme+stars%3A%3E50 +%22cutting+plotter%22+svg+in%3Areadme+stars%3A%3E50"
           : > candidates.txt
           for q in $QUERIES; do
             # Use the account PAT, not the repo-scoped GITHUB_TOKEN: 16 rapid
@@ -75,6 +80,17 @@ jobs:
             cat /tmp/q.out
             sleep 2
           done | sort -u -k2,2 > all_candidates.tsv
+          # Second pass: README-content searches (no in:name, so they cannot be
+          # folded into the loop above without corrupting both).
+          for q in $RQUERIES; do
+            err=$(GH_TOKEN="$VF_GH_PAT" gh api "search/repositories?q=${q}+archived%3Afalse+fork%3Afalse&sort=stars&order=desc&per_page=12" \
+              --jq '.items[] | "\(.stargazers_count)\t\(.full_name)\t\(.default_branch)\t\(.description // "")"' \
+              2>&1 >/tmp/r.out) || true
+            echo "readme-query [$q] -> $(wc -l < /tmp/r.out) rows${err:+ ERROR: $err}" >&2
+            cat /tmp/r.out
+            sleep 2
+          done | sort -u -k2,2 >> all_candidates.tsv
+          sort -u -k2,2 -o all_candidates.tsv all_candidates.tsv
           echo "raw candidate rows: $(wc -l < all_candidates.tsv)"
 
           # A submission target is a repository whose NAME starts with
@@ -99,27 +115,46 @@ jobs:
             kind=""
             # Curated lists qualify when the name STARTS with "awesome-" or ENDS with
             # "-awesome" (image2svg-awesome). Do not use a *-awesome-* pattern
-            # to mean "ends with": that glob matches any name CONTAINING
+            # to mean "ends with": that glob matches any name CONTAANING
             # "-awesome-", which is how Font-Awesome-SVG-PNG (an icon
             # converter, not a list) got a storefront PR opened against it.
             case "$base_lc" in awesome-*|*-awesome) kind="list" ;; esac
+            topics_lc=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/topics" --jq '.names | join(" ")' 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
+            # Relevance beats naming, and it has to apply to EVERY kind —
+            # including curated lists. Gating only the "craft" class let
+            # vsouza/awesome-ios and nexu-io/open-design through purely on
+            # their names, which is how an unrelated list gets a storefront
+            # link. Naming decides what a repo *is*; content decides whether we
+            # have anything to say to it.
+            readme_text=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/readme" \
+              -H "Accept: application/vnd.github.raw" 2>/dev/null || true)
+            haystack="$(printf '%s %s' "$base_lc $topics_lc" | tr '[:upper:]' '[:lower:]') $(printf '%s' "$readme_text" | tr '[:upper:]' '[:lower:]')"
+            readme_text_lc="$(printf '%s' "$readme_text" | tr '[:upper:]' '[:lower:]')"
+            relevant=0
+            # Strong relevance only. A loose filter is self-confirming: the
+            # repos a "cut file in:readme" search returns already contain the
+            # words that search looked for, so papercraft template dumps and
+            # icon collections kept qualifying on vocabulary alone. These
+            # terms name the machine or the exact product, not the act of
+            # cutting something out of paper.
+            case "$haystack" in
+              *cricut*|*"shadow box"*|*silhouette*|*glowforge*|*"vinyl decal"*|*"laser cutting"*|*"cutting machine"*|*"svg cut file"*|*"layered svg"*|*"svg layer"*|*"cutting plotter"*)
+                relevant=1 ;;
+            esac
+            [ "$relevant" -eq 1 ] || continue
+            # A link is only meaningful where the repo already collects links.
+            # The workflow appends the entry at the end of the README, so a
+            # repo with no Resources/Tools/Related section has nowhere for it
+            # to go and the PR reads as spam on arrival.
+            placeable=0
+            # Heading-anchored, not just the word: any README that says "tools"
+            # somewhere qualifies, which let a terminal-theme repo (it ships a
+            # theme literally named "shadow box") through.
+            printf '%s' "$readme_text" | grep -qiE "^#+ *(resources|tools|related|see also|external|contributing|awesome)" && placeable=1
             if [ -z "$kind" ]; then
-              topics_lc=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/topics" --jq '.names | join(" ")' 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
-              # Only genuinely adjacent targets. Papercraft template
-              # collections and generic "svg" repos match by vocabulary but a
-              # shop link is off-topic there, and an off-topic PR is worse than
-              # no PR: it burns the one submission a maintainer will ever read.
-              case "$base_lc" in
-                *cricut*|*laser*|*cut-file*|*cutfile*|*shadow-box*|*silhouette*|*die-cut*|*stencil*) kind="craft" ;;
-              esac
-              if [ -z "$kind" ]; then
-                case "$topics_lc" in
-                  *cricut*|*laser-cutting*|*lasercutting*|*shadow-box*|*cricutting*|*die-cut*|*diecut*)
-                    kind="craft" ;;
-                  *) continue ;;
-                esac
-              fi
+              kind="craft"
               [ "${stars:-0}" -ge 100 ] || continue
+              [ "$placeable" -eq 1 ] || continue
             fi
             # Lists that already reviewed us stay skipped forever.
             case "$full" in ad-si/awesome-laser-cutting|kosmos/awesome-generative-art) continue ;; esac
@@ -138,12 +173,6 @@ jobs:
             # PR; one that does not is a coin flip, and we only get a limited
             # number of submissions per day, so the invitation decides.
             score=0
-            # Fetch the README raw. The JSON body's base64 "content" field is
-            # newline-escaped every 60 characters, so extracting it with sed
-            # yields a truncated fragment (measured: 45 bytes instead of
-            # 2691) and the invitation check silently never matches.
-            readme_text=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/readme" \
-              -H "Accept: application/vnd.github.raw" 2>/dev/null || true)
             if [ -n "$readme_text" ]; then
               if printf '%s' "$readme_text" | grep -qiE "pull requests? welcome|prs? welcome|contributions? welcome|feel free to (open|add)|open a pull request|add your (own )?|how to contribute|contributing"; then
                 score=$((score + 3))
