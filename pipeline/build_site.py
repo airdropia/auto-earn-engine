@@ -1721,6 +1721,13 @@ def main() -> None:
                         zf.write(f, f.relative_to(folder))
             zipped += 1
 
+    # Social pin images must be publicly fetchable: a social platform cannot pin
+    # a file that only exists in the repo. Copied into the site so the pin URL
+    # is a stable public address.
+    pins_dir = ROOT / "pins"
+    if pins_dir.is_dir():
+        shutil.copytree(pins_dir, SITE_DIR / "pins", dirs_exist_ok=True)
+
     make_og_image(SITE_DIR, cfg)
     (SITE_DIR / "robots.txt").write_text(
         "User-agent: *\nAllow: /\n"

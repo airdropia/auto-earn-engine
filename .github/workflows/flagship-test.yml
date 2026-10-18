@@ -52,11 +52,24 @@ jobs:
         run: python3 pipeline/quality_gate.py
       - name: Render delivery pages for issued orders
         run: python3 pipeline/delivery.py
+      - name: Generate social pin images (Pinterest/Instagram ready)
+        run: |
+          python3 pipeline/pin_generator.py
+          sudo apt-get install -y -qq librsvg2-bin
+          for svg in pins/*-pin.svg; do
+            [ -f "$svg" ] || continue
+            base="${svg%.svg}"
+            if [ ! -f "${base}.png" ] || [ "$svg" -nt "${base}.png" ]; then
+              rsvg-convert -w 1000 -h 1500 --background-color '#0d1117' "$svg" -o "${base}.png"
+              echo "pin: ${base##*/}.png ($(du -h "${base}.png" | cut -f1))"
+            fi
+          done
+
       - name: Build storefront (per-product pages + sitemap)
         run: python3 pipeline/build_site.py
       - name: Commit generator outputs
         run: |
-          bash .github/scripts/commit-push.sh "flagship design [skip ci]" site_extra/ checkout/ catalog/ products/
+          bash .github/scripts/commit-push.sh "flagship design [skip ci]" site_extra/ checkout/ catalog/ products/ pins/
       - name: Verify site artifact exists
         run: |
           ls -la site/ | head -20
