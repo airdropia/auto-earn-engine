@@ -53,11 +53,15 @@ USDT_DECIMALS = 18
 # single providers, and on 2026-10-18 every run of the watcher died with
 # "chain unreachable", which would have silently lost the first real order.
 DEFAULT_RPCS = [
+    # Probed from a GitHub runner 2026-10-18: the first two answer getLogs,
+    # the other four return HTTP 403 there (the providers block AWS ranges).
+    # Order matters: the endpoints known to work from CI come first so a
+    # healthy run spends no requests on ones that will refuse.
+    "https://bsc.rpc.blxrbdn.com",
+    "https://rpc-bsc.48.club",
     "https://bsc-rpc.publicnode.com",
     "https://bsc.publicnode.com",
     "https://1rpc.io/bnb",
-    "https://bsc.rpc.blxrbdn.com",
-    "https://rpc-bsc.48.club",
     "https://bsc.blockrazor.xyz",
 ]
 # BSC blocks are ~3s; 10 minutes of headroom over the cron interval.
