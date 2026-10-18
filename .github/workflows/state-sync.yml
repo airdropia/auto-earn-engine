@@ -79,6 +79,28 @@ jobs:
         run: 'bash .github/scripts/commit-push.sh "checkout: payment watcher state + earnings" checkout/ metrics/earnings.json site_extra/delivery'
 
   # ---------------------------------------------------------------------------
+  # Search probe: are crawlers finding us at all?
+  # ---------------------------------------------------------------------------
+  serp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The only traffic signal available without an analytics account. It
+      # records whether Bing has indexed anything, daily, so "no visitors"
+      # can be distinguished from "nothing was ever crawled".
+      - name: Probe search indexing
+        run: python3 pipeline/serp_probe.py
+
+      - name: Commit traffic series
+        run: 'bash .github/scripts/commit-push.sh "serp: daily index probe [skip ci]" metrics/traffic.json'
+
+  # ---------------------------------------------------------------------------
   # Catalog hygiene (relocated from catalog-hygiene.yml)
   # ---------------------------------------------------------------------------
   catalog-hygiene:
