@@ -57,10 +57,20 @@ jobs:
           QUERIES="awesome+laser+cutting awesome+generative+art awesome+paper+craft awesome+svg awesome+cricut awesome+cut+files awesome+diy awesome+maker+tools awesome+crafts cricut+svg papercraft laser+cutting+projects craft+svg shadow+box+svg svg+cut+files cricut+templates cricut+ideas"
           : > candidates.txt
           for q in $QUERIES; do
-            gh api "search/repositories?q=$q+in:name+archived:false+fork:false&sort=stars&order=desc&per_page=12" \
+            # Use the account PAT, not the repo-scoped GITHUB_TOKEN: 16 rapid
+            # searches in a row trip GitHub's secondary rate limit on the
+            # Actions token, and the failure was invisible because stderr went
+            # to /dev/null — the run then reported "candidates: 0" and looked
+            # like there was simply nothing left to submit.
+            err=$(GH_TOKEN="$VF_GH_PAT" gh api "search/repositories?q=$q+in:name+archived:false+fork:false&sort=stars&order=desc&per_page=12" \
               --jq '.items[] | "\(.stargazers_count)\t\(.full_name)\t\(.default_branch)\t\(.description // "")"' \
-              2>/dev/null || true
+              2>&1 >/tmp/q.out) || true
+            n=$(wc -l < /tmp/q.out)
+            echo "query [$q] -> $n rows${err:+ ERROR: $err}"
+            cat /tmp/q.out
+            sleep 2
           done | sort -u -k2,2 > all_candidates.tsv
+          echo "raw candidate rows: $(wc -l < all_candidates.tsv)"
 
           # A submission target is a repository whose NAME starts with
           # "awesome". Everything else that matched the words (icon kits,
@@ -80,7 +90,7 @@ jobs:
             kind=""
             case "$base_lc" in awesome-*) kind="list" ;; esac
             if [ -z "$kind" ]; then
-              topics_lc=$(gh api "repos/$full/topics" --jq '.names | join(" ")' 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
+              topics_lc=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/topics" --jq '.names | join(" ")' 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
               case "$topics_lc" in
                 *cricut*|*papercraft*|*paper-craft*|*laser-cutting*|*lasercutting*|*shadow-box*|*svg*|*crafts*|*3d-printing*)
                   [ "${stars:-0}" -ge 100 ] || continue
@@ -95,7 +105,7 @@ jobs:
             # The full "search/issues" path is required: a bare "search/..."
             # is a 404, and the || echo 0 swallowed it, so every target with
             # a prior PR looked like a fresh one.
-            prior=$(gh api "search/issues?q=repo:$full+is:pr+author:airdropia" --jq '.total_count' 2>/dev/null)
+            prior=$(GH_TOKEN="$VF_GH_PAT" gh api "search/issues?q=repo:$full+is:pr+author:airdropia" --jq '.total_count' 2>/dev/null)
             if [ "${prior:-1}" != "0" ]; then
               echo "skip $full — prior PR by this account (${prior:-query failed})"
               continue
