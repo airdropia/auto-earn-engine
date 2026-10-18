@@ -58,6 +58,13 @@ jobs:
       - name: Offline selftest (money math must be right before real funds)
         run: python3 pipeline/checkout.py --selftest
 
+      - name: Probe BSC RPC endpoints
+        # GitHub's runner IPs get rate-limited by public RPC providers, and a
+        # watcher with no reachable log indexer silently loses orders. This
+        # step makes that condition visible in the log every single run
+        # instead of only when a buyer is waiting for their files.
+        run: python3 pipeline/checkout.py --probe
+
       - name: Ensure invoices exist for every product
         env:
           VF_PAYOUT_ADDRESS: ${{ vars.VF_PAYOUT_ADDRESS }}

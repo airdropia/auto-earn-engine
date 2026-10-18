@@ -45,14 +45,20 @@ METRICS_FILE = ROOT / "metrics" / "earnings.json"
 
 USDT_BEP20_CONTRACT = "0x55d398326f99059fF775485246999027B3197955"
 USDT_DECIMALS = 18
-# Endpoints verified live 2026-10-14: dataseed* REJECT eth_getLogs with
-# -32005 "limit exceeded" (they do not index logs), and publicnode rejects
-# historical ranges without a token. These three answer recent getLogs with
-# no key and no account.
+# Only endpoints that actually index logs can answer eth_getLogs. Probed
+# 2026-10-18: bnb dataseed* and zan.top answer blockNumber but reject
+# getLogs with "limit exceeded", drpc/bloxroute-free tiers rate-limit
+# hard, meowrpc has no getLogs at all. The six below are from six different
+# operators on purpose — GitHub's runner IP ranges get rate-limited by
+# single providers, and on 2026-10-18 every run of the watcher died with
+# "chain unreachable", which would have silently lost the first real order.
 DEFAULT_RPCS = [
     "https://bsc-rpc.publicnode.com",
     "https://bsc.publicnode.com",
     "https://1rpc.io/bnb",
+    "https://bsc.rpc.blxrbdn.com",
+    "https://rpc-bsc.48.club",
+    "https://bsc.blockrazor.xyz",
 ]
 # BSC blocks are ~3s; 10 minutes of headroom over the cron interval.
 BLOCK_CHUNK = 200
@@ -88,8 +94,47 @@ def rpc(method: str, params: list, tolerate_error: bool = False):
             last = str(exc)
             continue
     if tolerate_error:
+        print(f"::warning::all {len(endpoints)} BSC RPC endpoints failed; last error: {last}")
         return None
     raise RuntimeError(f"all RPC endpoints failed, last error: {last}")
+
+
+def probe_endpoints() -> int:
+    """Report, per endpoint, whether it answers blockNumber and getLogs.
+
+    The watcher has exactly one failure mode that matters — no reachable log
+    indexer — and until this existed it was invisible: the run printed
+    "chain unreachable" with no reason and no endpoint named. This is cheap,
+    read-only, and turns an outage into evidence.
+    """
+    topic0 = ("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef")
+    address = USDT_BEP20_CONTRACT
+    head_hex = None
+    for endpoint in DEFAULT_RPCS:
+        res = rpc("eth_blockNumber", [], tolerate_error=True)
+        head_hex = res or head_hex
+        print(f"probe {endpoint} blockNumber={'ok' if res else 'FAIL'}")
+    if head_hex is None:
+        print("probe: no endpoint answered blockNumber; cannot test getLogs")
+        return 0
+    head = int(head_hex, 16)
+    payload = [{
+        "fromBlock": hex(max(0, head - 3)),
+        "toBlock": hex(head),
+        "address": address,
+        "topics": [topic0],
+    }]
+    for endpoint in DEFAULT_RPCS:
+        try:
+            req = urllib_request(endpoint, json.dumps(
+                {"jsonrpc": "2.0", "method": "eth_getLogs", "params": payload, "id": 1}))
+            if req.get("error"):
+                print(f"probe {endpoint} getLogs=ERROR {req['error'].get('message')}")
+            else:
+                print(f"probe {endpoint} getLogs=OK ({len(req.get('result') or [])} logs)")
+        except Exception as exc:
+            print(f"probe {endpoint} getLogs=FAIL {exc}")
+    return 0
 
 
 def urllib_request(url: str, payload: str) -> dict:
@@ -480,7 +525,11 @@ def main() -> int:
     ap.add_argument("--watch", action="store_true")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--probe", action="store_true")
     a = ap.parse_args()
+
+    if a.probe:
+        return probe_endpoints()
 
     if a.selftest:
         return selftest()
