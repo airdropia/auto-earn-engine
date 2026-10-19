@@ -134,7 +134,12 @@ jobs:
             # "-awesome-", which is how Font-Awesome-SVG-PNG (an icon
             # converter, not a list) got a storefront PR opened against it.
             case "$base_lc" in awesome-*|*-awesome) kind="list" ;; esac
-            topics_lc=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/topics" --jq '.names | join(" ")' 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
+            # Every gh api call inside this loop gets </dev/null: gh reads
+            # stdin when it has no arguments, and the loop's stdin IS the
+            # candidate TSV. Without the redirect the API calls ate the
+            # remaining rows and printf died with "Broken pipe", which killed
+            # the run after the candidate list grew past ~20 repos.
+            topics_lc=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/topics" --jq '.names | join(" ")' </dev/null 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
             # Relevance beats naming, and it has to apply to EVERY kind —
             # including curated lists. Gating only the "craft" class let
             # vsouza/awesome-ios and nexu-io/open-design through purely on
@@ -142,7 +147,7 @@ jobs:
             # link. Naming decides what a repo *is*; content decides whether we
             # have anything to say to it.
             readme_text=$(GH_TOKEN="$VF_GH_PAT" gh api "repos/$full/readme" \
-              -H "Accept: application/vnd.github.raw" 2>/dev/null || true)
+              -H "Accept: application/vnd.github.raw" </dev/null 2>/dev/null || true)
             haystack="$(printf '%s %s' "$base_lc $topics_lc" | tr '[:upper:]' '[:lower:]') $(printf '%s' "$readme_text" | tr '[:upper:]' '[:lower:]')"
             readme_text_lc="$(printf '%s' "$readme_text" | tr '[:upper:]' '[:lower:]')"
             relevant=0
@@ -188,7 +193,7 @@ jobs:
             # The full "search/issues" path is required: a bare "search/..."
             # is a 404, and the || echo 0 swallowed it, so every target with
             # a prior PR looked like a fresh one.
-            prior=$(GH_TOKEN="$VF_GH_PAT" gh api "search/issues?q=repo:$full+is:pr+author:airdropia" --jq '.total_count' 2>/dev/null)
+            prior=$(GH_TOKEN="$VF_GH_PAT" gh api "search/issues?q=repo:$full+is:pr+author:airdropia" --jq '.total_count' </dev/null 2>/dev/null)
             if [ "${prior:-1}" != "0" ]; then
               echo "skip $full — prior PR by this account (${prior:-query failed})"
               continue
@@ -236,7 +241,7 @@ jobs:
 
             # Already present upstream? Then there is nothing to do.
             # The /readme endpoint resolves the real casing (Readme.md, ...).
-            readme_json=$(gh api "repos/$full/readme" 2>/dev/null) || {
+            readme_json=$(gh api "repos/$full/readme" </dev/null 2>/dev/null) || {
               echo "skip $full — no README found"; continue;
             }
             readme_path=$(printf '%s' "$readme_json" | sed -n 's/^.*"name":"\([^"]*\)".*$/\1/p' | head -1)
