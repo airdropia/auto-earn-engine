@@ -8,10 +8,11 @@ listing). At $9.99 for a single design we lose on price and have no volume
 to show for it, so the single design is not the product a buyer should be
 aimed at.
 
-The product is the set: all three memorial variants (pet, angel wings,
-rainbow bridge) in one bundle, with the editable name plate on every front
-layer. No Etsy listing in the researched set offers the full memorial trio
-with per-design name plates. That is the bundle this script publishes.
+The product is the set: every memorial variant (pet paw, angel wings,
+rainbow bridge and the rest) in one bundle, with the editable name plate on
+every front layer. No Etsy listing in the researched set offers the full
+memorial range with per-design name plates. That is the bundle this script
+publishes.
 
 Pricing rationale: three designs at the single-design price is roughly the
 market's $6.87 top end times three, minus the volume discount buyers expect
@@ -93,9 +94,12 @@ def build(today: str, catalog: list[dict]) -> dict | None:
     )
 
     title = f"Memorial Shadow Box Collection | {len(designs)} Editable-Name Designs, {mg.LAYERS} Layers Each"
+    motif_names = ", ".join(
+        str(d.get("id", "")).replace("memorial-", "") for d in designs
+    )
     description = (
         f"The complete memorial line in one bundle: {len(designs)} seven-layer "
-        "shadow-box designs (pet paw, angel wings, rainbow bridge), each with an "
+        f"shadow-box designs ({motif_names}), each with an "
         "editable name plate on the front layer so a grieving crafter can put "
         "their own beloved's name on it before cutting. Midnight, pearl and "
         "antique gold, stacked for real depth, with print-ready PNG renders. "
