@@ -187,7 +187,7 @@ jobs:
               while IFS= read -r heading; do
                 low="$(printf '%s' "$heading" | tr '[:upper:]' '[:lower:]')"
                 case "$low" in
-                  *"svg"*|*"vector"*|*"graphic"*|*"illustration"*|*"illustrator"*|*"typography"*|*"font"*|*"drawing"*|*"stencil"*|*"scrapbook"*|*"papercraft"*|*"paper craft"*|*"craft"*|*"maker"*|*"3d print"*|*"laser"*|*"diy"*|*"photo edit"*|*"video edit"*|*"creative"*|*"design tools"*|*"design software"*|*"design resources"*)
+                  *"svg"*|*"vector"*|*"graphic"*|*"illustration"*|*"illustrator"*|*"typography"*|*"font"*|*"drawing"*|*"stencil"*|*"scrapbook"*|*"papercraft"*|*"paper craft"*|*"craft"*|*"maker"*|*"3d print"*|*"laser"*|*"diy"*|*"photo edit"*|*"video edit"*|*"creative"*)
                     making_section=1 ;;
                 esac
               done < <(grep -E "^#{1,4} " <<< "$readme_text" 2>/dev/null || true)
@@ -320,7 +320,7 @@ jobs:
               continue
             fi
 
-            entry="- [$ENTRY_NAME]($PROJECT_URL) — MIT-licensed, dependency-free Python pipeline that generates memorial shadow box SVGs with an editable name plate (you type the name inside Cricut, no custom order needed) plus original 7-layer mandala bundles; one file per physical layer, 6500px PNG renders, quality gates and a static storefront, running entirely on GitHub Actions."
+            entry="- [$ENTRY_NAME]($PROJECT_URL) — Free in-browser memorial shadow box maker: type a pet's or someone's name and see the keepsake instantly, no signup. MIT-licensed, standard-library-only Python generator behind it that produces 7-layer shadow-box SVGs with an editable name plate, plus 6500px PNG renders. [Try the free maker]($MAKER_URL)."
             if ! (
               set -euo pipefail
               cd "$workdir"
