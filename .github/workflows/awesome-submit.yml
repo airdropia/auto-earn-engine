@@ -161,26 +161,37 @@ jobs:
               *cricut*|*"shadow box"*|*silhouette*|*glowforge*|*"vinyl decal"*|*"laser cutting"*|*"cutting machine"*|*"svg cut file"*|*"layered svg"*|*"svg layer"*|*"cutting plotter"*)
                 relevant=1 ;;
             esac
-            # Curated lists get a looser bar, because a list's subject is
-            # decided by its topic and a maker/SVG/design list is a place
-            # where a shadow-box generator is a genuine entry rather than
-            # noise. The stricter rule above is what keeps random project
-            # repos out.
+            # Curated lists get a looser bar, but the bar is a SECTION, not a
+            # word. The list must actually have a section about making
+            # things - SVG, graphics, illustration, craft, maker, 3D
+            # printing, laser cutting, typography, stencils. Scanning the
+            # whole README for "design" or "generative" was hopeless: it
+            # matched Ant Design, design systems, low-level design, AI
+            # papers and generative-AI lists, and every one of those
+            # produced a spam PR that had to be closed again.
             if [ "$relevant" -eq 0 ] && [ "$kind" = "list" ]; then
-              # BUT a list about AI, papers or data science is not a place
-              # for a craft tool, however many making words its README
-              # happens to contain ("generative", "design" and "agent" all
-              # appear there). Such lists were opening as spam: three PRs to
-              # an AI-papers list and a generative-AI list were opened and
-              # closed in one day.
+              # A list about AI, papers or data science is never a place for
+              # a craft tool, however many making words its README contains.
               case "$haystack" in
                 *"machine learning"*|*"deep learning"*|*"neural network"*|*llm*|*"large language model"*|*transformer*|*dataset*|*"data science"*|*"data scientist"*|*"awesome papers"*|*arxiv*|*"paper list"*|*"prompt engineering"*|*"agent paper"*|*"reinforcement learning"*)
                   continue ;;
               esac
+              # Software-design topics are a hard no: "design" in their name
+              # means interfaces and patterns, not craft.
               case "$haystack" in
-                *svg*|*vector*|*graphic*|*design*|*maker*|*craft*|*diy*|*maker\ tool*|*creative*|*illustration*|*drawing*|*generative*)
-                  relevant=1 ;;
+                *"design system"*|*"ui design"*|*"ux design"*|*"design pattern"*|*architecture*|*"ant design"*|*"low-level"*|*"system design"*|*database*|*"distributed system"*|*"compiler"*|*"operating system"*)
+                  continue ;;
               esac
+              # The section test: a heading that names a making topic.
+              making_section=0
+              while IFS= read -r heading; do
+                low="$(printf '%s' "$heading" | tr '[:upper:]' '[:lower:]')"
+                case "$low" in
+                  *"svg"*|*"vector"*|*"graphic"*|*"illustration"*|*"illustrator"*|*"typography"*|*"font"*|*"drawing"*|*"stencil"*|*"scrapbook"*|*"papercraft"*|*"paper craft"*|*"craft"*|*"maker"*|*"3d print"*|*"laser"*|*"diy"*|*"photo edit"*|*"video edit"*|*"creative"*|*"design tools"*|*"design software"*|*"design resources"*)
+                    making_section=1 ;;
+                esac
+              done < <(grep -E "^#{1,4} " <<< "$readme_text" 2>/dev/null || true)
+              [ "$making_section" -eq 1 ] && relevant=1
             fi
             [ "$relevant" -eq 1 ] || continue
             # A link is only meaningful where the repo already collects links.
