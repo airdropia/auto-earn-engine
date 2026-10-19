@@ -130,6 +130,7 @@ footer{padding:24px 16px 48px;text-align:center;color:#6e7681;font-size:.82rem}
 <select id="palette"></select>
 <button class="btn btn-primary" id="download" type="button">Download free preview SVG</button>
 <button class="btn" id="png" type="button">Download PNG to share</button>
+<button class="btn" id="copylink" type="button">Copy link to this design</button>
 <button class="btn" id="share" type="button">Share this design</button>
 <p class="note">Free preview: one flattened SVG file for printing or sharing. It is not a cut file &mdash; there are no separated layers.</p>
 <a class="btn btn-buy" id="buy" href="__CHECKOUT__">Get the full 7-layer cut file bundle</a>
@@ -306,6 +307,53 @@ function render() {
   }
 }
 
+// The share link carries the design in the URL *fragment*, not the query
+// string. A fragment is never sent to the server and is ignored by search
+// engines, so a pet's name in a shared link reaches nobody but the person it
+// was sent to: GitHub never sees it, no crawler indexes it, and the recipient
+// still opens the exact keepsake made for their own person.
+function readHash() {
+  const h = (location.hash || '').replace(/^#/, '');
+  if (!h) return {};
+  const out = {};
+  h.split('&').forEach((kv) => {
+    const i = kv.indexOf('=');
+    if (i < 0) return;
+    out[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1).replace(/\+/g, ' '));
+  });
+  return out;
+}
+
+function currentDesign() {
+  return {
+    name: document.getElementById('name').value.trim(),
+    dates: document.getElementById('dates').value.trim(),
+    line: document.getElementById('line').value.trim(),
+    motif: document.getElementById('motif').value,
+    palette: document.getElementById('palette').value,
+  };
+}
+
+function designLink() {
+  const d = currentDesign();
+  const parts = [];
+  if (d.name) parts.push('name=' + encodeURIComponent(d.name));
+  if (d.dates) parts.push('dates=' + encodeURIComponent(d.dates));
+  if (d.line) parts.push('line=' + encodeURIComponent(d.line));
+  if (d.motif) parts.push('motif=' + encodeURIComponent(d.motif));
+  if (d.palette) parts.push('palette=' + encodeURIComponent(d.palette));
+  return MK_URL + '#' + parts.join('&');
+}
+
+function applyHash() {
+  const h = readHash();
+  if (h.name) document.getElementById('name').value = h.name;
+  if (h.dates) document.getElementById('dates').value = h.dates;
+  if (h.line) document.getElementById('line').value = h.line;
+  if (h.motif) document.getElementById('motif').value = h.motif;
+  if (h.palette) document.getElementById('palette').value = h.palette;
+}
+
 function init() {
   const ms = document.getElementById('motif');
   DATA.motifs.forEach((m) => {
@@ -372,17 +420,31 @@ function init() {
   document.getElementById('share').addEventListener('click', () => {
     // WhatsApp is where this actually travels: a keepsake for a pet is the
     // kind of thing people send to the group chat they just created for the
-    // family. No account, no upload, just a link and a sentence.
-    const who = (document.getElementById('name').value.trim() || 'a name');
-    const text = 'I made this for ' + who + ' - free memorial shadow box maker: ' + MK_URL;
-    const wa = 'https://wa.me/?text=' + encodeURIComponent(text);
+    // family. The link carries the design, so whoever opens it sees the
+    // keepsake made for the name on it.
+    const d = currentDesign();
+    const who = d.name || 'a name';
+    const text = 'I made this for ' + who + ':';
+    const wa = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + designLink());
     if (navigator.share) {
-      navigator.share({ title: 'Memorial shadow box', text: text, url: MK_URL })
+      navigator.share({ title: 'Memorial shadow box', text: text, url: designLink() })
         .catch(() => { window.open(wa, '_blank'); });
       return;
     }
     window.open(wa, '_blank');
   });
+  document.getElementById('copylink').addEventListener('click', () => {
+    const link = designLink();
+    const btn = document.getElementById('copylink');
+    const old = btn.textContent;
+    const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = old; }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(done).catch(() => { window.prompt('Copy this link', link); });
+    } else {
+      window.prompt('Copy this link', link);
+    }
+  });
+  applyHash();
   render();
 }
 

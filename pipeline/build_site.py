@@ -1913,6 +1913,15 @@ A candle if you are not sure yet what you are making.</p>
 <p>The download button gives you a free flattened SVG: a single file, good for
 printing, for a phone wallpaper, for showing someone before they are ready.
 It is not a cut file, because it is not separated into layers.</p>
+<h3>Send the design itself, not a screenshot</h3>
+<p>There is a Copy link button. It copies a link that carries your design, so
+the person you send it to opens the keepsake with <em>their</em> person's name
+on it, already made.</p>
+<p>Worth knowing: that name travels inside the part of a web address that
+browsers never send to a website, and that search engines never index. So the
+name of the one you lost is not on our server, is not in a crawl log, and is
+not going to turn up in a search for you one day. Only the person you sent it
+to can see it.</p>
 <h3>What the paid version actually is</h3>
 <p>Same design, cut into seven separate layer files, one per sheet of
 cardstock, plus a 6500px print render and a materials list. You cut them,
