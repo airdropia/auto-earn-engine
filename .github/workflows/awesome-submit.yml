@@ -174,7 +174,7 @@ jobs:
               # an AI-papers list and a generative-AI list were opened and
               # closed in one day.
               case "$haystack" in
-                *"machine learning"*|*"deep learning"*|*"neural network"*|*llm*|*"large language model"*|*transformer*|*dataset*|*data science*|*data scientist*|*"awesome papers"*|*arxiv*|*paper list*|*prompt engineering"*|*agent paper*|*reinforcement learning"*)
+                *"machine learning"*|*"deep learning"*|*"neural network"*|*llm*|*"large language model"*|*transformer*|*dataset*|*"data science"*|*"data scientist"*|*"awesome papers"*|*arxiv*|*"paper list"*|*"prompt engineering"*|*"agent paper"*|*"reinforcement learning"*)
                   continue ;;
               esac
               case "$haystack" in
