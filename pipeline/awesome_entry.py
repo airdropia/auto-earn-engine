@@ -131,27 +131,13 @@ def detect_style(text: str) -> tuple[str, int, str]:
     return "*", 1, " - "
 
 
-def insert_into(path: Path, entry: str, name: str) -> tuple[int, str]:
-    lines = path.read_text(encoding="utf-8", errors="replace").split("\n")
-
-    # Prefer a section whose heading matches the subject.
-    section_idx = -1
-    best_score = 0
+def collect_sections(lines: list[str]) -> list[tuple[int, int, int, str]]:
+    """Headings with their bullet block: (heading index, block start, block end, heading)."""
+    out = []
     for i, line in enumerate(lines):
         if not line.strip().startswith("#"):
             continue
-        low = line.lower()
-        score = 0
-        for hint in SECTION_HINTS + SECTION_HINTS_ZH:
-            if hint in low:
-                score += len(hint)
-        if score > best_score:
-            best_score = score
-            section_idx = i
-
-    start, end = 0, len(lines)
-    if section_idx >= 0:
-        start = section_idx + 1
+        start = i + 1
         while start < len(lines) and lines[start].strip().startswith(">"):
             start += 1
         while start < len(lines) and lines[start].strip() == "":
@@ -159,21 +145,57 @@ def insert_into(path: Path, entry: str, name: str) -> tuple[int, str]:
         end = start
         while end < len(lines) and is_bullet(lines[end]):
             end += 1
-        if end == start:
-            lines.insert(start, entry)
+        out.append((i, start, end, line.strip()))
+    return out
+
+
+def insert_into(path: Path, entry: str, name: str) -> tuple[int, str]:
+    lines = path.read_text(encoding="utf-8", errors="replace").split("\n")
+    sections = collect_sections(lines)
+
+    # Rank the headings that actually hold a bullet list. A heading whose
+    # block is empty is followed by prose, and inserting there put the entry
+    # in the middle of a paragraph - which is how a PR looks like spam.
+    ranked = []
+    for (h, s, e, title) in sections:
+        if e == s:
+            continue
+        low = title.lower()
+        score = 0
+        for hint in SECTION_HINTS + SECTION_HINTS_ZH:
+            if hint in low:
+                score += len(hint)
+        ranked.append((score, e - s, h, s, e))
+    ranked.sort(key=lambda t: (-t[0], -t[1]))
+
+    if ranked:
+        _score, _n, _h, start, end = ranked[0]
+        where = "section, alphabetical"
+    else:
+        # No heading with bullets anywhere: use the file's last bullet block.
+        start, end = 0, len(lines)
+        last = -1
+        for i, l in enumerate(lines):
+            if is_bullet(l):
+                last = i
+        if last < 0:
+            lines.append("")
+            lines.append(entry)
             path.write_text("\n".join(lines), encoding="utf-8")
-            return start + 1, "section (empty)"
+            return len(lines), "appended (no bullets in file)"
+        start, end = 0, last + 1
+        where = "file bullets, appended"
 
     target = name.lower()
     for i in range(start, end):
         if sort_key(lines[i]) > target:
             lines.insert(i, entry)
             path.write_text("\n".join(lines), encoding="utf-8")
-            return i + 1, "section, alphabetical"
+            return i + 1, where
 
     lines.insert(end, entry)
     path.write_text("\n".join(lines), encoding="utf-8")
-    return end + 1, "section, appended"
+    return end + 1, where + ", appended"
 
 
 def main() -> int:

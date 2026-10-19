@@ -37,6 +37,7 @@ env:
   VF_GH_PAT: ${{ secrets.VF_GH_PAT }}
   PROJECT_URL: https://github.com/airdropia/auto-earn-engine
   CATALOG_URL: https://airdropia.github.io/auto-earn-engine/
+  MAKER_URL: https://airdropia.github.io/auto-earn-engine/maker/
   ENTRY_NAME: "VectorForge Daily"
   MAX_NEW_PER_RUN: "3"
 
