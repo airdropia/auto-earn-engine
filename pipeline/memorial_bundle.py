@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+import re
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -94,8 +95,11 @@ def build(today: str, catalog: list[dict]) -> dict | None:
     )
 
     title = f"Memorial Shadow Box Collection | {len(designs)} Editable-Name Designs, {mg.LAYERS} Layers Each"
+    # "pet-50b75d91" -> "pet": the hash suffix is internal, and a buyer reading
+    # a bundle description should never see it.
     motif_names = ", ".join(
-        str(d.get("id", "")).replace("memorial-", "") for d in designs
+        re.sub(r"-[0-9a-f]{8}$", "", str(d.get("id", "")).replace("memorial-", ""))
+        for d in designs
     )
     description = (
         f"The complete memorial line in one bundle: {len(designs)} seven-layer "
