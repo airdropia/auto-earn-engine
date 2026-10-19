@@ -199,7 +199,12 @@ jobs:
             # The full "search/issues" path is required: a bare "search/..."
             # is a 404, and the || echo 0 swallowed it, so every target with
             # a prior PR looked like a fresh one.
-            prior=$(GH_TOKEN="$VF_GH_PAT" gh api "search/issues?q=repo:$full+is:pr+author:airdropia" --jq '.total_count' </dev/null 2>/dev/null)
+            # `|| true` is required, not defensive noise: gh exits non-zero
+            # when the search API refuses a repo (rate limit, 403 on a
+            # disabled issue tracker), and under `set -e` a failing
+            # assignment kills the whole step. One bad repo out of 141
+            # candidates silently ended every discovery run.
+            prior=$(GH_TOKEN="$VF_GH_PAT" gh api "search/issues?q=repo:$full+is:pr+author:airdropia" --jq '.total_count' </dev/null 2>/dev/null || true)
             if [ "${prior:-1}" != "0" ]; then
               echo "skip $full — prior PR by this account (${prior:-query failed})"
               continue
@@ -250,12 +255,15 @@ jobs:
             readme_json=$(gh api "repos/$full/readme" </dev/null 2>/dev/null) || {
               echo "skip $full — no README found"; continue;
             }
-            readme_path=$(printf '%s' "$readme_json" | sed -n 's/^.*"name":"\([^"]*\)".*$/\1/p' | head -1)
+            # `|| true` inside the substitution: head closes the pipe after
+            # the first line, sed then dies on SIGPIPE, and under pipefail
+            # that non-zero status would kill the step.
+            readme_path=$(printf '%s' "$readme_json" | sed -n 's/^.*"name":"\([^"]*\)".*$/\1/p' | head -1 || true)
             if [ -z "$readme_path" ]; then
               echo "skip $full — could not parse README name"
               continue
             fi
-            readme_content=$(printf '%s' "$readme_json" | sed -n 's/^.*"content":"\([^"]*\)".*$/\1/p' | head -1)
+            readme_content=$(printf '%s' "$readme_json" | sed -n 's/^.*"content":"\([^"]*\)".*$/\1/p' | head -1 || true)
             if [ -n "$readme_content" ] && grep -qi "$ENTRY_NAME" <<< "$(printf '%s' "$readme_content" | tr -d '\n' | base64 -d 2>/dev/null || true)"; then
               echo "skip $full — entry already present"
               continue
