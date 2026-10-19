@@ -180,7 +180,13 @@ jobs:
             # Heading-anchored, not just the word: any README that says "tools"
             # somewhere qualifies, which let a terminal-theme repo (it ships a
             # theme literally named "shadow box") through.
-            printf '%s' "$readme_text" | grep -qiE "^#+ *(resources|tools|related|see also|external|contributing|awesome)" && placeable=1
+            # A here-string, not a pipe: `printf ... | grep -q` makes grep exit
+            # on the first match, which closes the pipe while printf is still
+            # writing, and `set -o pipefail` then turns that SIGPIPE into a
+            # failed step. It killed every run of the discovery job.
+            if grep -qiE "^#+ *(resources|tools|related|see also|external|contributing|awesome)" <<< "$readme_text"; then
+              placeable=1
+            fi
             if [ -z "$kind" ]; then
               kind="craft"
               [ "${stars:-0}" -ge 100 ] || continue
@@ -204,10 +210,10 @@ jobs:
             # number of submissions per day, so the invitation decides.
             score=0
             if [ -n "$readme_text" ]; then
-              if printf '%s' "$readme_text" | grep -qiE "pull requests? welcome|prs? welcome|contributions? welcome|feel free to (open|add)|open a pull request|add your (own )?|how to contribute|contributing"; then
+              if grep -qiE "pull requests? welcome|prs? welcome|contributions? welcome|feel free to (open|add)|open a pull request|add your (own )?|how to contribute|contributing" <<< "$readme_text"; then
                 score=$((score + 3))
               fi
-              if printf '%s' "$readme_text" | grep -qiE "^#+ *(resources|tools|related|see also|libraries|free|external)"; then
+              if grep -qiE "^#+ *(resources|tools|related|see also|libraries|free|external)" <<< "$readme_text"; then
                 score=$((score + 1))
               fi
             fi
@@ -250,8 +256,7 @@ jobs:
               continue
             fi
             readme_content=$(printf '%s' "$readme_json" | sed -n 's/^.*"content":"\([^"]*\)".*$/\1/p' | head -1)
-            if [ -n "$readme_content" ] && printf '%s' "$readme_content" \
-               | tr -d '\n' | base64 -d 2>/dev/null | grep -qi "$ENTRY_NAME"; then
+            if [ -n "$readme_content" ] && grep -qi "$ENTRY_NAME" <<< "$(printf '%s' "$readme_content" | tr -d '\n' | base64 -d 2>/dev/null || true)"; then
               echo "skip $full — entry already present"
               continue
             fi
