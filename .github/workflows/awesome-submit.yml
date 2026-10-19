@@ -60,6 +60,11 @@ jobs:
           # These search README *content*, which is what actually identifies a
           # repo whose readers own a cutting machine.
           RQUERIES="cricut+in%3Areadme+stars%3A%3E100 cricut+in%3Areadme+stars%3A%3E50+%22cutting+file%22 +%22shadow+box%22+svg+in%3Areadme+stars%3A%3E50 +silhouette+cricut+in%3Areadme+stars%3A%3E50 +glowforge+in%3Areadme+stars%3A%3E50 +%22vinyl+decal%22+svg+in%3Areadme+stars%3A%3E50 +%22cutting+plotter%22+svg+in%3Areadme+stars%3A%3E50"
+          # Curated lists: search by the topic words their READMEs use, not by
+          # repo name. The name-only pass had already taken every list that
+          # calls itself awesome-*, so the second pass looks for the subject
+          # (svg, maker, craft, design, generative art) inside the README.
+          LQUERIES="awesome+svg+in%3Aname+stars%3A%3E100 awesome+maker+in%3Aname+stars%3A%3E50 awesome+craft+in%3Aname+stars%3A%3E50 awesome+design+in%3Aname+stars%3A%3E500 awesome+creative+in%3Aname+stars%3A%3E200 awesome+illustration+in%3Aname+stars%3A%3E100 awesome+paper+in%3Aname+stars%3A%3E100 awesome+3d+printing+in%3Aname+stars%3A%3E500 awesome+generative+in%3Aname+stars%3A%3E200"
           : > candidates.txt
           for q in $QUERIES; do
             # Use the account PAT, not the repo-scoped GITHUB_TOKEN: 16 rapid
@@ -88,6 +93,16 @@ jobs:
               2>&1 >/tmp/r.out) || true
             echo "readme-query [$q] -> $(wc -l < /tmp/r.out) rows${err:+ ERROR: $err}" >&2
             cat /tmp/r.out
+            sleep 2
+          done | sort -u -k2,2 >> all_candidates.tsv
+          sort -u -k2,2 -o all_candidates.tsv all_candidates.tsv
+          # Third pass: curated-list topics.
+          for q in $LQUERIES; do
+            err=$(GH_TOKEN="$VF_GH_PAT" gh api "search/repositories?q=${q}+archived%3Afalse+fork%3Afalse&sort=stars&order=desc&per_page=15" \
+              --jq '.items[] | "\(.stargazers_count)\t\(.full_name)\t\(.default_branch)\t\(.description // "")"' \
+              2>&1 >/tmp/l.out) || true
+            echo "list-query [$q] -> $(wc -l < /tmp/l.out) rows${err:+ ERROR: $err}" >&2
+            cat /tmp/l.out
             sleep 2
           done | sort -u -k2,2 >> all_candidates.tsv
           sort -u -k2,2 -o all_candidates.tsv all_candidates.tsv
@@ -131,16 +146,26 @@ jobs:
             haystack="$(printf '%s %s' "$base_lc $topics_lc" | tr '[:upper:]' '[:lower:]') $(printf '%s' "$readme_text" | tr '[:upper:]' '[:lower:]')"
             readme_text_lc="$(printf '%s' "$readme_text" | tr '[:upper:]' '[:lower:]')"
             relevant=0
-            # Strong relevance only. A loose filter is self-confirming: the
-            # repos a "cut file in:readme" search returns already contain the
-            # words that search looked for, so papercraft template dumps and
-            # icon collections kept qualifying on vocabulary alone. These
-            # terms name the machine or the exact product, not the act of
-            # cutting something out of paper.
+            # Strong relevance only for project repos: a name or topic that
+            # names the machine or the exact product. A loose filter is
+            # self-confirming, because the repos a "cut file in:readme"
+            # search returns already contain the words it searched for, so
+            # papercraft template dumps kept qualifying on vocabulary alone.
             case "$haystack" in
               *cricut*|*"shadow box"*|*silhouette*|*glowforge*|*"vinyl decal"*|*"laser cutting"*|*"cutting machine"*|*"svg cut file"*|*"layered svg"*|*"svg layer"*|*"cutting plotter"*)
                 relevant=1 ;;
             esac
+            # Curated lists get a looser bar, because a list's subject is
+            # decided by its topic and a maker/SVG/design list is a place
+            # where a shadow-box generator is a genuine entry rather than
+            # noise. The stricter rule above is what keeps random project
+            # repos out.
+            if [ "$relevant" -eq 0 ] && [ "$kind" = "list" ]; then
+              case "$haystack" in
+                *svg*|*vector*|*graphic*|*design*|*maker*|*craft*|*diy*|*maker\ tool*|*creative*|*illustration*|*drawing*|*generative*)
+                  relevant=1 ;;
+              esac
+            fi
             [ "$relevant" -eq 1 ] || continue
             # A link is only meaningful where the repo already collects links.
             # The workflow appends the entry at the end of the README, so a
@@ -264,8 +289,13 @@ jobs:
               git remote set-url origin "https://github.com/$fork.git"
               git config user.name "airdropia"
               git config user.email "x2newd@gmail.com"
-              printf '\n%s\n' "$entry" >> "$readme_path"
-              git add "$readme_path"
+              # Place the entry where the list keeps its entries, inside the
+              # right section, alphabetically, in the list's own bullet
+              # style. Appending to the end of the README put the line below
+              # the License section - and on lists that keep content in
+              # topics/*.md it never appeared in the list at all.
+              python3 "$GITHUB_WORKSPACE/pipeline/awesome_entry.py" "$workdir" "$entry" "$ENTRY_NAME"
+              git add -A
               git commit -q -m "Add $ENTRY_NAME to curated list"
               # Authenticate the push with an explicit extraheader instead of
               # gh auth setup-git: on a fresh runner gh has no active account,
