@@ -167,6 +167,16 @@ jobs:
             # noise. The stricter rule above is what keeps random project
             # repos out.
             if [ "$relevant" -eq 0 ] && [ "$kind" = "list" ]; then
+              # BUT a list about AI, papers or data science is not a place
+              # for a craft tool, however many making words its README
+              # happens to contain ("generative", "design" and "agent" all
+              # appear there). Such lists were opening as spam: three PRs to
+              # an AI-papers list and a generative-AI list were opened and
+              # closed in one day.
+              case "$haystack" in
+                *"machine learning"*|*"deep learning"*|*"neural network"*|*llm*|*"large language model"*|*transformer*|*dataset*|*data science*|*data scientist*|*"awesome papers"*|*arxiv*|*paper list*|*prompt engineering"*|*agent paper*|*reinforcement learning"*)
+                  continue ;;
+              esac
               case "$haystack" in
                 *svg*|*vector*|*graphic*|*design*|*maker*|*craft*|*diy*|*maker\ tool*|*creative*|*illustration*|*drawing*|*generative*)
                   relevant=1 ;;
