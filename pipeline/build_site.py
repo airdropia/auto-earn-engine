@@ -731,6 +731,45 @@ def render_checkout(cfg: dict, catalog: list[dict]) -> str:
 # one needs hand-written copy that matches real search intent.
 COLLECTIONS = [
     {
+        "slug": "free-memorial-shadow-box-maker",
+        "title": "Free Memorial Shadow Box Maker",
+        "h1": "Free Memorial Shadow Box Maker - Type Their Name, See It Now",
+        "intro": (
+            "A free memorial shadow box maker that runs in your browser. Type "
+            "a pet's or someone's name, add the years, choose a motif and a "
+            "colourway, and the design updates as you type. No signup, no "
+            "account, nothing uploaded, and the name never leaves your "
+            "browser. Download a free preview SVG or a print-ready PNG, or "
+            "send the design to someone as a link that opens on their name."
+        ),
+        "match": ["free", "maker"],
+        "pinned": ["memorial-pet", "memorial-angel", "memorial-bundle"],
+        "guide": [
+            ("Why the free version exists", (
+                "A shadow box is not bought from a listing, it is bought from a "
+                "picture of the one you lost. So the picture comes first, for "
+                "nothing: you see the keepsake with their name on it before "
+                "you spend anything. The paid version is the same design cut "
+                "into seven separate layers that you can actually make."
+            )),
+            ("What is free and what is not", (
+                "Free: the maker itself, an unlimited number of previews, the "
+                "SVG download, the PNG download, the print-ready page, and a "
+                "share link that carries the design. Paid: the seven separated "
+                "layer files sized for Cricut, Silhouette and Glowforge, the "
+                "6500px print render, and the materials list."
+            )),
+            ("How the share link works", (
+                "The link carries the name in the fragment of the address, the "
+                "part a browser never sends to a website and a search engine "
+                "never indexes. So the name of the one you lost is not on our "
+                "server, is not in anyone's crawl log, and will not turn up in "
+                "a search for you one day. Only the person you sent it to can "
+                "open it."
+            )),
+        ],
+    },
+    {
         "slug": "golden-retriever-memorial-svg",
         "title": "Golden Retriever Memorial SVG",
         "h1": "Golden Retriever Memorial Shadow Box SVGs",
@@ -1310,6 +1349,10 @@ def write_seo_files(site_dir: Path, cfg: dict, catalog: list[dict]) -> None:
         "memorial-shadow-box-for-cat",
         "memorial-shadow-box-size-guide",
         "free-memorial-shadow-box-maker",
+        "rainbow-bridge-shadow-box-dog",
+        "diy-pet-memorial-gift-cheaper-than-flowers",
+        "cricut-memorial-shadow-box-7-layer-cut",
+        "pet-memorial-shadow-box-what-to-write",
     ]
     for slug in blog_slugs:
         urls.append(f"{base}/blog/{slug}/")
@@ -1887,6 +1930,155 @@ def main() -> None:
 <p>Above a desk, in a hallway, or on a bedroom shelf. The shadow box casts a real shadow that changes through the day as light moves.</p>
 <h3>4. Words that help</h3>
 <p>Write their name and dates on the shadow box. Add "In Loving Memory" or a short phrase like "Forever in our hearts." Keep it simple - the name matters most.</p>
+""",
+        },
+        {
+            "slug": "rainbow-bridge-shadow-box-dog",
+            "title": "How to Make a Rainbow Bridge Shadow Box for Your Dog",
+            "description": "Step-by-step: cut a rainbow bridge shadow box SVG for a dog, with an editable name plate so their name is on the front layer.",
+            "content": """
+<h2>A rainbow bridge shadow box for your dog</h2>
+<p>Somebody searching for this is not shopping. They are trying to do one
+specific thing for one specific dog, and they would rather not be sold to
+anything.</p>
+<p>So here is the whole thing, with nothing to buy until you have decided
+what to write on it.</p>
+<h3>Step 1: see it with their name first</h3>
+<p>Open the <a href="./../maker/">free memorial maker</a> and pick the
+rainbow bridge motif. Type the name. The arc appears in soft colours over a
+pale background, with the name plate left empty for you to fill.</p>
+<p>Now decide what goes on that plate, because this is the part people get
+stuck on for weeks. It is worth deciding before you cut anything, not
+after.</p>
+<h3>Step 2: choose the three words</h3>
+<p>Most people end up with one of these:</p>
+<ul>
+<li>their name, and the years</li>
+<li>their name, and one word: <em>Brave</em>, <em>Good girl</em>, <em>Best boy</em></li>
+<li>a date they met, and nothing else</li>
+</ul>
+<p>Whatever you pick, the front layer is editable text, so you can change it
+in Cricut Design Space as many times as you need before cutting. You cannot
+do that with a printed design, and it is the reason to cut your own.</p>
+<h3>Step 3: cut seven layers, largest first</h3>
+<p>The bundle gives you seven SVGs, one per sheet, named in cut order. Cut
+them largest to smallest. Cardstock between 250 and 350 gsm; thinner tears
+along the arcs, thicker makes the gaps disappear.</p>
+<h3>Step 4: stack with foam tape</h3>
+<p>Apply foam tape to the back of each layer, then stack. The voids in the
+upper layers reveal the layers beneath, and that is the depth. Press the
+stack from the back, not the front, so the front layer stays flat enough to
+read.</p>
+<h3>Step 5: write the dates small</h3>
+<p>If you are putting years on the front, put them smaller than the name
+and in a lighter colour. The name is the thing. The dates are for the people
+who already know.</p>
+<p>If you are not ready to write dates, leave the plate with just the name.
+Nobody will think less of it.</p>
+""",
+        },
+        {
+            "slug": "diy-pet-memorial-gift-cheaper-than-flowers",
+            "title": "A Pet Memorial Gift That Costs Less Than the Flowers",
+            "description": "Why a cut paper memorial keepsake outlives a bouquet, and how to make one for the price of a card.",
+            "content": """
+<h2>The bouquet is gone in a week</h2>
+<p>Flowers are the correct thing to send. They are also gone in a week, and
+then there is nothing in the house that says somebody was loved here.</p>
+<p>A shadow box is the opposite: it is a sheet of cardstock with a name on
+it, stacked into something that stands up. It does not wilt, it does not
+need watering, and it will still be there in ten years when someone asks
+who Luna was.</p>
+<h3>What it actually costs</h3>
+<p>Less than the flowers, and less than the frame if you build the frame
+yourself. One sheet of cardstock per layer, a little foam tape, and an
+evening.</p>
+<h3>What makes it worth giving</h3>
+<p>The name. That is the whole thing. A generic memorial design is a
+decoration. The same design with your dog's name on the front layer is a
+keepsake, and it is the part people cry over.</p>
+<p>Because of that, the <a href="./../maker/">free maker</a> lets you put
+the name on and see it before you commit to anything. You can also send the
+design itself to someone as a link, and they will open it and see their own
+dog's name on it.</p>
+<h3>For the people who cannot cut</h3>
+<p>Somebody will want to give this and cannot cut a single sheet. Two ways
+out: the free maker prints on a home printer, which is good enough for a
+framed A4, or you take the free preview to someone who owns a Cricut and
+ask them to cut it. Either way the name is the part that matters, and the
+name does not need a machine to be right.</p>
+""",
+        },
+        {
+            "slug": "cricut-memorial-shadow-box-7-layer-cut",
+            "title": "Cutting a 7-Layer Memorial Shadow Box in Cricut: What Goes Wrong",
+            "description": "The real cutting problems with layered memorial shadow boxes, and how to avoid each one.",
+            "content": """
+<h2>Seven layers is seven chances to go wrong</h2>
+<p>Nothing about a layered shadow box is hard once you know the four things
+that actually go wrong. Every one of them is a physical problem, not a
+design problem.</p>
+<h3>1. The small parts lift off the mat</h3>
+<p>The feet, the dots, the small arches on the innermost layers are the
+first to come loose. Mat with extra-tack, and if you have it, a small
+roller to press them down before the blade lifts.</p>
+<h3>2. The blade drags on the inner curves</h3>
+<p>Change the blade every few layers. A dull blade does not cut, it pushes,
+and a pushed curve is a torn curve. If the arcs come out ragged, it is the
+blade, not the file.</p>
+<h3>3. The front layer curls</h3>
+<p>The largest sheet is the one that curls, because it is the most exposed
+to the air. Keep it flat under something heavy for an hour after cutting,
+and do not peel the backing paper until you are ready to mount it.</p>
+<h3>4. The stack is off-centre</h3>
+<p>Every layer is centred by eye, and every eye is wrong. Cut the largest
+layer, put it down, then cut the next one to the same centre while the first
+is still on the mat. Work downwards, one layer at a time, and never cut the
+whole set first and stack afterwards.</p>
+<h3>What to use</h3>
+<ul>
+<li>Cardstock 250-350 gsm for the outer layers, thinner for the inner ones</li>
+<li>Foam tape, 1-2mm, on the back of every layer except the base</li>
+<li>A backing board, cut to the size of the largest layer</li>
+<li>A deep frame, so the stack does not touch the glass</li>
+</ul>
+<p>And the name: keep it on the front layer as editable text so you can
+change it right up until the moment you cut it. You can preview the whole
+thing free in the <a href="./../maker/">memorial maker</a> before you touch
+a blade.</p>
+""",
+        },
+        {
+            "slug": "pet-memorial-shadow-box-what-to-write",
+            "title": "What to Write on a Pet's Memorial: The Honest Answer",
+            "description": "How to choose the words on a pet memorial, including what to do when you cannot think of anything.",
+            "content": """
+<h2>Most people cannot write anything</h2>
+<p>Not because they feel nothing, but because there is too much and none of
+it fits on a name plate. So here is the practical version.</p>
+<h3>The name is enough</h3>
+<p>Write the name. Nothing else. A name on a front layer, in the same
+lettering as a name should be, is a complete memorial. Everyone who sees it
+knows what it is.</p>
+<h3>If you want a second line</h3>
+<ul>
+<li>The years, small and light</li>
+<li>One word, and only one: <em>Brave</em>, <em>Stubborn</em>, <em>Good girl</em></li>
+<li>The date you got them, if the getting was the part you want remembered</li>
+<li>Nothing. The plate does not have to be filled.</li>
+</ul>
+<h3>What not to write</h3>
+<p>Do not write a sentence. A sentence becomes a thing people read once and
+then feel obliged to comment on, and the keepsake turns into a prompt. A
+shadow box is looked at quietly, years later, on a wall. It is not a
+conversation.</p>
+<h3>How to decide faster</h3>
+<p>Type the name into the <a href="./../maker/">free memorial maker</a> and
+look at it for a minute. If it is right, it is right. If something is
+missing, you will usually know what it is within a few days, and the front
+layer stays editable until you cut it, so you are not locked in.</p>
+<p>And if you still cannot decide, write only the name. That is not a
+cop-out. For most people it is the truest version.</p>
 """,
         },
         {

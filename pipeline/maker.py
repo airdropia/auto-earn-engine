@@ -110,6 +110,21 @@ li{margin:6px 0}
 footer{padding:24px 16px 48px;text-align:center;color:#6e7681;font-size:.82rem}
 #stage{display:flex;flex-direction:column;gap:14px}
 #fallback{display:none;background:#111823;border:1px solid #1f2a3a;border-radius:12px;padding:18px;font-size:.9rem}
+/* Print: the free preview is meant to be hung on a wall, not just saved.
+   A printed keepsake is the thing a person actually shares - and the credit
+   line travels with it. */
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  body{background:#fff !important;color:#000 !important}
+  header,footer,section.panel,.panel,button,#tags,.note,.howtopay{display:none !important}
+  main{display:block !important;max-width:none !important;padding:0 !important;margin:0 !important}
+  #stage{display:block !important}
+  .preview{border:none !important;box-shadow:none !important;background:#fff !important;width:100% !important}
+  .preview svg{width:100% !important;height:auto !important;display:block !important}
+  .printcredit{display:block !important;font-size:9pt;color:#666;text-align:center;margin-top:6mm}
+}
+.printcredit{display:none}
+@media screen { .printcredit{display:none} }
 </style></head><body>
 <header>
 <h1>Free memorial shadow box maker</h1>
@@ -130,6 +145,7 @@ footer{padding:24px 16px 48px;text-align:center;color:#6e7681;font-size:.82rem}
 <select id="palette"></select>
 <button class="btn btn-primary" id="download" type="button">Download free preview SVG</button>
 <button class="btn" id="png" type="button">Download PNG to share</button>
+<button class="btn" id="print" type="button">Print / Save as PDF</button>
 <button class="btn" id="copylink" type="button">Copy link to this design</button>
 <button class="btn" id="share" type="button">Share this design</button>
 <p class="note">Free preview: one flattened SVG file for printing or sharing. It is not a cut file &mdash; there are no separated layers.</p>
@@ -138,6 +154,7 @@ footer{padding:24px 16px 48px;text-align:center;color:#6e7681;font-size:.82rem}
 </section>
 <section id="stage">
 <div class="preview"><svg id="art" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Memorial shadow box preview"></svg></div>
+<p class="printcredit" id="printcredit">Free memorial shadow box maker — <span id="printurl"></span></p>
 <div id="fallback">Your browser blocked the inline preview. The download button still works.</div>
 <div class="panel">
 <h2>Why this page exists</h2>
@@ -446,6 +463,8 @@ function init() {
   });
   applyHash();
   render();
+  document.getElementById('printurl').textContent = MK_URL.replace(/^https:\/\//, '');
+  document.getElementById('print').addEventListener('click', () => { window.print(); });
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
