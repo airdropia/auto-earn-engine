@@ -1507,6 +1507,7 @@ def render_index(cfg: dict, catalog: list[dict]) -> str:
         '<meta charset="utf-8"/>'
         '<meta name="viewport" content="width=device-width, initial-scale=1"/>'
         '<meta name="google-site-verification" content="rj9PdWPw8UQNxgVDfJbn3ISodK8t-0nU51F4L6GtbpI"/>'
+        '<meta name="p:domain_verify" content="33209c243a2652730cad8bccbf68d8c5"/>'
         f"<title>{svgkit.escape(cfg['store_name'])} - Memorial Shadow Boxes & Layered SVG Cut Files</title>"
         '<meta name="description" content="Pet memorial and in-loving-memory shadow box SVGs with editable name plates, plus original layered mandala bundles for Cricut. Buy with USDT."/>'
         '<link rel="canonical" href="' + canonical_url(cfg) + '/"/>'
