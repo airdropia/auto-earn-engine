@@ -1,0 +1,2 @@
+102	list	AI-Maker-Space/Awesome-AIM-Index	main	An index of all of our weekly concepts + code events for aspiring AI Engineers and Business Leaders!!	0
+607	list	Anil-matcha/awesome-generative-ai-apps	main	50+ open-source generative AI apps you can clone, deploy, and monetize — image generators, video tools, virtual try-on	1
