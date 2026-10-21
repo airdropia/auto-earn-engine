@@ -513,7 +513,7 @@ def selftest() -> int:
         fails.append("session id collision in 5000 draws")
 
     # address padding used in eth_call topic
-    addr = "0x1c7B4F7e1101bA38c92d99B35299E83736a3b112"
+    addr = "0x2CA45537aC61394DEb1Ad18897E095A68E7Ab72a"
     if len("0x" + "0" * 24 + addr[2:]) != 66:
         fails.append("topic padding wrong length")
 
