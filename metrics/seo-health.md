@@ -1,6 +1,6 @@
 # SEO HEALTH (auto-generated)
 
-_Auto-updated 2026-10-21T09:25:38Z by `pipeline/report_title_uniqueness.py`_
+_Auto-updated 2026-10-22T09:28:37Z by `pipeline/report_title_uniqueness.py`_
 
 | Check | Value |
 |---|---|
