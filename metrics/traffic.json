@@ -253,6 +253,29 @@
         "status": "unknown",
         "reason": "bing served a challenge page"
       }
+    },
+    {
+      "date": "2026-10-29",
+      "status": "ok",
+      "captured": false,
+      "indexes_checked": [
+        {
+          "index": "CC-MAIN-2026-43",
+          "captures": 0
+        },
+        {
+          "index": "CC-MAIN-2026-39",
+          "captures": 0
+        },
+        {
+          "index": "CC-MAIN-2026-34",
+          "captures": 0
+        }
+      ],
+      "bing": {
+        "status": "unknown",
+        "reason": "bing served a challenge page"
+      }
     }
   ]
 }
