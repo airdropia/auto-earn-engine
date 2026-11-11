@@ -1,10 +1,10 @@
 {
   "balance_usdt": "0.0",
   "created": "2026-10-14T10:30:56Z",
-  "cursor_block": 132830768,
+  "cursor_block": 132869307,
   "last_scan": {
-    "at": "2026-11-10T19:39:55Z",
-    "head_block": 132830768,
+    "at": "2026-11-11T00:09:57Z",
+    "head_block": 132869307,
     "transfers_seen": 0
   },
   "sessions": {
