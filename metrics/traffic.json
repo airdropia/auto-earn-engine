@@ -630,6 +630,37 @@
           "/auto-earn-engine/": false
         }
       }
+    },
+    {
+      "date": "2026-11-13",
+      "status": "ok",
+      "captured": false,
+      "indexes_checked": [
+        {
+          "index": "CC-MAIN-2026-43",
+          "captures": 0
+        },
+        {
+          "index": "CC-MAIN-2026-39",
+          "captures": 0
+        },
+        {
+          "index": "CC-MAIN-2026-34",
+          "captures": 0
+        }
+      ],
+      "bing": {
+        "status": "ok",
+        "indexed_urls": 0,
+        "no_results_banner": false,
+        "key_pages_indexed": 0,
+        "key_pages": {
+          "/auto-earn-engine/maker/": false,
+          "/auto-earn-engine/checkout/": false,
+          "/auto-earn-engine/blog/": false,
+          "/auto-earn-engine/": false
+        }
+      }
     }
   ]
 }
