@@ -1025,5 +1025,42 @@
     "quality": {
       "layers": 7
     }
+  },
+  {
+    "id": "flagship-94603bfc",
+    "type": "flagship",
+    "title": "Leaves 3D Shadow-Box Mandala | 7 Layers",
+    "description": "Premium 7-layer 3D shadow-box mandala. Cut each layer from cardstock and stack for real depth - voids in upper layers reveal lower layers. Theme: Leaves.",
+    "tags": [
+      "3d layered mandala",
+      "botanical svg",
+      "cricut mandala",
+      "flagship",
+      "foliage svg",
+      "greenery svg",
+      "layered svg",
+      "leaf svg",
+      "leaves mandala",
+      "leaves svg",
+      "nature svg",
+      "shadow box svg"
+    ],
+    "files": [
+      "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1.svg",
+      "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1-layer-1.svg",
+      "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1-layer-2.svg",
+      "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1-layer-3.svg",
+      "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1-layer-4.svg",
+      "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1-layer-5.svg",
+      "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1-layer-6.svg",
+      "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1-layer-7.svg"
+    ],
+    "folder": "products/2026-11-16/flagship-94603bfc",
+    "preview": "products/2026-11-16/flagship-94603bfc/flagship-94603bfc-design-1.svg",
+    "created": "2026-11-16",
+    "designs": 1,
+    "quality": {
+      "layers": 7
+    }
   }
 ]
